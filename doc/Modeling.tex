@@ -1,0 +1,388 @@
+\documentclass[10pt]{article}
+\usepackage[letterpaper,text={6.5in,8.6in},centering]{geometry}
+\usepackage{amssymb,amsmath,amsthm,times,graphicx,subfigure}
+\usepackage{enumitem}
+%\usepackage{warmread}
+%\usepackage[all,import]{xy}
+
+\newcommand{\norm}[1]{\ensuremath{\left\| #1 \right\|}}
+\newcommand{\bracket}[1]{\ensuremath{\left[ #1 \right]}}
+\newcommand{\braces}[1]{\ensuremath{\left\{ #1 \right\}}}
+\newcommand{\parenth}[1]{\ensuremath{\left( #1 \right)}}
+\newcommand{\pair}[1]{\ensuremath{\langle #1 \rangle}}
+\newcommand{\met}[1]{\ensuremath{\langle\langle #1 \rangle\rangle}}
+\newcommand{\refeqn}[1]{(\ref{eqn:#1})}
+\newcommand{\reffig}[1]{Fig. \ref{fig:#1}}
+\newcommand{\tr}[1]{\mathrm{tr}\ensuremath{\negthickspace\bracket{#1}}}
+\newcommand{\trs}[1]{\mathrm{tr}\ensuremath{[#1]}}
+\newcommand{\ave}[1]{\mathrm{E}\ensuremath{[#1]}}
+\newcommand{\deriv}[2]{\ensuremath{\frac{\partial #1}{\partial #2}}}
+\newcommand{\SO}{\ensuremath{\mathsf{SO(3)}}}
+\newcommand{\T}{\ensuremath{\mathsf{T}}}
+\renewcommand{\L}{\ensuremath{\mathsf{L}}}
+\newcommand{\so}{\ensuremath{\mathfrak{so}(3)}}
+\newcommand{\SE}{\ensuremath{\mathsf{SE(3)}}}
+\newcommand{\se}{\ensuremath{\mathfrak{se}(3)}}
+\renewcommand{\Re}{\ensuremath{\mathbb{R}}}
+\newcommand{\aSE}[2]{\ensuremath{\begin{bmatrix}#1&#2\\0&1\end{bmatrix}}}
+\newcommand{\ase}[2]{\ensuremath{\begin{bmatrix}#1&#2\\0&0\end{bmatrix}}}
+\newcommand{\D}{\ensuremath{\mathbf{D}}}
+\renewcommand{\d}{\ensuremath{\mathfrak{d}}}
+\newcommand{\Sph}{\ensuremath{\mathsf{S}}}
+\renewcommand{\S}{\Sph}
+\newcommand{\J}{\ensuremath{\mathbf{J}}}
+\newcommand{\Ad}{\ensuremath{\mathrm{Ad}}}
+\newcommand{\intp}{\ensuremath{\mathbf{i}}}
+\newcommand{\extd}{\ensuremath{\mathbf{d}}}
+\newcommand{\hor}{\ensuremath{\mathrm{hor}}}
+\newcommand{\ver}{\ensuremath{\mathrm{ver}}}
+\newcommand{\dyn}{\ensuremath{\mathrm{dyn}}}
+\newcommand{\geo}{\ensuremath{\mathrm{geo}}}
+\newcommand{\Q}{\ensuremath{\mathsf{Q}}}
+\newcommand{\G}{\ensuremath{\mathsf{G}}}
+\newcommand{\g}{\ensuremath{\mathfrak{g}}}
+\newcommand{\Hess}{\ensuremath{\mathrm{Hess}}}
+
+\newcommand{\bfi}{\bfseries\itshape\selectfont}
+
+\renewcommand{\baselinestretch}{1.2}
+
+\date{}
+
+\newtheorem{definition}{Definition}
+\newtheorem{lem}{Lemma}
+\newtheorem{prop}{Proposition}
+\newtheorem{remark}{Remark}
+
+\renewcommand{\thesubsection}{\arabic{subsection}. }
+\renewcommand{\thesubsubsection}{\arabic{subsection}.\arabic{subsubsection} }
+
+\graphicspath{{./Figs/}}
+
+\renewcommand{\today}{\ifcase \month \or January\or February\or March\or April\or May%
+\or June\or July\or August\or September\or October\or November\or December\fi\space \number\day, %
+\number \year} 
+
+\begin{document}
+\section*{Dynamic and Control of Flapping Wing UAV}
+\vspace{-0.4cm} \noindent{\today}\\
+
+\subsection{Dynamic Modeling}
+
+Consider a flapping wing UAV that is composed of a body, which is constituted of a head, a thorax, and an abdomen, and two wings attached to the thorax. 
+We plan to study the motion of the abdomen relative to the thorax in the future. 
+In this note, the combined head, thorax, and abdomen is referred to as either a body or a thorax. 
+
+
+\subsubsection{Kinematics}
+
+Define an inertial frame $\mathcal{F}_I=\{\mathbf{i}_x,\mathbf{i}_y,\mathbf{i}_z\}$, where the third axis points downward, and the first two axes span the horizontal plane. 
+This is compatible to the NED (north-east-down) frame common in flight dynamics. 
+
+\paragraph{Thorax/Body}
+
+Define a thorax-fixed frame or the body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$.
+Its origin is located at its mass center of the thorax.
+Following the common convention in flight dynamics, the first axis points toward the head, the second axis point toward the right wing, and the third axis points from the dorsal (back) side to the ventral (belly) side.
+
+\setlength{\unitlength}{0.1\columnwidth}
+\begin{figure}[h]
+    \begin{center}
+        \footnotesize
+        \begin{picture}(3,3)(0,0)
+            \put(0,0){\includegraphics[trim={6cm 4cm 5cm 2cm},clip,width=0.3\textwidth]{monarch_FB}}
+            \put(-0.1,0.4){$\mathbf{i}_x$}
+            \put(0.55,0.65){$\mathbf{i}_y$}
+            \put(0.5,0.05){$\mathbf{i}_z$}
+            \put(0.7,2.3){$\mathbf{b}_x$}
+            \put(2.1,2.6){$\mathbf{b}_y$}
+            \put(1.15,0.7){$\mathbf{b}_z$}
+        \end{picture}
+    \end{center}
+    \caption{The inertial frame $\mathcal{F}_I=\{\mathbf{i}_x,\mathbf{i}_y,\mathbf{i}_z\}$ (black) and the body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue)}
+\end{figure}
+
+
+\begin{itemize}[leftmargin=2.5cm]
+    \item[$x\in\Re^3$]  the location of the mass center of the thorax represented in $\mathcal{F}_I$ 
+    \item[$R\in\SO$]    the linear transformation of the representation of a vector from $\mathcal{F}_B$ to $\mathcal{F}_I$
+    \item[$\Omega\in\Re^3$] the angular velocity of the thorax represented in $\mathcal{F}_B$
+    \item[$J\in\Re^{3\times 3}$] the moment of inertia of the thorax about its mass center represented in $\mathcal{F}_B$
+    \item[$m\in\Re$] the mass of the thorax
+\end{itemize}
+
+
+\paragraph{Right Wing}
+
+Let $\mathcal{F}_R=\{\mathbf{r}_x,\mathbf{r}_y,\mathbf{r}_z\}$ be the frame fixed to the right wing.
+Its origin is located at the joint of the right wing, or the wing root where the right wing is attached to the thorax. 
+The first two axes span the plane of the wing, where the first axis points toward the leading edge and the second axis points toward the wing tip. 
+Consequently, the third axis is normal to the wing plane, and it points toward the ventral side when there is no rotation of the right wing.
+
+\setlength{\unitlength}{0.1\columnwidth}
+\begin{figure}[h]
+    \begin{center}
+        \footnotesize
+        \begin{picture}(3,2.4)(0,0)
+           \put(0,0){\includegraphics[trim={3cm 2cm 2cm 1cm},clip,width=0.3\textwidth]{monarch_FR}}
+           \put(1.6,2.2){$\mathbf{r}_x$}
+           \put(1.2,2.25){$\mathbf{b}_x$}
+           \put(2.7,1.1){$\mathbf{r}_y$}
+           \put(2.85,0.75){$\mathbf{b}_y$}
+        \end{picture}
+    \end{center}
+    \caption{The body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue), the right wing frame $\mathcal{F}_R=\{\mathbf{r}_x,\mathbf{r}_y,\mathbf{r}_z\}$ (red)}
+\end{figure}
+
+\begin{itemize}[leftmargin=2.5cm]
+    \item[$\mu_R\in\Re^3$] the fixed vector from the origin of $\mathcal{F}_B$ to the origin of $\mathcal{F}_R$ represented in $\mathcal{F}_B$
+\end{itemize}
+
+
+To describe the motion of the wing relative to the thorax, we first introduce the stroke frame $\mathcal{F}_S=\{\mathbf{s}_x,\mathbf{s}_y,\mathbf{s}_z\}$, which is obtained by translating the origin of $\mathcal{F}_B$ to the center of the left wing root and the right wing root, and rotating it about $\mathbf{b}_y$ by $\beta$.
+The $y$--$z$ plane of $\mathcal{F}_s$ is referred to as the stroke plane. 
+
+\setlength{\unitlength}{0.1\columnwidth}
+\begin{figure}[h]
+    \begin{center}
+        \footnotesize
+        \begin{picture}(3,2.6)(0,0)
+           \put(0,0){\includegraphics[trim={5cm 3cm 3cm 2cm},clip,width=0.3\textwidth]{monarch_FS}}
+           \put(1.95,2.0){$\mathbf{s}_x$}
+           \put(2.5,1.95){$\mathbf{b}_x$}
+           \put(2.2,0.45){$\mathbf{s}_z$}
+           \put(2.05,-0.05){$\mathbf{b}_z$}
+           \put(2.05,1.7){$\beta$}
+           \put(0.05,1.9){\shortstack[c]{stroke\\plane}}
+        \end{picture}
+    \end{center}
+    \caption{The body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue), the stroke frame $\mathcal{F}_S=\{\mathbf{s}_x,\mathbf{s}_y,\mathbf{s}_z\}$ (green)}
+\end{figure}
+\begin{itemize}[leftmargin=2.5cm]
+    \item[$\beta\in[-\pi,\pi)$] the angle between $\mathbf{b}_x$ and $\mathbf{s}_x$ that is normal to the stroke plane. 
+        Or equivalently, it is the angle between $y$--$z$ plane of $\mathcal{F}_B$ and the stroke plane.
+        It is positive when $\mathbf{s}_x\cdot \mathbf{b}_z <0$.  
+        This angle is often defined as the angle between the ground, horizontal plane and the stroke plane, considering hovering flights. 
+        Here, it is defined relative to $\mathcal{F}_B$ considering rotation of the thorax. 
+\end{itemize}
+
+The motion of the wing relative to $\mathcal{F}_S$ is described by 1--3--2 Euler angles $(\phi_R,\psi_R,\theta_R)$. 
+Consequently, the orientation of the right wing relative to $\mathcal{F}_B$ is described by
+\begin{align*}
+    Q_R(t) = \exp(\beta \hat e_2)\exp(\phi_R(t) \hat e_1) \exp(-\psi_R(t) \hat e_3) \exp(\theta_R(t) \hat e_2) 
+\end{align*}
+where
+
+\begin{itemize}[leftmargin=2.5cm]
+    \item[$Q_R\in\SO$] the linear transformation of the representation of a vector from $\mathcal{F}_R$ to $\mathcal{F}_B$
+    \item[$\phi_R\in[-\pi,\pi)$] the stroke, the sweep, or the flapping angle, which is positive when the wing is in the ventral side, i.e., $\dot\phi>0$ corresponds to downstroke and $\dot\phi<0$ corresponds ot upstroke
+    \item[$\theta_R\in[-\pi,\pi)$] the pitch, the feathering, or the rotation angle about the axis from the wing root to the wing tip, which is positive when the leading edge of the wing is rotated toward the dorsal side
+    \item[$\psi_R\in[-\pi,\pi)$] the deviation angle that governs the motion of the wing tip out of the stroke plane, which is positive when the wing tip is rotated toward the head 
+\end{itemize}
+
+\begin{figure}
+    \centerline{
+        \footnotesize
+        \subfigure[flapping angle]{
+        \begin{picture}(3,2.6)(0,0)
+           \put(0,0){\includegraphics[trim={4cm 3cm 4cm 1.5cm},clip,width=0.3\textwidth]{monarch_FR_phi}}
+           \put(1.9,1.4){$\phi>0$}
+           \put(2.75,1.9){$\mathbf{s}_y$}
+           \put(2.2,0.6){$\mathbf{r}_y$}
+        \end{picture}
+    }
+        \subfigure[pitch angle]{
+        \begin{picture}(3,2.6)(0,0)
+           \put(0,0){\includegraphics[trim={4cm 3cm 2.5cm 1.5cm},clip,width=0.3\textwidth]{monarch_FR_theta}}
+           \put(1.3,1.7){$\theta>0$}
+           \put(1.1,2.3){$\mathbf{r}_x$}
+           \put(2.0,1.85){$\mathbf{s}_x$}
+        \end{picture}
+    }
+        \subfigure[deviation angle]{
+        \begin{picture}(3,2.6)(0,0)
+           \put(0,0){\includegraphics[trim={3cm 2cm 3cm 2cm},clip,width=0.3\textwidth]{monarch_FR_psi}}
+           \put(1.8,1.3){$\psi>0$}
+           \put(2.8,1.4){$\mathbf{r}_y$}
+           \put(2.8,0.95){$\mathbf{s}_y$}
+        \end{picture}
+    }
+}
+\caption{Wing configuration when only one of $(\phi,\theta,\psi)$ is non-zero}
+\end{figure}
+
+The time-derivative of $Q_R$ is given by
+\begin{align*}
+    \dot Q_R = Q_R \hat \Omega_R,
+\end{align*}
+where the \textit{hat} map $\wedge:\Re^3\rightarrow \so$ is defined such that $\hat x y = x\times y$ for any $x,y\in\Re^3$, and
+\begin{itemize}[leftmargin=2.5cm]
+    \item[$\Omega_R\in\Re^3$]  the angular velocity of the right wing relative to $\mathcal{F}_b$ resolved in $\mathcal{F}_R$
+\end{itemize}
+One can show
+\begin{align*}
+    \Omega_R & =
+    \begin{bmatrix} 
+        \cos\psi_R\cos\theta_R & 0 & \sin\theta_R \\
+        \sin\psi_R & 1 & 0 \\
+        \cos\psi_R\sin\theta_R& 0& -\cos\theta_R
+    \end{bmatrix}
+    \begin{bmatrix}
+        \dot\phi_R \\ \dot\theta_R \\ \dot\psi_R
+    \end{bmatrix}.
+\end{align*}
+The determinant of the above $3\times 3$ matrix is $-\cos\psi_R$. 
+Consequently, it is invertible when the deviation angle satisfies $\psi_R\neq \pm\frac{\pi}{2}$. 
+This is not restrictive as the deviation angle is quite small in general. 
+
+
+\paragraph{Left Wing}
+
+Let $\mathcal{F}_L$ be the frame fixed to the left wing.
+It can be obtained by translating $\mathcal{F}_R$ to the root of the left wing.
+More specifically, its origin is located at the joint of the left wing, where the left wing is attached to the thorax. 
+The first two axes span the plane of the wing, where the first axis points toward the leading edge and the second axis points toward the right wing, opposite to the left wing tip.
+Consequently, the third axis is normal to the wing plane, and it points toward the ventral side when there is no rotation of the left wing.
+
+\setlength{\unitlength}{0.1\columnwidth}
+\begin{figure}[h]
+    \begin{center}
+        \footnotesize
+        \begin{picture}(3,2.4)(0,0)
+           \put(0,0){\includegraphics[trim={3cm 2cm 2cm 1cm},clip,width=0.3\textwidth]{monarch_FL}}
+           \put(1.5,2.25){$\mathbf{b}_x$}
+           \put(1.2,2.15){$\mathbf{l}_x$}
+           \put(2.5,1.1){$\mathbf{l}_y$}
+           \put(2.85,0.75){$\mathbf{b}_y$}
+        \end{picture}
+    \end{center}
+    \caption{The body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue), the left wing frame $\mathcal{F}_L=\{\mathbf{l}_x,\mathbf{l}_y,\mathbf{l}_z\}$ (red)}
+\end{figure}
+
+Similar as the right wing, the motion of the left wing relative to the thorax is described by $Q_L\in\SO$, which is described by successive rotations as
+\begin{align*}
+    Q_L(t) = \exp(\beta \hat e_2)\exp(-\phi_L(t) \hat e_1) \exp(\psi_L(t) \hat e_3) \exp(\theta_L(t) \hat e_2),
+\end{align*}
+where the definition of $(\phi_L,\theta_L,\psi_L)$ are compatible to those of the right wing.
+The wing kinematics become symmetric when $(\phi_R,\theta_R,\psi_R)=(\phi_L,\theta_L,\psi_L)$. 
+
+The time-derivative of $Q_L$ is given by
+\begin{align*}
+    \dot Q_L = Q_L \hat \Omega_L,
+\end{align*}
+where
+\begin{itemize}[leftmargin=2.5cm]
+    \item[$\Omega_L\in\Re^3$]  the angular velocity of the left wing relative to $\mathcal{F}_B$ resolved in $\mathcal{F}_L$
+\end{itemize}
+One can show
+\begin{align*}
+    \Omega_L & =
+    \begin{bmatrix} 
+        -\cos\psi_L\cos\theta_L & 0 & -\sin\theta_L \\
+        \sin\psi_L & 1 & 0 \\
+        -\cos\psi_L\sin\theta_L& 0& \cos\theta_L
+    \end{bmatrix}
+    \begin{bmatrix}
+        \dot\phi_L \\ \dot\theta_L \\ \dot\psi_L
+    \end{bmatrix}.
+\end{align*}
+
+\subsubsection{Quasi-Steady Aerodynamics}
+
+The quasi-steady assumption implies that the aerodynamic force and moment generated by the flapping wing are equivalent to those for steady motion at the same instantaneous velocity and the angle of attack. 
+
+\paragraph{Translational Force}
+
+Let $dr$ be the infinitesimal wing segment located distanced at $r$ from the wing root. 
+The wing segment is parallel to the first axis of $\mathcal{F}_r$ and the distance is measured along the second axis of $\mathcal{F}_r$. 
+Assume that the aerodynamic center of the segment is along the second axis of $\mathcal{F}_r$.
+The location of the aerodynamic center resolved in the inertial frame is given by
+\[
+    x+R\mu_r + RQ_r r e_2.
+\]
+Therefore, its velocity is resolved in the inertial frame as
+\[
+    \dot x+ R\hat\Omega \mu_r + R\hat\Omega Q_r re_2 + R Q_r \hat \Omega_r r e_2.
+\]
+Assume $\dot x, \Omega\ll 1$. 
+In $\mathcal{F}_r$, the velocity is given by
+\begin{align*}
+    \hat \Omega_r r e_2 = 
+    r  \begin{bmatrix}
+        -\cos\psi\sin\theta & \cos\theta \\
+        0 & 0 \\
+    \cos\psi\cos\theta &  \sin\theta\end{bmatrix}
+    \begin{bmatrix}
+        \dot\phi \\ \dot\psi
+    \end{bmatrix}.
+\end{align*}
+Further assume $\psi,\dot\psi \ll  1$, to obtain
+\[
+    \hat\Omega_r r e_2 = r \dot\phi (-\sin\theta e_1 + \cos\theta e_3) .
+\]
+Therefore, the unit-vector along the velocity is 
+\[
+    \mathrm{sgn}(\dot\phi) (-\sin\theta e_1 + \cos\theta e_3) .
+\]
+
+The angle of attack is the angle between the above velocity and $e_1$, which is the unit-vector along the chord line from the trailing edge to the leading edge.
+\[
+    \alpha = \cos^{-1} (-\frac{\dot\phi}{|\dot\phi|} \sin\theta).
+\]
+When $|\theta|<\frac{\pi}{2}$, the above expression can be written as
+\[
+    \alpha = \frac{\pi}{2} + \mathrm{sgn}(\dot\phi) \theta.
+\]
+The infinitesimal lift caused by the wing segment is 
+\[
+    dF_L = \frac{1}{2}\rho C_L(\alpha) c(r) r^2 \dot\phi^2 dr,
+\]
+which is integrated from the wing root to the tip to obtain
+\[
+    F_L = \frac{1}{2}\rho C_L(\alpha) \dot\phi^2 \int_{0}^l c(r) r^2 dr,
+\]
+where $l$ is the wing span, i.e., the distance between the wing root and the tip along the second axis of $\mathcal{F}_r$.
+The above is often rearranged into 
+\[
+    F_L(\theta,\dot\phi) = \frac{1}{2}\rho  C_L(\alpha) S U_{cp}^2,
+\]
+with the velocity at the center of pressure of the wing 
+\[
+    U_{cp} = \hat r_2 l \dot\phi,
+\]
+where the non-dimensional radius of the second moment of the wing area
+\[
+    \hat r_2 = \frac{1}{S l^2} \int_0^l c(r) r^2 dr.
+\]
+The lift is normal to the velocity vector and the wing span direction, and its direction depends on the sign of $\theta$.
+The unit-vector along the lift is given as follow, when resolved in $\mathcal{F}_r$.
+\[
+    \mathrm{sgn}(\theta) \mathrm{sgn}(\dot\phi) (-\sin\theta e_1 + \cos\theta e_3)\times e_2 =\mathrm{sgn}(\theta) \mathrm{sgn}(\dot\phi) (-\cos\theta e_1 - \sin\theta e_3).
+\]
+Therefore, the lift vector resolved in $\mathcal{F}_b$ is given by
+\[
+    F_L(\theta,\dot\phi) \mathrm{sgn}(\theta) \mathrm{sgn}(\dot\phi) Q_r  (-\cos\theta e_1 - \sin\theta e_3).
+\]
+
+
+
+
+Similarly, the drag is given by
+\[
+    F_D(\theta,\dot\phi) = \frac{1}{2}\rho  C_D(\alpha) S U_{cp}^2.
+\]
+
+The drag is opposite to the velocity.
+Therefore, the drag vector resolved in $\mathcal{F}_b$ is
+\[
+    F_D(\theta,\dot\phi)  Q_r \mathrm{sgn}(\dot\phi) (\sin\theta e_1 -\cos\theta e_3).
+\]
+
+
+
+
+
+
+
+\end{document}
+

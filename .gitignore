@@ -1,0 +1,13 @@
+*.aux
+*.bbl
+*.blg
+*.log
+*.synctex.gz
+*.wrm
+*.bst
+*.bb
+*.pdf
+*.bib.bak
+*.out
+/Master-noRobust
+Master-noRobust/
