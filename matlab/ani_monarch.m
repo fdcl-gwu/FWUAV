@@ -44,10 +44,7 @@ ylabel('$\psi$','interpreter','latex');
 xlabel('$t$','interpreter','latex');
 
 %% generate figures for the note
-
 fig_note(fv_body, fv_wr, fv_wl, true);
-
-return;
 
 %% generate the initial object when k=1
 k=1;
