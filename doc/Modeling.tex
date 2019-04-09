@@ -5,6 +5,7 @@
 %\usepackage{warmread}
 %\usepackage[all,import]{xy}
 \usepackage{trimclip} % for AR symbol
+\usepackage{nomencl}
 
 \newcommand{\norm}[1]{\ensuremath{\left\| #1 \right\|}}
 \newcommand{\bracket}[1]{\ensuremath{\left[ #1 \right]}}
@@ -64,9 +65,16 @@
 \or June\or July\or August\or September\or October\or November\or December\fi\space \number\day, %
 \number \year} 
 
+\makenomenclature
+
 \begin{document}
 \section*{Quasi-Steady Dynamics of Flapping Wing UAV}
 \vspace{-0.4cm} \noindent{\today}\\
+
+
+\tableofcontents
+
+\printnomenclature[4cm]
 
 \subsection{Flapping Wing UAV Model}
 
@@ -75,16 +83,20 @@ We plan to study the motion of the abdomen relative to the thorax in the future.
 In this note, the combined head, thorax, and abdomen is referred to as either a body or a thorax. 
 
 
-\subsubsection{Body/Wing Kinematics}
+\subsubsection{Body}
 
 Define an inertial frame $\mathcal{F}_I=\{\mathbf{i}_x,\mathbf{i}_y,\mathbf{i}_z\}$, where the third axis points downward, and the first two axes span the horizontal plane. 
 This is compatible to the NED (north-east-down) frame common in flight dynamics. 
+\nomenclature{$\mathcal{F}_I$}{North-East-Down inertial frame}
+\nomenclature{$\mathbf{i}_x,\mathbf{i}_y,\mathbf{i}_z$}{basis vector of the inertial frame}
 
 \paragraph{Thorax/Body}
 
 Define a thorax-fixed frame or the body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$.
 Its origin is located at its mass center of the thorax.
 Following the common convention in flight dynamics, the first axis points toward the head, the second axis point toward the right wing, and the third axis points from the dorsal (back) side to the ventral (belly) side.
+\nomenclature{$\mathcal{F}_B$}{Body-fixed frame (see Figure \ref{fig:FI_FB})}
+\nomenclature{$\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z$}{basis vector of the body-fixed frame}
 
 \setlength{\unitlength}{0.1\columnwidth}
 \begin{figure}[h]
@@ -100,7 +112,7 @@ Following the common convention in flight dynamics, the first axis points toward
             \put(1.15,0.7){$\mathbf{b}_z$}
         \end{picture}
     \end{center}
-    \caption{The inertial frame $\mathcal{F}_I=\{\mathbf{i}_x,\mathbf{i}_y,\mathbf{i}_z\}$ (black) and the body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue)}
+    \caption{The inertial frame $\mathcal{F}_I=\{\mathbf{i}_x,\mathbf{i}_y,\mathbf{i}_z\}$ (black) and the body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue)}\label{fig:FI_FB}
 \end{figure}
 
 
@@ -112,6 +124,8 @@ Following the common convention in flight dynamics, the first axis points toward
     \item[$m\in\Re$] the mass of the thorax
 \end{itemize}
 
+
+\subsubsection{Wing}
 
 \paragraph{Right Wing}
 
@@ -297,13 +311,65 @@ One can show
     \end{bmatrix}.
 \end{align}
 
+\subsubsection{Wing Kinematics}
+
+We consider the wing kinematics model presented in~\cite{berman2007energy}.
+Let $f\in\Re$ be the frequency of the flapping.
+\nomenclature{$f\in\Re$}{flapping frequency}
+
+The flapping angle is given by a smoothed triangular waveform,
+\begin{align}
+    \phi(t) & = \frac{\phi_m}{\sin^{-1} \phi_K}\sin^{-1}(\phi_K\sin(2\pi f t)) + \phi_0,
+\end{align}
+where $\phi_m\in\Re$ is the amplitude of flapping, and $\phi_0\in\Re$ is the offset. 
+The parameter $\phi_K\in(0,1)$ determines the shape of flapping waveform (sinusoidal when $\phi_K\rightarrow 0$; triangular when $\phi_K\rightarrow 1$).
+\nomenclature{$\phi_m\in[0,\frac{\pi}{2}]$}{flapping amplitude\nomrefeq}
+\nomenclature{$\phi_o\in[\theta_m-\frac{\pi}{2},\frac{\pi}{2}-\theta_m]$}{flapping offset\nomrefeq}
+\nomenclature{$\phi_K\in(0,1)$}{flapping waveform parameter\nomrefeq}
+
+The pitch angle is given by a hyperbolic function,
+\begin{align}
+    \theta(t) = \frac{\theta_m}{\tanh \theta_C} \tanh( \theta_C \sin(2\pi f t + \theta_a)) +\theta_0,
+\end{align}
+where $\theta_m\in\Re$ is the amplitude of pitching, and $\theta_0\in\Re$ is the offset. 
+The parameter $\theta_C\in(0,\infty)$ determines the waveform (sinusoidal when $\theta_C\rightarrow 0$; step function when $\theta_C\rightarrow \infty$).
+The value of $\theta_C$ is related to the duration of the wing pitch reversal. 
+The parameter $\theta_a\in(-\pi,\pi)$ describes the offset in phase. 
+\nomenclature{$\theta_m\in[0,\frac{\pi}{2}]$}{pitching amplitude\nomrefeq}
+\nomenclature{$\theta_o\in[\theta_m-\pi,\pi-\theta_m]$}{pitching offset\nomrefeq}
+\nomenclature{$\theta_C\in(0,\infty)$}{pitching waveform parameter\nomrefeq}
+\nomenclature{$\theta_a\in(-\pi,\pi)$}{pitching phase offset\nomrefeq}
+
+Finally, the deviation angle is given by a sinusoidal oscillation,
+\begin{align}
+    \psi(t) = \psi_m \cos(2\pi \psi_N f t + \psi_a) + \psi_0,
+\end{align}
+where $\psi_m\in\Re$ is the amplitude of the deviation, and $\psi_0\in\Re$ is the offset. 
+The parameter $\psi_N$ is either 1 or 2: $\psi_N=1$ corresponds to one oscillation per a flapping period, and $\psi_N=2$ corresponds to a figure-eight motion. 
+The parameter $\psi_a\in(-\pi,\pi)$ describes the offset in phase. 
+\nomenclature{$\psi_m\in\Re$}{deviation amplitude\nomrefeq}
+\nomenclature{$\psi_o\in\Re$}{deviation offset\nomrefeq}
+\nomenclature{$\psi_N\in\{1,2\}$}{deviation oscillation per a flapping\nomrefeq}
+\nomenclature{$\psi_a\in(-\pi,\pi)$}{deviation phase offset\nomrefeq}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \subsection{Quasi-Steady Aerodynamics}
 
 The quasi-steady assumption implies that the aerodynamic force and moment generated by the flapping wing are equivalent to those for steady motion at the same instantaneous velocity and the angle of attack. 
 
-\subsubsection{Blade-Element Theory: Right Wing}
-
-\paragraph{Wing Moment Parameters}
+\subsubsection{Wing Moment Parameters}
 
 \setlength{\unitlength}{0.1\columnwidth}
 \begin{figure}[h]
@@ -343,9 +409,9 @@ The non-dimensional aspect ratio is
 \begin{align}
     \AR = \frac{l^2}{S}.
 \end{align}
-The mean chord is the area divided by the span, i.e., $c_{\mathrm{mean}} = \frac{S}{l}$, and the normalized wing chord is
+The mean chord is the area divided by the span, i.e., $\bar c = \frac{S}{l}$, and the normalized wing chord is
 \begin{align}
-    \tilde c = \frac{c}{c_{\mathrm{mean}}} = \frac{c l}{S}.
+    \tilde c = \frac{c}{\bar c} = \frac{c l}{S}.
 \end{align}
 Also, the non-dimensional radius is defined as
 \begin{align}
@@ -372,7 +438,26 @@ The non-dimensional radius of the $k$-th moment of wing area is defined as
     \item[${\tilde r_k \in[0,1]}$]  non-dimensional radius of the $k$-th moment of wing area (this is equivalent to $\hat r_k$ in~\cite{ellington1984aerodynamics})
 \end{itemize}
 
- 
+Next, the normalized virtual mass is defined as
+\begin{align}
+    \tilde v = \int_0^1 \tilde c^2 d\tilde r.
+\end{align}
+And the corresponding normalized radius of the $k$-th moment of virtual mass is 
+\begin{align}
+    \tilde r_k (v) = \parenth{ \frac{1}{\tilde v} \int_0^1 \tilde c^2 \tilde r^k d\tilde r }^{\frac{1}{k}}.
+\end{align}
+
+Later, we need to compute the following quantity:
+\begin{align}
+    \int_0^l r c^2(r) dr & = l^2 \bar c^2 \int_0^1 \tilde r \tilde c^2 d\tilde r = l^2 \bar c^2 \tilde v \tilde r_1(v),\label{eqn:int_rc2dr} \\
+    \int_0^l r^2 c^2(r) dr & = l^3 \bar c^2 \int_0^1 \tilde r^2 \tilde c^2 d\tilde r = l^2 \bar c^2 \tilde v \tilde r_2^2(v).\label{eqn:int_r2c2dr} 
+\end{align}
+
+
+\subsubsection{Blade-Element Theory: Right Wing}
+
+   
+
 
 \paragraph{Angle of Attack}
 
@@ -418,8 +503,13 @@ More explicitly,
 \end{align}
 The above expression has a singularity when $U(r)=0$. 
 But, the value of $\alpha(r)$ does not matter when $U(r)=0$, as the resulting aerodynamic force and moment will vanish.
+Or equivalently,
+\begin{align}
+    \alpha (r) & = 
+    \sin^{-1} ( \frac{|e_3^T U(r)|}{\|U(r)\|} ).\label{eqn:alpha_3}
+\end{align}
 
-\paragraph{Translational Forces}
+\subsubsection{Translational Forces: Right Wing}
 
 The magnitude of the lift generated by the infinitesimal wing segment $c(r)$ is
 \[
@@ -439,6 +529,8 @@ More specifically, consider the following four cases.
                 \put(1.25,1.25){\vector(-1,2){0.5}}
                 \put(0.2,0.5){$U(r)$}
                 \put(0.0,2.0){\shortstack[c]{$dL_R\parallel$\\$e_2\times U(r)$}}
+                \put(1.25,1.25){\line(1,0){1}}
+                \put(1.55,1.3){chord}
                 \linethickness{0.1em}
                 \put(1.25,1.25){\vector(-1,0){1}}
                 \put(1.25,1.25){\vector(0,-1){1}}
@@ -455,6 +547,7 @@ More specifically, consider the following four cases.
                 \put(0.8,2.0){\shortstack[c]{$dL_R\parallel$\\$-e_2\times U(r)$}}
                 \put(1.25,1.25){\line(1,0){1}}
                 \put(1.55,1.12){$\alpha$}
+                \put(1.55,1.3){chord}
                 \linethickness{0.1em}
                 \put(1.25,1.25){\vector(-1,0){1}}
                 \put(1.25,1.25){\vector(0,-1){1}}
@@ -469,6 +562,8 @@ More specifically, consider the following four cases.
                 \put(0.1,1.9){$U(r)$}
                 \put(0.2,0.5){\shortstack[c]{$dL_R\parallel$\\$-e_2\times U(r)$}}
                 \put(0.8,1.3){$\alpha$}
+                \put(1.25,1.25){\line(1,0){1}}
+                \put(1.55,1.3){chord}
                 \linethickness{0.1em}
                 \put(1.25,1.25){\vector(-1,0){1}}
                 \put(1.25,1.25){\vector(0,-1){1}}
@@ -484,6 +579,7 @@ More specifically, consider the following four cases.
                 \put(1.6,0.1){\shortstack[c]{$dL_R\parallel$\\$e_2\times U(r)$}}
                 \put(1.25,1.25){\line(1,0){1}}
                 \put(1.55,1.3){$\alpha$}
+                \put(1.55,1.10){chord}
                 \linethickness{0.1em}
                 \put(1.25,1.25){\vector(-1,0){1}}
                 \put(1.25,1.25){\vector(0,-1){1}}
@@ -492,7 +588,7 @@ More specifically, consider the following four cases.
             \end{picture}
         }
     }
-    \caption{Direction of the velocity and the lift in the $\mathbf{r}_x$--$\mathbf{r}_z$ plane}
+    \caption{Direction of the velocity and the lift in the $\mathbf{r}_x$--$\mathbf{r}_z$ plane}\label{fig:lift_direction}
 \end{figure}
 These show that the direction of lift is $e_2\times U(r)$ when $e_1^T U(r)$ and $e_3^TU(r)$ have the same sign (Case 1 and Case 4), and it is $-e_2\times U(r)$ when they have the opposite sign (Case 2 and Case 3).
 Therefore, the infinitesimal lift vector resolved in $\mathcal{F}_R$ is given by
@@ -589,7 +685,7 @@ Similarly, the drag is given by
 \end{align}
 The angle of attack can be rewritten as
 \begin{align}
-    \alpha & = \cos^{-1} (\frac{ |e_1^T U_R|}{\|U_R\|}). \label{eqn:alpha_R}
+    \alpha & = \cos^{-1} (\frac{ |e_1^T U_R|}{\|U_R\|}) = \sin^{-1} (\frac{ |e_3^T U_R|}{\|U_R\|}). \label{eqn:alpha_R}
 \end{align}
 In short, for the special case of small body velocities, the lift and the drag vector of the right wing resolved in $\mathcal{F}_R$ are given by \eqref{eqn:U_R}--\eqref{eqn:alpha_R}.
 
@@ -616,16 +712,189 @@ which is resolved in $\mathcal{F}_R$.
     \item[$M_R\in\Re^3$]  the moment about the root of the right wing cased by $L_R$ and $D_R$, resolved in $\mathcal{F}_R$.
 \end{itemize}
 
-\paragraph{Rotational Force}
+\subsubsection{Rotational Force}
 
 \newcommand{\rot}{\mathrm{rot}}
 According to~\cite{sane2002aerodynamic}, the magnitude of the rotational lift for the infinitesimal wing segment is given by
 \[
- \rho \|U(r)\| C_\rot |\dot\alpha(r)|  c^2(r) dr
+ \rho \|U(r)\| C_\rot |\dot\alpha(r)|  c^2(r) dr,
 \]
+where the last part $C_\rot |\dot\alpha(R)| c^2$ corresponds to the rotational circulation.
+From \eqref{eqn:alpha_R}, the time-derivative of the angle of attack is given by
+\begin{align}
+    \dot \alpha & = \frac{1}{\sin\alpha} \braces{ |e_1^T U|\frac{U^T \dot U}{\|U\|^3} - \frac{\mathrm{sgn}(e_1^T U)(e_1^T \dot U)}{\|U\|}} \nonumber\\
+    & = \frac{1}{\cos\alpha} \braces{ -|e_3^T U|\frac{U^T \dot U}{\|U\|^3} + \frac{\mathrm{sgn}(e_3^T U)(e_3^T \dot U)}{\|U\|}}.
+\end{align}
+Either one of the above can be used to avoid singularity. 
+
+Next, we find the direction of the rotational lift. 
+It is shown that the rotational lift is always perpendicular to the chord line, and consequently it is $\pm e_3$ in $\mathcal{F}_R$. 
+Consider the four cases of $\alpha >0$ illustrated in Figure \ref{fig:lift_direction}.
+For the first two cases of $e_3^T U >0$, $\dot\alpha >0$ generates the rotational lift along $-e_3$, and for the last two cases of $e_3^T U(r) <0$,  $\dot\alpha>0$ generates the rotational lift along $e_3$. 
+Therefore, when $\alpha >0$, the direction of the rotational lift is $-\mathrm{sgn}(e_3^T U) \mathrm{sgn}(\dot\alpha) e_3$.
+
+\begin{figure}[h]
+    \centerline{
+        \footnotesize
+        \subfigure[Case 1]{
+            \begin{picture}(2.5,2.5)(0,0)
+                \put(1.25,1.25){\vector(-2,0){1}}
+                \put(1.25,1.25){\vector(0,1){1}}
+                \put(0.25,1.20){\vector(0,-1){0.3}}
+                \put(0.0,1.35){$U(r)$}
+                \put(0.0,0.65){$e_3^T\dot U(r)>0$}
+                \put(1.3,2.2){$F_\rot$}
+                \put(1.25,1.25){\line(1,0){1}}
+                \put(1.55,1.3){chord}
+                \linethickness{0.1em}
+                \put(1.25,1.25){\vector(-1,0){0.6}}
+                \put(1.25,1.25){\vector(0,-1){0.6}}
+                \put(0.75,1.35){$\mathbf{r}_x$}
+                \put(1.3,0.6){$\mathbf{r}_z$}
+            \end{picture}
+        }
+        \subfigure[Case 2]{
+            \begin{picture}(2.5,2.5)(0,0)
+                \put(1.25,1.25){\vector(-2,0){1}}
+                \put(1.25,1.25){\vector(0,-1){1}}
+                \put(0.25,1.3){\vector(0,1){0.3}}
+                \put(0.0,1.05){$U(r)$}
+                \put(0.0,1.7){$e_3^T\dot U(r)<0$}
+                \put(1.3,0.2){$F_\rot$}
+                \put(1.25,1.25){\line(1,0){1}}
+                \put(1.55,1.3){chord}
+                \linethickness{0.1em}
+                \put(1.25,1.25){\vector(-1,0){0.6}}
+                \put(1.25,1.25){\vector(0,-1){0.6}}
+                \put(0.75,1.35){$\mathbf{r}_x$}
+                \put(1.3,0.6){$\mathbf{r}_z$}
+            \end{picture}
+        }
+        \subfigure[Case 3]{
+            \begin{picture}(2.5,2.5)(0,0)
+                \put(1.25,1.25){\vector(2,0){1}}
+                \put(1.25,1.25){\vector(0,1){1}}
+                \put(2.25,1.20){\vector(0,-1){0.3}}
+                \put(2.0,1.35){$U(r)$}
+                \put(1.8,0.65){$e_3^T\dot U(r)>0$}
+                \put(1.3,2.2){$F_\rot$}
+                \put(1.25,1.25){\line(-1,0){1}}
+                \put(0.3,1.0){chord}
+                \linethickness{0.1em}
+                \put(1.25,1.25){\vector(-1,0){0.6}}
+                \put(1.25,1.25){\vector(0,-1){0.6}}
+                \put(0.75,1.35){$\mathbf{r}_x$}
+                \put(1.3,0.6){$\mathbf{r}_z$}
+            \end{picture}
+        }
+        \subfigure[Case 4]{
+            \begin{picture}(2.5,2.5)(0,0)
+                \put(1.25,1.25){\vector(2,0){1}}
+                \put(1.25,1.25){\vector(0,-1){1}}
+                \put(2.25,1.3){\vector(0,1){0.3}}
+                \put(2.0,1.05){$U(r)$}
+                \put(1.8,1.7){$e_3^T\dot U(r)<0$}
+                \put(1.3,0.2){$F_\rot$}
+                \put(1.25,1.25){\line(-1,0){1}}
+                \put(0.3,1.0){chord}
+                \linethickness{0.1em}
+                \put(1.25,1.25){\vector(-1,0){0.6}}
+                \put(1.25,1.25){\vector(0,-1){0.6}}
+                \put(0.75,1.35){$\mathbf{r}_x$}
+                \put(1.3,0.6){$\mathbf{r}_z$}
+            \end{picture}
+        }
+    }
+    \caption{Direction of the rotational lift when $\alpha=0$}\label{fig:lift_rot}
+\end{figure}
+
+For the case of $\alpha=0$, the direction of the rotational lift is illustrated in Figure \ref{fig:lift_rot}, where the rotational lift is always opposite to $e_3^T \dot U$.
+Therefore, its direction is given by $-\mathrm{sgn}(e_3^T \dot U) e_3$. 
+
+These two cases can be combined into
+\begin{equation}
+    \mathrm{sgn}(\alpha(r))\{-\mathrm{sgn}(e_3^T U(r) )\mathrm{sgn}(\dot \alpha(r)) \} + (1-\mathrm{sgn}(\alpha(r)))\{-\mathrm{sgn}(e_3^T \dot U(r)) \},
+\end{equation}
+which takes the value of $\pm 1$. 
+For convenience, define
+\begin{equation}
+    \mathrm{sgn}_\rot (r) = \mathrm{sgn}(\dot\alpha(r))\bracket{
+    \mathrm{sgn}(\alpha(r))\{-\mathrm{sgn}(e_3^T U(r) )\mathrm{sgn}(\dot \alpha(r)) \} + (1-\mathrm{sgn}(\alpha(r)))\{-\mathrm{sgn}(e_3^T \dot U(r)) \}}.
+\end{equation}
+Since $|\dot\alpha| = |\dot\alpha| (\mathrm{sgn}(\dot\alpha))^2 = \dot\alpha \mathrm{sgn}(\dot\alpha)$, the infinitesimal rotational force resolved in $\mathcal{F}_R$ is 
+\begin{align*}
+d F_\rot & = - \rho \|U(r)\| C_\rot \dot\alpha(r) \mathrm{sgn}_\rot (r) e_3  c^2(r) dr,
+\end{align*}
+which is integrated to obtain the rotational force
+\begin{align*}
+    F_\rot = \int_0^{l} dF_\rot.
+\end{align*}
+
+\paragraph{Special Case: Small Body Velocities}
+
+As discussed above, when $\|\dot x\|,\|\Omega\|, \|v_{\mathrm{wind}}\| \ll 1$, $U(r)$ reduces to
+\[
+    U(r) = r \Omega_R \times e_2,
+\]
+so that $\alpha,\dot\alpha$ remains fixed span-wise. 
+Thus,
+\begin{align*}
+    F_\rot & = - \rho C_\rot  \|\Omega_R \times e_2 \| \dot\alpha(t)\; \mathrm{sgn}_\rot(t)  e_3 \int_0^l r c^2(r) dr,
+\end{align*}
+Substituting \eqref{eqn:int_rc2dr},
+\begin{align*}
+    F_\rot & = - \rho C_\rot  \|\Omega_R \times e_2 \| \dot\alpha(t)\; \mathrm{sgn}_\rot(t)  e_3 l^2 \bar c^2 \tilde v \tilde r_1(v).
+\end{align*}
+Substituting \eqref{eqn:U_R}, 
+\begin{align}
+    F_\rot & = - \rho C_\rot  \|U_R \| \dot\alpha(t)\; \mathrm{sgn}_\rot(t)  e_3 l \bar c^2 \frac{\tilde v \tilde r_1(v)}{\tilde r_2}. \label{eqn:F_rot}
+\end{align}
+
+\paragraph{Moment Generated by Rotational Force}
+
+The above rotational force generate the moment about the wing root as follows.
+\[
+    M_\rot = \int_0^l re_2 \times d F_\rot.
+\]
+Define $r_\rot\in\Re$ such that the above moment is equivalent to the rotational force acting on $r_\rot e_2$, i.e.,
+\begin{equation}
+    M_\rot = r_\rot e_2 \times F_\rot.
+\end{equation}
+For the special case presented above, using \eqref{eqn:int_rc2dr} and \eqref{eqn:int_r2c2dr}, one can show
+\begin{align}
+    r_\rot & = \frac{\int_0^l r^2 c^2(r) dr}{\int_0^l r c^2(r) dr} = \frac{l\tilde r_2^2(v)}{\tilde r_1(v)}.
+\end{align}
 
 
 
+
+\appendix
+
+\subsection*{Appendix}
+
+\subsubsection*{Hat Map}
+
+For $x=(x_1,x_2,x_3)\in\Re^3$, 
+\begin{align}
+    \hat x = \begin{bmatrix}
+        0 & -x_3 & x_2 \\
+        x_3 & 0 & -x_1 \\
+        -x_2 & x_1 & 0 
+    \end{bmatrix},
+\end{align}
+
+
+\subsubsection*{Sign Function}
+
+For $x\in\Re$, 
+\begin{align}
+    \mathrm{sgn}(x) =
+    \begin{cases}
+        1 &  x>0,\\
+        0 &  x=0,\\
+        -1 & x<0.
+    \end{cases}
+\end{align}
 
 
 
