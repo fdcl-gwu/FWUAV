@@ -319,10 +319,18 @@ Let $f\in\Re$ be the frequency of the flapping.
 
 The flapping angle is given by a smoothed triangular waveform,
 \begin{align}
-    \phi(t) & = \frac{\phi_m}{\sin^{-1} \phi_K}\sin^{-1}(\phi_K\sin(2\pi f t)) + \phi_0,
+    \phi(t) & = \frac{\phi_m}{\sin^{-1} \phi_K}\sin^{-1}(\phi_K\cos(2\pi f t)) + \phi_0,\label{eqn:phi}
 \end{align}
 where $\phi_m\in\Re$ is the amplitude of flapping, and $\phi_0\in\Re$ is the offset. 
-The parameter $\phi_K\in(0,1)$ determines the shape of flapping waveform (sinusoidal when $\phi_K\rightarrow 0$; triangular when $\phi_K\rightarrow 1$).
+The parameter $0 < \phi_K \leq 1$ determines the shape of flapping waveform (sinusoidal when $\phi_K\rightarrow 0$; triangular when $\phi_K\rightarrow 1$).
+The initial pitch angle is $\phi(0)=\phi_m+\phi_0$.
+During $0\leq t \leq \frac{1}{2f}$, the pitch angle decreases to $\phi(\frac{1}{2f}) = -\phi_m+\phi_0$. 
+Therefore, it represents upstroke when $0\leq t \leq \frac{1}{2f}$, and it represents downstroke when $\frac{1}{2f} \leq t \leq \frac{}{f}$.
+
+In~\cite{berman2007energy}, the inner term is given by $\sin(2\pi f t)$, instead of $\cos(2\pi f t)$ in~\eqref{eqn:phi}. 
+By following the convention of~\cite{bluman2017wing}, we use the cosine.
+This is to ensure that in the subsequent expression of the pitch angle, the pitch angle reversal happens at the end of the downstroke or at the end of upstorke when there is no phase offset ($\theta_a=0$).
+
 \nomenclature{$\phi_m\in[0,\frac{\pi}{2}]$}{flapping amplitude\nomrefeq}
 \nomenclature{$\phi_o\in[\theta_m-\frac{\pi}{2},\frac{\pi}{2}-\theta_m]$}{flapping offset\nomrefeq}
 \nomenclature{$\phi_K\in(0,1)$}{flapping waveform parameter\nomrefeq}
@@ -334,7 +342,7 @@ The pitch angle is given by a hyperbolic function,
 where $\theta_m\in\Re$ is the amplitude of pitching, and $\theta_0\in\Re$ is the offset. 
 The parameter $\theta_C\in(0,\infty)$ determines the waveform (sinusoidal when $\theta_C\rightarrow 0$; step function when $\theta_C\rightarrow \infty$).
 The value of $\theta_C$ is related to the duration of the wing pitch reversal. 
-The parameter $\theta_a\in(-\pi,\pi)$ describes the offset in phase. 
+The parameter $\theta_a\in(-\pi,\pi)$ describes the offset in phase (advance rotation for $\theta_a>0$; symmetric rotation for $\theta_a=0$; delayed rotation for $\theta_a<0$).
 \nomenclature{$\theta_m\in[0,\frac{\pi}{2}]$}{pitching amplitude\nomrefeq}
 \nomenclature{$\theta_o\in[\theta_m-\pi,\pi-\theta_m]$}{pitching offset\nomrefeq}
 \nomenclature{$\theta_C\in(0,\infty)$}{pitching waveform parameter\nomrefeq}
@@ -347,12 +355,18 @@ Finally, the deviation angle is given by a sinusoidal oscillation,
 where $\psi_m\in\Re$ is the amplitude of the deviation, and $\psi_0\in\Re$ is the offset. 
 The parameter $\psi_N$ is either 1 or 2: $\psi_N=1$ corresponds to one oscillation per a flapping period, and $\psi_N=2$ corresponds to a figure-eight motion. 
 The parameter $\psi_a\in(-\pi,\pi)$ describes the offset in phase. 
+See Figure \ref{fig:wing_kinematics} for the trajectories of these angles for selected parameters. 
 \nomenclature{$\psi_m\in\Re$}{deviation amplitude\nomrefeq}
 \nomenclature{$\psi_o\in\Re$}{deviation offset\nomrefeq}
 \nomenclature{$\psi_N\in\{1,2\}$}{deviation oscillation per a flapping\nomrefeq}
 \nomenclature{$\psi_a\in(-\pi,\pi)$}{deviation phase offset\nomrefeq}
 
-
+\begin{figure}
+    \centerline{
+        \includegraphics[width=0.7\textwidth]{wing_kinematics}
+    }
+    \caption{Wing kinematics when $\phi_m=50^\circ$, $\phi_0=10^\circ$, $\theta_m=45^\circ$, $\theta_0=0$, $\theta_a=0.3$, $\phi_m=10^\circ$, $\phi_0=\phi_a=0$}\label{fig:wing_kinematics} 
+\end{figure}
 
 
 

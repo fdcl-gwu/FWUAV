@@ -9,77 +9,60 @@ II=eye(3);
 
 load fv_monarch;
 
-%% wing kinematics
-N=301;
-WK.Z=50*pi/180;
-WK.K=0.5;
+%% Wing kinematics
+
 WK.f=50;
+WK.beta=5*pi/180;
+N=301;
+T=5/WK.f;
+t=linspace(0,T,N);
+
+WK.phi_m=50*pi/180;
+WK.phi_K=0.4;
 WK.phi_0=10*pi/180;
 
-WK.Ca=1;
-WK.A=45*pi/180;
-WK.theta_0=-0.3;
+WK.theta_m=45*pi/180;
+WK.theta_C=2;
+WK.theta_0=0;
+WK.theta_a=0.3;
 
-beta=10*pi/180;
-t=linspace(0,5/WK.f,N);
-for k=1:N
-    [phi(k) theta(k) psi(k)]=wing_kinematics(t(k),WK);
-end
-
-figure(1);
-subplot(3,1,1);
-plot(t,phi*180/pi,'r');
-grid on;
-ylabel('$\phi$','interpreter','latex');
-
-subplot(3,1,2);
-plot(t,theta*180/pi,'r');
-grid on;
-ylabel('$\theta$','interpreter','latex');
-
-subplot(3,1,3);
-plot(t,psi*180/pi,'r');
-grid on;
-ylabel('$\psi$','interpreter','latex');
-xlabel('$t$','interpreter','latex');
+WK.psi_m=0*pi/180;
+WK.psi_N=2;
+WK.psi_a=0;
+WK.psi_0=0;
 
 %% generate figures for the note
-fig_note(fv_body, fv_wr, fv_wl, true);
+%fig_note(fv_body, fv_wr, fv_wl, true);
 
 %% generate the initial object when k=1
 k=1;
 x=[0 0 0]';
 R=expmso3(pi/3*e2);
 
-[Q_R Q_L]=wing_attitude(beta,phi(k),theta(k),psi(k));
+Euler=wing_kinematics(t(k),WK);
+[Q_R Q_L]=wing_attitude(WK.beta, Euler);
 h_fig=figure('color','w');
-[h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L);
+[h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[1 0 0]);
 
 %% animation
 
 for k=floor(linspace(1,N,101))
-    [Q_R Q_L]=wing_attitude(beta,phi(k),theta(k),psi(k));
+    Euler=wing_kinematics(t(k),WK);
+    [Q_R Q_L]=wing_attitude(WK.beta, Euler);    
     update_monarch(h_fig,[h_body, h_wr, h_wl], fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L)
 end
 
 %% save
 filename='ani_monarch';
-save(filename);
+varData = whos;
+saveIndex = cellfun(@isempty, regexp({varData.class}, 'matlab.(graphics|ui)'));
+saveVars = {varData(saveIndex).name};
+save(filename,saveVars{:});
 evalin('base',['load ' filename]);
 
 end
 
-function [phi theta psi]=wing_kinematics(t,WK)
-phi=WK.Z/asin(WK.K)*asin(WK.K*cos(2*pi*WK.f*t))+WK.phi_0;
-theta=WK.A/tanh(WK.Ca)*tanh(WK.Ca*sin(2*pi*WK.f*t-WK.theta_0));
-psi=0*pi/180;
-end
 
-function [Q_R Q_L]=wing_attitude(beta,phi,theta,psi)
-global e1 e2 e3
-Q_R=expmso3(beta*e2)*expmso3(phi*e1)*expmso3(-psi*e3)*expmso3(theta*e2);
-Q_L=expmso3(beta*e2)*expmso3(-phi*e1)*expmso3(psi*e3)*expmso3(theta*e2);
-end
 
 function [v_body, v_wr, v_wl]=compute_vertices(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L)
 v_body=zeros(size(fv_body.vertices));
@@ -98,11 +81,11 @@ end
 
 end
 
-function [h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, varargin)
+function [h_body, h_wr, h_wl, h_FB, h_FR, f_FL]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, varargin)
 if nargin < 8
     bool_FB=true; % show the body-fixed frame
-    bool_FR=true; % show the right wing frame
-    bool_FL=true; % show the left wing frame
+    bool_FR=false; % show the right wing frame
+    bool_FL=false % show the left wing frame
 else
     bool_FB=varargin{1}(1);
     bool_FR=varargin{1}(2);
@@ -140,7 +123,7 @@ awidth=alength*tand(10);
 if bool_FB
     acolor=[0 0 1];
     for i=1:3
-        myarrow(x', x'+140*(R*II(:,i))', acolor, lwidth, alength, awidth);
+        h_FB(i)=myarrow(x', x'+140*(R*II(:,i))', acolor, lwidth, alength, awidth);
     end
 end
 
@@ -148,7 +131,7 @@ acolor=[1 0 0];
 mu_R=[12 8 -3]';
 if bool_FR
     for i=1:3
-        myarrow(R*mu_R, R*mu_R+ 120*R*Q_R*II(:,i), acolor, lwidth, alength, awidth);
+        h_FR(i)=myarrow(R*mu_R, R*mu_R+ 120*R*Q_R*II(:,i), acolor, lwidth, alength, awidth);
     end
 end
 
@@ -156,7 +139,7 @@ acolor=[1 0 0];
 mu_L=[12 -8 -3]';
 if bool_FL
     for i=1:3
-        myarrow(R*mu_L, R*mu_L+ 120*R*Q_R*II(:,i), acolor, lwidth, alength, awidth);
+        h_FL(i)=myarrow(R*mu_L, R*mu_L+ 120*R*Q_R*II(:,i), acolor, lwidth, alength, awidth);
     end
 end
 
@@ -235,7 +218,7 @@ x=[0 0 0]';
 R=expmso3(pi/6*e2);
 patch_circle(R*mu_R, R*expmso3(beta*e2)*e1, 170);
 
-[Q_R Q_L]=wing_attitude(beta,-pi/6,0,0);
+[Q_R Q_L]=wing_attitude(beta,[-pi/6,0,0]);
 [h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [1 0 0]);
 alpha([h_body, h_wr, h_wl],0.8);
 hold on;
@@ -254,7 +237,7 @@ x=[0 0 0]';
 R=expmso3(pi/6*e2);
 beta=15*pi/180;
 
-[Q_R Q_L]=wing_attitude(beta,pi/3,0,0);
+[Q_R Q_L]=wing_attitude(beta,[pi/3,0,0]);
 [h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [0 0 0]);
 alpha([h_body, h_wr, h_wl],0.9);
 hold on;
@@ -276,7 +259,7 @@ x=[0 0 0]';
 R=expmso3(pi/6*e2);
 beta=15*pi/180;
 
-[Q_R Q_L]=wing_attitude(beta,0,pi/6,0);
+[Q_R Q_L]=wing_attitude(beta,[0,pi/6,0]);
 [h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [0 0 0]);
 alpha([h_body, h_wr, h_wl],0.9);
 hold on;
@@ -299,7 +282,7 @@ x=[0 0 0]';
 R=expmso3(pi/6*e2);
 beta=15*pi/180;
 
-[Q_R Q_L]=wing_attitude(beta,0,0,pi/12);
+[Q_R Q_L]=wing_attitude(beta,[0,0,pi/12]);
 [h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [0 0 0]);
 alpha([h_body, h_wr, h_wl],0.9);
 hold on;
@@ -397,3 +380,5 @@ for k=1:N
 end
 line(x_arc(1,:),x_arc(2,:),x_arc(3,:),'linewidth',1,'color',[0 0 0]);
 end
+
+
