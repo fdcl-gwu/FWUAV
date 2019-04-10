@@ -23,8 +23,8 @@ WK.psi_a=rand;
 WK.psi_0=rand;
 
 for k=1:N
-    [E_R(:,k) E_R_dot(:,k)]=wing_kinematics(t(k),WK);
-    [Q_R(:,:,k) Q_L(:,:,k) W_R(:,k) W_L(:,k)]=wing_attitude(WK.beta, E_R(:,k), E_R(:,k), E_R_dot(:,k), E_R_dot(:,k));
+    [E_R(:,k) E_R_dot(:,k) E_R_ddot(:,k)]=wing_kinematics(t(k),WK);
+    [Q_R(:,:,k) Q_L(:,:,k) W_R(:,k) W_L(:,k) W_R_dot(:,k) W_L_dot(:,k)]=wing_attitude(WK.beta, E_R(:,k), E_R(:,k), E_R_dot(:,k), E_R_dot(:,k), E_R_ddot(:,k), E_R_ddot(:,k));
 end
 
 for k=1:N-1
@@ -33,19 +33,45 @@ for k=1:N-1
 end
 
 figure;
-subplot(3,1,1);
-plot(t,E_R_dot(1,:),'r',t(2:end),diff(E_R(1,:))./diff(t),'b--');
-ylabel('$\dot\phi$','interpreter','latex');
-subplot(3,1,2);
-plot(t,E_R_dot(2,:),'r',t(2:end),diff(E_R(2,:))./diff(t),'b--');
-ylabel('$\dot\theta$','interpreter','latex');
-subplot(3,1,3);
-plot(t,E_R_dot(3,:),'r',t(2:end),diff(E_R(3,:))./diff(t),'b--');
-ylabel('$\dot\psi$','interpreter','latex');
+my_ylabel={'$\dot\phi$','$\dot\theta$','$\dot\psi$'};
+for ii=1:3
+    subplot(3,1,ii);
+    plot(t,E_R_dot(ii,:),'r',t(2:end),diff(E_R(ii,:))./diff(t),'b--');
+    ylabel(my_ylabel{ii},'interpreter','latex');
+end
 
 figure;
-plot(t,W_R,'r',t(2:end),W_R_diff,'b--');
-ylabel('$\Omega_R$','interpreter','latex');
+my_ylabel={'$\ddot\phi$','$\ddot\theta$','$\ddot\psi$'};
+for ii=1:3
+    subplot(3,1,ii);
+    plot(t,E_R_ddot(ii,:),'r',t(2:end),diff(E_R_dot(ii,:))./diff(t),'b--');
+    ylabel(my_ylabel{ii},'interpreter','latex');
+end
+
 figure;
-plot(t,W_L,'r',t(2:end),W_L_diff,'b--');
-ylabel('$\Omega_L$','interpreter','latex');
+for ii=1:3
+    subplot(3,1,ii);
+    plot(t,W_R(ii,:),'r',t(2:end),W_R_diff(ii,:),'b--');
+end
+subplot(3,1,2);ylabel('$\Omega_R$','interpreter','latex');
+
+figure;
+for ii=1:3
+    subplot(3,1,ii);
+    plot(t,W_L(ii,:),'r',t(2:end),W_L_diff(ii,:),'b--');
+end
+subplot(3,1,2);ylabel('$\Omega_L$','interpreter','latex');
+
+figure;
+for ii=1:3
+    subplot(3,1,ii);
+    plot(t,W_R_dot(ii,:),'r',t(2:end),diff(W_R(ii,:)')'./diff(t),'b--');
+end
+subplot(3,1,2);ylabel('$\dot\Omega_R$','interpreter','latex');
+
+figure;
+for ii=1:3
+    subplot(3,1,ii);
+    plot(t,W_L_dot(ii,:),'r',t(2:end),diff(W_L(ii,:)')'./diff(t),'b--');
+end
+subplot(3,1,2);ylabel('$\dot\Omega_L$','interpreter','latex');

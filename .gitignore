@@ -9,5 +9,11 @@
 *.pdf
 *.bib.bak
 *.out
-/Master-noRobust
-Master-noRobust/
+*.fdb_latexmk
+*.fls
+*.ilg
+*.nlo
+*.nls
+*.toc
+*~
+.DS_Store

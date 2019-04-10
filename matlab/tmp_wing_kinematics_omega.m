@@ -24,13 +24,13 @@ T=[diff(W,phi_dot), diff(W,theta_dot), diff(W,psi_dot)];
 simplify(W-T*[phi_dot; theta_dot; psi_dot])
 simplify(Q_dot-Q*hat(W))
 
+return;
 beta=rand; phi=-rand;theta=-rand;psi=-rand;
 phi_dot=rand; psi_dot=rand; theta_dot=rand;
 Q_exp=expmso3(phi*e1)*expmso3(-psi*e3)*expmso3(theta*e2);
-
 disp(norm(vpa(subs(Q))-Q_exp));
-disp(norm(vpa(subs(Q_dot))-vpa(subs(Q*hat(W)))   ));
-return;
+
+
 
 %% left wing
 %phi=-rand;theta=-rand;psi=-rand;

@@ -82,4 +82,4 @@ set(gca,'XTick',[0 0.5 1]);
 set(gca,'FontSize',14);
 
 print('wing_kinematics','-depsc');
-!cp wing_kinematics.eps ../doc/Figs
+!mv wing_kinematics.eps ../doc/Figs
