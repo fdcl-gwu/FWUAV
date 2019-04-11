@@ -26,10 +26,12 @@ WK.theta_C=2;
 WK.theta_0=0;
 WK.theta_a=0.3;
 
-WK.psi_m=0*pi/180;
+WK.psi_m=1*pi/180;
 WK.psi_N=2;
 WK.psi_a=0;
 WK.psi_0=0;
+
+load('morp_MONARCH');
 
 %% generate figures for the note
 %fig_note(fv_body, fv_wr, fv_wl, true);
@@ -39,17 +41,40 @@ k=1;
 x=[0 0 0]';
 R=expmso3(pi/3*e2);
 
-Euler=wing_kinematics(t(k),WK);
-[Q_R Q_L]=wing_attitude(WK.beta, Euler);
+[Euler Euler_dot Euler_ddot]=wing_kinematics(t(k),WK);
+[Q_R Q_L W_R W_L W_R_dot W_L_dot]=wing_attitude(WK.beta, Euler, Euler, Euler_dot, Euler_dot, Euler_ddot, Euler_ddot);
 h_fig=figure('color','w');
-[h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[1 0 0]);
+[h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[0 0 0]);
+[L_R D_R M_R F_rot_R M_rot_R alpha U_alpha_dot U_R]=wing_QS_aerodynamics(MONARCH, W_R, W_R_dot);
 
+x_cp = x + R*Q_R*50*e2;
+lwidth=1;
+alength=12;
+awidth=alength*tand(10);
+scale_Force=0.5e6;
+acolor=[1 0 0]';
+[h_La, h_Ll]=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*L_R, acolor, lwidth, alength, awidth);
+acolor=[0 0 1]';
+[h_Da, h_Dl]=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*D_R, acolor, lwidth, alength, awidth);
+acolor=[0.72,0.27,1.00]';
+[h_Fa, h_Fl]=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*(D_R+L_R), acolor, lwidth, alength, awidth);
+acolor=[0 1 0]';
+[h_F_rot_a, h_F_rot_l]=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*(F_rot_R), acolor, lwidth, alength, awidth);
+acolor=[0 0 0]';
+[h_F_tot_a, h_F_tot_l]=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*(D_R+L_R+F_rot_R), acolor, lwidth, alength, awidth);
 %% animation
 
 for k=floor(linspace(1,N,101))
-    Euler=wing_kinematics(t(k),WK);
-    [Q_R Q_L]=wing_attitude(WK.beta, Euler);    
-    update_monarch(h_fig,[h_body, h_wr, h_wl], fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L)
+    [Euler Euler_dot Euler_ddot]=wing_kinematics(t(k),WK);
+    [Q_R Q_L W_R W_L W_R_dot W_L_dot]=wing_attitude(WK.beta, Euler, Euler, Euler_dot, Euler_dot, Euler_ddot, Euler_ddot);
+    [L_R D_R M_R F_rot_R M_rot_R alpha U_alpha_dot U_R]=wing_QS_aerodynamics(MONARCH, W_R, W_R_dot);
+    update_monarch(h_fig,[h_body, h_wr, h_wl], fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L);
+    x_cp = x + R*Q_R*50*e2;
+    update_arrow(h_La, h_Ll, x_cp, x_cp + scale_Force*R*Q_R*L_R, alength, awidth);
+    update_arrow(h_Da, h_Dl, x_cp, x_cp + scale_Force*R*Q_R*D_R, alength, awidth);
+    update_arrow(h_Fa, h_Fl, x_cp, x_cp + scale_Force*R*Q_R*(L_R+D_R), alength, awidth);   
+    update_arrow(h_F_rot_a, h_F_rot_l, x_cp, x_cp + scale_Force*R*Q_R*(F_rot_R), alength, awidth);
+    update_arrow(h_F_tot_a, h_F_tot_l, x_cp, x_cp + scale_Force*R*Q_R*(D_R+L_R+F_rot_R), alength, awidth);
 end
 
 %% save
@@ -123,7 +148,7 @@ awidth=alength*tand(10);
 if bool_FB
     acolor=[0 0 1];
     for i=1:3
-        h_FB(i)=myarrow(x', x'+140*(R*II(:,i))', acolor, lwidth, alength, awidth);
+        h_FB(i)=patch_arrow(x', x'+140*(R*II(:,i))', acolor, lwidth, alength, awidth);
     end
 end
 
@@ -131,7 +156,7 @@ acolor=[1 0 0];
 mu_R=[12 8 -3]';
 if bool_FR
     for i=1:3
-        h_FR(i)=myarrow(R*mu_R, R*mu_R+ 120*R*Q_R*II(:,i), acolor, lwidth, alength, awidth);
+        h_FR(i)=patch_arrow(R*mu_R, R*mu_R+ 120*R*Q_R*II(:,i), acolor, lwidth, alength, awidth);
     end
 end
 
@@ -139,7 +164,7 @@ acolor=[1 0 0];
 mu_L=[12 -8 -3]';
 if bool_FL
     for i=1:3
-        h_FL(i)=myarrow(R*mu_L, R*mu_L+ 120*R*Q_R*II(:,i), acolor, lwidth, alength, awidth);
+        h_FL(i)=patch_arrow(R*mu_L, R*mu_L+ 120*R*Q_R*II(:,i), acolor, lwidth, alength, awidth);
     end
 end
 
@@ -182,7 +207,7 @@ lwidth=1;
 alength=12;
 awidth=alength*tand(10);
 for i=1:3
-    myarrow([0 0 0], 50*(II(:,i))', acolor, lwidth, alength, awidth);
+    patch_arrow([0 0 0], 50*(II(:,i))', acolor, lwidth, alength, awidth);
 end
 axis auto;
 
@@ -227,7 +252,7 @@ camlight;
 
 x0=R*[mu_R(1) 0 0]'; % origin of the unit vector normal to the stroke plane
 for i=1:3
-    myarrow(x0, x0 + 100*R*expmso3(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
+    patch_arrow(x0, x0 + 100*R*expmso3(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
 end
 plot_arc(x0, R*expmso3(beta*e2)*e1, R*e1, 70);
 
@@ -248,8 +273,8 @@ axis auto;
 
 x0=R*mu_R;
 for i=2
-    myarrow(x0, x0 + 100*R*Q_R*II(:,i), [1 0 0], lwidth, alength, awidth);
-    myarrow(x0, x0 + 100*R*expmso3(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
+    patch_arrow(x0, x0 + 100*R*Q_R*II(:,i), [1 0 0], lwidth, alength, awidth);
+    patch_arrow(x0, x0 + 100*R*expmso3(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
     plot_arc(x0, R*Q_R*II(:,i), R*expmso3(beta*e2)*II(:,i), 40);
 end
 
@@ -270,8 +295,8 @@ axis auto;
 
 x0=R*[0 mu_R(2) mu_R(3)]';
 for i=1
-    myarrow(x0, x0 + 100*R*Q_R*II(:,i), [1 0 0], lwidth, alength, awidth);
-    myarrow(x0, x0 + 100*R*expmso3(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
+    patch_arrow(x0, x0 + 100*R*Q_R*II(:,i), [1 0 0], lwidth, alength, awidth);
+    patch_arrow(x0, x0 + 100*R*expmso3(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
     plot_arc(x0, R*Q_R*II(:,i), R*expmso3(beta*e2)*II(:,i), 40);
 end
 
@@ -292,8 +317,8 @@ axis auto;
 
 x0=R*[mu_R(1) mu_R(2) -20]';
 for i=2
-    myarrow(x0, x0 + 100*R*Q_R*II(:,i), [1 0 0], lwidth, alength, awidth);
-    myarrow(x0, x0 + 100*R*expmso3(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
+    patch_arrow(x0, x0 + 100*R*Q_R*II(:,i), [1 0 0], lwidth, alength, awidth);
+    patch_arrow(x0, x0 + 100*R*expmso3(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
     plot_arc(x0, R*Q_R*II(:,i), R*expmso3(beta*e2)*II(:,i), 40);
 end
 
@@ -379,6 +404,66 @@ for k=1:N
     x_arc(:,k)=x0+rad*(r1*cos(theta(k))+r2*sin(theta(k)));
 end
 line(x_arc(1,:),x_arc(2,:),x_arc(3,:),'linewidth',1,'color',[0 0 0]);
+end
+
+function [ha hl]=patch_arrow(p1,p2,acolor,lwidth,alength,awidth)
+% acolor=[0 0 1];
+% alength=1;
+% awidth=1;
+% lwidth=1;
+
+if size(p1,1)>1
+    p1=p1(:)';
+end
+if size(p2,1)>1
+    p2=p2(:)';
+end
+
+dir=(p2-p1)/norm(p2-p1);
+origin=p2-alength*dir;
+
+tmp=rand(3,1);
+base1=cross(dir,tmp)/norm(cross(dir,tmp));
+base2=cross(dir,base1);
+
+N=20;
+theta=linspace(0,2*pi,N);
+for a=1:N
+    vertice(a,:)=origin+awidth*cos(theta(a))*base1+awidth*sin(theta(a))*base2;
+end
+vertice=[vertice;origin;origin+alength*dir];
+faces=[1:N-1 1:N-1; 2:N 2:N; N+1*ones(1,N-1) N+2*ones(1,N-1)]';
+ha=patch('Vertices',vertice,'Faces',faces,'FaceColor',acolor,'LineStyle','none');
+hl=line([p1(1) origin(1)],[p1(2) origin(2)],[p1(3) origin(3)],'Color',acolor,'LineWidth',lwidth);
+
+end
+
+function update_arrow(ha, hl, p1,p2 ,alength,awidth)
+
+if size(p1,1)>1
+    p1=p1(:)';
+end
+if size(p2,1)>1
+    p2=p2(:)';
+end
+
+dir=(p2-p1)/norm(p2-p1);
+origin=p2-alength*dir;
+
+tmp=rand(3,1);
+base1=cross(dir,tmp)/norm(cross(dir,tmp));
+base2=cross(dir,base1);
+
+N=20;
+theta=linspace(0,2*pi,N);
+for a=1:N
+    vertice(a,:)=origin+awidth*cos(theta(a))*base1+awidth*sin(theta(a))*base2;
+end
+vertice=[vertice;origin;origin+alength*dir];
+faces=[1:N-1 1:N-1; 2:N 2:N; N+1*ones(1,N-1) N+2*ones(1,N-1)]';
+
+set(ha,'Vertices',vertice,'Faces',faces);
+set(hl,'XData',[p1(1) origin(1)], 'YData', [p1(2) origin(2)], 'ZData', [p1(3) origin(3)]);
 end
 
 

@@ -447,19 +447,20 @@ The non-dimensional radius of the $k$-th moment of wing area is defined as
     = \parenth{\frac{1}{Sl^k} \int_0^{l} r^k c(r) dr}^{\frac{1}{k}} 
     = \parenth{\int_0^1 \tilde r^k \tilde c d\tilde r}^{\frac{1}{k}}. \label{eqn:tilde_r_k}
 \end{align}
-
-\begin{itemize}[leftmargin=2.5cm]
-    \item[${\tilde r_k \in[0,1]}$]  non-dimensional radius of the $k$-th moment of wing area (this is equivalent to $\hat r_k$ in~\cite{ellington1984aerodynamics})
-\end{itemize}
+\nomenclature{${\tilde r_k \in\Re}$}{non-dimensional radius of the $k$-th moment of wing area (this is equivalent to $\hat r_k(S)$, or (7) of ~\cite{ellington1984aerodynamics})}
 
 Next, the normalized virtual mass is defined as
 \begin{align}
     \tilde v = \int_0^1 \tilde c^2 d\tilde r.
 \end{align}
+\nomenclature{${\tilde v \in\Re}$}{non-dimensional virtual mass of the wing (this is equivalent to $\hat v$, or (14) of ~\cite{ellington1984aerodynamics})}
+%
 And the corresponding normalized radius of the $k$-th moment of virtual mass is 
 \begin{align}
     \tilde r_k (v) = \parenth{ \frac{1}{\tilde v} \int_0^1 \tilde c^2 \tilde r^k d\tilde r }^{\frac{1}{k}}.
 \end{align}
+\nomenclature{${\tilde r_k(v) \in\Re}$}{non-dimensional radius of the $k$-th moment of wing volume (this is equivalent to $\hat r_k(v)$, or (16) of ~\cite{ellington1984aerodynamics})}
+
 
 Later, we need to compute the following quantity:
 \begin{align}
@@ -715,7 +716,7 @@ Define $r_{cp}\in\Re$ such that the above moment is equivalent to the lift and t
 \]
 For the special case discussed above, one can show
 \begin{align}
-    r_{cp} & = \dfrac{ \int_{0}^l r^3 c(r) dr}{\int_0^l r^2 c(r) dr} = \frac{S_3}{S_2} = \frac{Sl^3 \tilde r_3^3}{S l^2 \tilde s_2^2} = \frac{\tilde r_3^3}{\tilde r_2^2} l.
+    r_{cp} & = \dfrac{ \int_{0}^l r^3 c(r) dr}{\int_0^l r^2 c(r) dr} = \frac{S_3}{S_2} = \frac{Sl^3 \tilde r_3^3}{S l^2 \tilde r_2^2} = \frac{\tilde r_3^3}{\tilde r_2^2} l.
 \end{align}
 Therefore, the span-wise location of the center of pressure of the right wing is given by $r_{cp}e_2$, and the resulting moment about the wing root is
 \begin{align}
@@ -736,10 +737,11 @@ According to~\cite{sane2002aerodynamic}, the magnitude of the rotational lift fo
 where the last part $C_\rot |\dot\alpha(R)| c^2$ corresponds to the rotational circulation.
 From \eqref{eqn:alpha_R}, the time-derivative of the angle of attack is given by
 \begin{align}
-    \dot \alpha & = \frac{1}{\sin\alpha} \braces{ |e_1^T U|\frac{U^T \dot U}{\|U\|^3} - \frac{\mathrm{sgn}(e_1^T U)(e_1^T \dot U)}{\|U\|}} \nonumber\\
-    & = \frac{1}{\cos\alpha} \braces{ -|e_3^T U|\frac{U^T \dot U}{\|U\|^3} + \frac{\mathrm{sgn}(e_3^T U)(e_3^T \dot U)}{\|U\|}}.
+    \|U\| \dot \alpha & = \frac{1}{\sin\alpha} \braces{ \cos\alpha \frac{U^T \dot U}{\|U\|} - {\mathrm{sgn}(e_1^T U)(e_1^T \dot U)}} \nonumber\\
+    & = \frac{1}{\cos\alpha} \braces{ -\sin\alpha \frac{U^T \dot U}{\|U\|} + {\mathrm{sgn}(e_3^T U)(e_3^T \dot U)}}.
 \end{align}
-Either one of the above can be used to avoid singularity. 
+To avoid singularity caused by $\alpha$, the first expression is used when $\alpha$ is close to $\frac{\pi}{2}$, and the second expression is used when $\alpha$ is close to $0$. 
+Also, to mitigate the singularity caused by $\|U\|\ll 1$, we evaluate $\|U\|\dot\alpha$ in the numerical implementation, instead of computing $\dot\alpha$ directly.  
 
 Next, we find the direction of the rotational lift. 
 It is shown that the rotational lift is always perpendicular to the chord line, and consequently it is $\pm e_3$ in $\mathcal{F}_R$. 
@@ -837,7 +839,7 @@ For convenience, define
 \end{equation}
 Since $|\dot\alpha| = |\dot\alpha| (\mathrm{sgn}(\dot\alpha))^2 = \dot\alpha \mathrm{sgn}(\dot\alpha)$, the infinitesimal rotational force resolved in $\mathcal{F}_R$ is 
 \begin{align*}
-d F_\rot & = - \rho \|U(r)\| C_\rot \dot\alpha(r) \mathrm{sgn}_\rot (r) e_3  c^2(r) dr,
+d F_\rot & = \rho \|U(r)\| C_\rot \dot\alpha(r) \mathrm{sgn}_\rot (r) e_3  c^2(r) dr,
 \end{align*}
 which is integrated to obtain the rotational force
 \begin{align*}
@@ -853,15 +855,15 @@ As discussed above, when $\|\dot x\|,\|\Omega\|, \|v_{\mathrm{wind}}\| \ll 1$, $
 so that $\alpha,\dot\alpha$ remains fixed span-wise. 
 Thus,
 \begin{align*}
-    F_\rot & = - \rho C_\rot  \|\Omega_R \times e_2 \| \dot\alpha(t)\; \mathrm{sgn}_\rot(t)  e_3 \int_0^l r c^2(r) dr,
+    F_\rot & = \rho C_\rot  \|\Omega_R \times e_2 \| \dot\alpha(t)\; \mathrm{sgn}_\rot(t)  e_3 \int_0^l r c^2(r) dr,
 \end{align*}
 Substituting \eqref{eqn:int_rc2dr},
 \begin{align*}
-    F_\rot & = - \rho C_\rot  \|\Omega_R \times e_2 \| \dot\alpha(t)\; \mathrm{sgn}_\rot(t)  e_3 l^2 \bar c^2 \tilde v \tilde r_1(v).
+    F_\rot & = \rho C_\rot  \|\Omega_R \times e_2 \| \dot\alpha(t)\; \mathrm{sgn}_\rot(t)  e_3 l^2 \bar c^2 \tilde v \tilde r_1(v).
 \end{align*}
 Substituting \eqref{eqn:U_R}, 
 \begin{align}
-    F_\rot & = - \rho C_\rot  \|U_R \| \dot\alpha(t)\; \mathrm{sgn}_\rot(t)  e_3 l \bar c^2 \frac{\tilde v \tilde r_1(v)}{\tilde r_2}. \label{eqn:F_rot}
+    F_\rot & = \rho C_\rot  \|U_R \| \dot\alpha(t)\; \mathrm{sgn}_\rot(t)  e_3 l \bar c^2 \frac{\tilde v \tilde r_1(v)}{\tilde r_2}. \label{eqn:F_rot}
 \end{align}
 
 \paragraph{Moment Generated by Rotational Force}
