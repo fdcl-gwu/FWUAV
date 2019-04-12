@@ -78,23 +78,21 @@
 
 \subsection{Flapping Wing UAV Model}
 
-Consider a flapping wing UAV that is composed of a body, which is constituted of a head, a thorax, and an abdomen, and two wings attached to the thorax. 
+Consider a flapping wing UAV that is composed of a head, a thorax, an abdomen, and two wings attached to the thorax. 
+Here, we assume that the head, the thorax, and the abdomen are coagulated into a single rigid body, which is referred to as \textit{body}. 
 We plan to study the motion of the abdomen relative to the thorax in the future. 
-In this note, the combined head, thorax, and abdomen is referred to as either a body or a thorax. 
-
-
-\subsubsection{Body}
+Also, we do not distinguish hindwings from forewings. 
 
 Define an inertial frame $\mathcal{F}_I=\{\mathbf{i}_x,\mathbf{i}_y,\mathbf{i}_z\}$, where the third axis points downward, and the first two axes span the horizontal plane. 
-This is compatible to the NED (north-east-down) frame common in flight dynamics. 
+This is compatible to the NED (north-east-down) frame common in flight dynamics.
 \nomenclature{$\mathcal{F}_I$}{North-East-Down inertial frame}
 \nomenclature{$\mathbf{i}_x,\mathbf{i}_y,\mathbf{i}_z$}{basis vector of the inertial frame}
 
-\paragraph{Thorax/Body}
+\subsubsection{Body}
 
-Define a thorax-fixed frame or the body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$.
-Its origin is located at its mass center of the thorax.
-Following the common convention in flight dynamics, the first axis points toward the head, the second axis point toward the right wing, and the third axis points from the dorsal (back) side to the ventral (belly) side.
+Define the body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$,
+whose origin is located at its mass center of the body.
+Following the common convention in flight dynamics, the first axis points toward the head, the second axis point toward the right wing, and the third axis points toward the ventral (belly) side.
 \nomenclature{$\mathcal{F}_B$}{Body-fixed frame (see Figure \ref{fig:FI_FB})}
 \nomenclature{$\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z$}{basis vector of the body-fixed frame}
 
@@ -114,15 +112,25 @@ Following the common convention in flight dynamics, the first axis points toward
     \end{center}
     \caption{The inertial frame $\mathcal{F}_I=\{\mathbf{i}_x,\mathbf{i}_y,\mathbf{i}_z\}$ (black) and the body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue)}\label{fig:FI_FB}
 \end{figure}
-
-
-\begin{itemize}[leftmargin=2.5cm]
-    \item[$x\in\Re^3$]  the location of the mass center of the thorax represented in $\mathcal{F}_I$ 
-    \item[$R\in\SO$]    the linear transformation of the representation of a vector from $\mathcal{F}_B$ to $\mathcal{F}_I$
-    \item[$\Omega\in\Re^3$] the angular velocity of the thorax represented in $\mathcal{F}_B$
-    \item[$J\in\Re^{3\times 3}$] the moment of inertia of the thorax about its mass center represented in $\mathcal{F}_B$
-    \item[$m\in\Re$] the mass of the thorax
-\end{itemize}
+The location of the mass center is given by $x\in\Re^3$ in $\mathcal{F}_I$. 
+The attitude of the body is described by $R\in\SO=\{R^{3\times 3}\,|\, R^T R = I_{3\times 3},\; \mathrm{det}[R]=1\}$, which represents the linear transformation of a representation of a vector from $\mathcal{F}_B$ to $\mathcal{F}_I$. 
+The attitude kinematics is given by
+\begin{align}
+    \dot R = R \hat \Omega,
+\end{align}
+where $\Omega\in\Re^3$ is the angular velocity resolved in $\mathcal{F}_B$. 
+In the above equation, the \textit{hat} map $\wedge:\Re^3\rightarrow \so$ is defined such that $\hat x y = x\times y$ for any $x,y\in\Re^3$, or equivalently
+\begin{align}
+    \hat x = \begin{bmatrix}
+        0 & -x_3 & x_2 \\
+        x_3 & 0 & -x_1 \\
+        -x_2 & x_1 & 0 
+    \end{bmatrix},
+\end{align}
+for $x=(x_1,x_2,x_3)\in\Re^3$. 
+\nomenclature{$x\in\Re^3$}{the location of the mass center of the body represented in $\mathcal{F}_I$}
+\nomenclature{$R\in\SO$}{the attitude of the body, the linear transformation of the representation of a vector from $\mathcal{F}_B$ to $\mathcal{F}_I$}
+\nomenclature{$\Omega\in\Re^3$}{the angular velocity of the body represented in $\mathcal{F}_B$}
 
 
 \subsubsection{Wing}
@@ -133,6 +141,9 @@ Let $\mathcal{F}_R=\{\mathbf{r}_x,\mathbf{r}_y,\mathbf{r}_z\}$ be the frame fixe
 Its origin is located at the joint of the right wing, or the wing root where the right wing is attached to the thorax. 
 The first two axes span the plane of the wing, where the first axis points toward the leading edge and the second axis points toward the wing tip. 
 Consequently, the third axis is normal to the wing plane, and it points toward the ventral side when there is no rotation of the right wing.
+\nomenclature{$\mathcal{F}_R$}{frame fixed to the right wing (see Figure~\ref{fig:FR})}
+\nomenclature{$\mathbf{r}_x,\mathbf{r}_y,\mathbf{r}_z$}{basis vector of $\mathcal{F}_R$}
+\nomenclature{$\mu_R\in\Re^3$}{the fixed vector from the origin of $\mathcal{F}_B$ to the origin of $\mathcal{F}_R$ represented in $\mathcal{F}_B$}
 
 \setlength{\unitlength}{0.1\columnwidth}
 \begin{figure}[h]
@@ -146,16 +157,11 @@ Consequently, the third axis is normal to the wing plane, and it points toward t
            \put(2.85,0.75){$\mathbf{b}_y$}
         \end{picture}
     \end{center}
-    \caption{The body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue), the right wing frame $\mathcal{F}_R=\{\mathbf{r}_x,\mathbf{r}_y,\mathbf{r}_z\}$ (red)}
+    \caption{The body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue), the right wing frame $\mathcal{F}_R=\{\mathbf{r}_x,\mathbf{r}_y,\mathbf{r}_z\}$ (red)}\label{fig:FR}
 \end{figure}
 
-\begin{itemize}[leftmargin=2.5cm]
-    \item[$\mu_R\in\Re^3$] the fixed vector from the origin of $\mathcal{F}_B$ to the origin of $\mathcal{F}_R$ represented in $\mathcal{F}_B$
-\end{itemize}
-
-
-To describe the motion of the wing relative to the thorax, we first introduce the stroke frame $\mathcal{F}_S=\{\mathbf{s}_x,\mathbf{s}_y,\mathbf{s}_z\}$, which is obtained by translating the origin of $\mathcal{F}_B$ to the center of the left wing root and the right wing root, and rotating it about $\mathbf{b}_y$ by $\beta$.
-The $y$--$z$ plane of $\mathcal{F}_s$ is referred to as the stroke plane. 
+To describe the motion of the wing relative to the body, we introduce the stroke frame $\mathcal{F}_S=\{\mathbf{s}_x,\mathbf{s}_y,\mathbf{s}_z\}$, which is obtained by translating the origin of $\mathcal{F}_B$ to the center of the left wing root and the right wing root, and rotating it about $\mathbf{b}_y$ by $\beta\in[-\pi,\pi)$.
+The $y$--$z$ plane of $\mathcal{F}_S$ is referred to as the stroke plane. 
 
 \setlength{\unitlength}{0.1\columnwidth}
 \begin{figure}[h]
@@ -171,29 +177,18 @@ The $y$--$z$ plane of $\mathcal{F}_s$ is referred to as the stroke plane.
            \put(0.05,1.9){\shortstack[c]{stroke\\plane}}
         \end{picture}
     \end{center}
-    \caption{The body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue), the stroke frame $\mathcal{F}_S=\{\mathbf{s}_x,\mathbf{s}_y,\mathbf{s}_z\}$ (green)}
+    \caption{The body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue), the stroke frame $\mathcal{F}_S=\{\mathbf{s}_x,\mathbf{s}_y,\mathbf{s}_z\}$ (green)}\label{fig:FS}
 \end{figure}
-\begin{itemize}[leftmargin=2.5cm]
-    \item[$\beta\in[-\pi,\pi)$] the angle between $\mathbf{b}_x$ and $\mathbf{s}_x$ that is normal to the stroke plane. 
-        Or equivalently, it is the angle between $y$--$z$ plane of $\mathcal{F}_B$ and the stroke plane.
-        It is positive when $\mathbf{s}_x\cdot \mathbf{b}_z <0$.  
-        This angle is often defined as the angle between the ground, horizontal plane and the stroke plane, considering hovering flights. 
-        Here, it is defined relative to $\mathcal{F}_B$ considering rotation of the thorax. 
-\end{itemize}
 
-The motion of the wing relative to $\mathcal{F}_S$ is described by 1--3--2 Euler angles $(\phi_R,\psi_R,\theta_R)$. 
-Consequently, the orientation of the right wing relative to $\mathcal{F}_B$ is described by
-\begin{align}
-    Q_R(t) = \exp(\beta \hat e_2)\exp(\phi_R(t) \hat e_1) \exp(-\psi_R(t) \hat e_3) \exp(\theta_R(t) \hat e_2) 
-\end{align}
-where
-
-\begin{itemize}[leftmargin=2.5cm]
-    \item[$Q_R\in\SO$] the linear transformation of the representation of a vector from $\mathcal{F}_R$ to $\mathcal{F}_B$
-    \item[$\phi_R\in[-\pi,\pi)$] the stroke, the sweep, or the flapping angle, which is positive when the wing is in the ventral side, i.e., $\dot\phi>0$ corresponds to downstroke and $\dot\phi<0$ corresponds ot upstroke
-    \item[$\theta_R\in[-\pi,\pi)$] the pitch, the feathering, or the rotation angle about the axis from the wing root to the wing tip, which is positive when the leading edge of the wing is rotated toward the dorsal side
-    \item[$\psi_R\in[-\pi,\pi)$] the deviation angle that governs the motion of the wing tip out of the stroke plane, which is positive when the wing tip is rotated toward the head 
-\end{itemize}
+The angle $\beta$ can be considered as the angle between $\mathbf{b}_x$, and $\mathbf{s}_x$ that is normal to the stroke plane. 
+Or equivalently, it is the angle between $y$--$z$ plane of $\mathcal{F}_B$ and the stroke plane.
+It is positive when $\mathbf{s}_x\cdot \mathbf{b}_z <0$.  
+This angle is often defined as the angle between the ground, horizontal plane and the stroke plane, considering hovering flights with a fixed attitude of the body.
+Here, it is defined relative to $\mathcal{F}_B$ as the flapping motion happens relative to the body. 
+\nomenclature{$\mathcal{F}_S$}{Stroke frame (see Figure \ref{fig:FS})}
+\nomenclature{$\mathbf{s}_x,\mathbf{s}_y,\mathbf{s}_z$}{basis vector of $\mathcal{F}_S$}
+\nomenclature{$\beta\in[-\pi,\pi)$}{the angle between $\mathbf{b}_x$ and $\mathbf{s}_x$ that is normal to the stroke plane, or equivalently, the angle between $y$--$z$ plane of $\mathcal{F}_B$ and the stroke plane.
+It is positive when $\mathbf{s}_x\cdot \mathbf{b}_z <0$.  }
 
 \begin{figure}
     \centerline{
@@ -223,8 +218,27 @@ where
         \end{picture}
     }
 }
-\caption{Wing configuration when only one of $(\phi,\theta,\psi)$ is non-zero}
+\caption{Wing configuration when only one of $(\phi,\theta,\psi)$ is non-zero}\label{fig:wing_Euler}
 \end{figure}
+
+
+The motion of the wing relative to $\mathcal{F}_S$ is described by 1--3--2 Euler angles $(\phi_R,\psi_R,\theta_R)$. 
+Consequently, the orientation of the right wing relative to $\mathcal{F}_B$ is described by
+\begin{align}
+    Q_R(t) = \exp(\beta \hat e_2)\exp(\phi_R(t) \hat e_1) \exp(-\psi_R(t) \hat e_3) \exp(\theta_R(t) \hat e_2),
+\end{align}
+which is the linear transformation of a representation of a vector from $\mathcal{F}_R$ to $\mathcal{F}_B$. 
+The Euler-angles are defined as
+\begin{itemize}[leftmargin=2.5cm]
+    \item[$\phi_R\in[-\pi,\pi)$] the flapping angle, which is positive when the wing is in the ventral side, i.e., $\dot\phi>0$ corresponds to downstroke and $\dot\phi<0$ corresponds to upstroke (this is also referred to as the stroke angle or the sweep angle in other papers)
+    \item[$\theta_R\in[-\pi,\pi)$] the pitch angle about the axis from the wing root to the wing tip, which is positive when the leading edge of the wing is rotated toward the dorsal side (this is also referred to as the feathering angle or the rotation angle in other papers)
+    \item[$\psi_R\in[-\pi,\pi)$] the deviation angle that governs the motion of the wing tip out of the stroke plane, which is positive when the wing tip is rotated toward the head 
+\end{itemize}
+\nomenclature{$Q_R\in\SO$]}{the attitude of the right wing,  the linear transformation of the representation of a vector from $\mathcal{F}_R$ to $\mathcal{F}_B$}
+\nomenclature{$\phi\in[-\pi,\pi)$}{flapping angle (see Figure \ref{fig:wing_Euler})}
+\nomenclature{$\theta\in[-\pi,\pi)$}{pitch angle (see Figure \ref{fig:wing_Euler})}
+\nomenclature{$\psi\in[-\pi,\pi)$}{deviation angle (see Figure \ref{fig:wing_Euler})}
+
 
 The time-derivative of $Q_R$ is given by
 \begin{align}
@@ -234,15 +248,6 @@ where $\Omega_R$ is defined as
 \begin{itemize}[leftmargin=2.5cm]
     \item[$\Omega_R\in\Re^3$]  the angular velocity of the right wing relative to $\mathcal{F}_b$ resolved in $\mathcal{F}_R$.
 \end{itemize}
-In the above equation, the \textit{hat} map $\wedge:\Re^3\rightarrow \so$ is defined such that $\hat x y = x\times y$ for any $x,y\in\Re^3$, or equivalently
-\begin{align}
-    \hat x = \begin{bmatrix}
-        0 & -x_3 & x_2 \\
-        x_3 & 0 & -x_1 \\
-        -x_2 & x_1 & 0 
-    \end{bmatrix},
-\end{align}
-for $x=(x_1,x_2,x_3)\in\Re^3$. 
 One can show that the angular velocity of the right wing is obtained from the time-derivatives of the Euler-angles as 
 \begin{align}
     \Omega_R & =
