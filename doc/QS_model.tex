@@ -46,6 +46,7 @@
 \newcommand{\Hess}{\ensuremath{\mathrm{Hess}}}
 
 \newcommand{\bfi}{\bfseries\itshape\selectfont}
+\def\AR{\text{\itshape\clipbox{0pt 0pt .32em 0pt}\AE\kern-.30emR}}
 
 \renewcommand{\baselinestretch}{1.2}
 
@@ -125,13 +126,12 @@ In the above equation, the \textit{hat} map $\wedge:\Re^3\rightarrow \so$ is def
         0 & -x_3 & x_2 \\
         x_3 & 0 & -x_1 \\
         -x_2 & x_1 & 0 
-    \end{bmatrix},
+    \end{bmatrix},\label{eqn:hat_map}
 \end{align}
 for $x=(x_1,x_2,x_3)\in\Re^3$. 
 \nomenclature{$x\in\Re^3$}{the location of the mass center of the body represented in $\mathcal{F}_I$}
 \nomenclature{$R\in\SO$}{the attitude of the body, the linear transformation of the representation of a vector from $\mathcal{F}_B$ to $\mathcal{F}_I$}
 \nomenclature{$\Omega\in\Re^3$}{the angular velocity of the body represented in $\mathcal{F}_B$}
-
 
 \subsubsection{Wing}
 
@@ -139,11 +139,13 @@ for $x=(x_1,x_2,x_3)\in\Re^3$.
 
 Let $\mathcal{F}_R=\{\mathbf{r}_x,\mathbf{r}_y,\mathbf{r}_z\}$ be the frame fixed to the right wing.
 Its origin is located at the joint of the right wing, or the wing root where the right wing is attached to the thorax. 
+The vector from the origin of $\mathcal{F}_B$ to the origin of $\mathcal{F}_R$ is defined as $\mu_R\in\Re^3$. 
+As it is resolved in $\mathcal{F}_B$ and the body is rigid, $\dot\mu_R=0$.
 The first two axes span the plane of the wing, where the first axis points toward the leading edge and the second axis points toward the wing tip. 
 Consequently, the third axis is normal to the wing plane, and it points toward the ventral side when there is no rotation of the right wing.
 \nomenclature{$\mathcal{F}_R$}{frame fixed to the right wing (see Figure~\ref{fig:FR})}
 \nomenclature{$\mathbf{r}_x,\mathbf{r}_y,\mathbf{r}_z$}{basis vector of $\mathcal{F}_R$}
-\nomenclature{$\mu_R\in\Re^3$}{the fixed vector from the origin of $\mathcal{F}_B$ to the origin of $\mathcal{F}_R$ represented in $\mathcal{F}_B$}
+\nomenclature{$\mu_R\in\Re^3$}{the fixed vector from the mass center of the body to the root of the right wing resolved in $\mathcal{F}_B$}
 
 \setlength{\unitlength}{0.1\columnwidth}
 \begin{figure}[h]
@@ -160,7 +162,7 @@ Consequently, the third axis is normal to the wing plane, and it points toward t
     \caption{The body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue), the right wing frame $\mathcal{F}_R=\{\mathbf{r}_x,\mathbf{r}_y,\mathbf{r}_z\}$ (red)}\label{fig:FR}
 \end{figure}
 
-To describe the motion of the wing relative to the body, we introduce the stroke frame $\mathcal{F}_S=\{\mathbf{s}_x,\mathbf{s}_y,\mathbf{s}_z\}$, which is obtained by translating the origin of $\mathcal{F}_B$ to the center of the left wing root and the right wing root, and rotating it about $\mathbf{b}_y$ by $\beta\in[-\pi,\pi)$.
+Next, we introduce the stroke frame $\mathcal{F}_S=\{\mathbf{s}_x,\mathbf{s}_y,\mathbf{s}_z\}$, which is constructed by translating the origin of $\mathcal{F}_B$ to the center of the left wing root and the right wing root, and rotating it about $\mathbf{b}_y$ by $\beta\in[-\pi,\pi)$.
 The $y$--$z$ plane of $\mathcal{F}_S$ is referred to as the stroke plane. 
 
 \setlength{\unitlength}{0.1\columnwidth}
@@ -188,7 +190,7 @@ Here, it is defined relative to $\mathcal{F}_B$ as the flapping motion happens r
 \nomenclature{$\mathcal{F}_S$}{Stroke frame (see Figure \ref{fig:FS})}
 \nomenclature{$\mathbf{s}_x,\mathbf{s}_y,\mathbf{s}_z$}{basis vector of $\mathcal{F}_S$}
 \nomenclature{$\beta\in[-\pi,\pi)$}{the angle between $\mathbf{b}_x$ and $\mathbf{s}_x$ that is normal to the stroke plane, or equivalently, the angle between $y$--$z$ plane of $\mathcal{F}_B$ and the stroke plane.
-It is positive when $\mathbf{s}_x\cdot \mathbf{b}_z <0$.  }
+It is positive when $\mathbf{s}_x\cdot \mathbf{b}_z <0$.  (see Figure \ref{fig:FS})}
 
 \begin{figure}
     \centerline{
@@ -234,7 +236,7 @@ The Euler-angles are defined as
     \item[$\theta_R\in[-\pi,\pi)$] the pitch angle about the axis from the wing root to the wing tip, which is positive when the leading edge of the wing is rotated toward the dorsal side (this is also referred to as the feathering angle or the rotation angle in other papers)
     \item[$\psi_R\in[-\pi,\pi)$] the deviation angle that governs the motion of the wing tip out of the stroke plane, which is positive when the wing tip is rotated toward the head 
 \end{itemize}
-\nomenclature{$Q_R\in\SO$]}{the attitude of the right wing,  the linear transformation of the representation of a vector from $\mathcal{F}_R$ to $\mathcal{F}_B$}
+\nomenclature{$Q_R\in\SO$}{the attitude of the right wing,  the linear transformation of the representation of a vector from $\mathcal{F}_R$ to $\mathcal{F}_B$}
 \nomenclature{$\phi\in[-\pi,\pi)$}{flapping angle (see Figure \ref{fig:wing_Euler})}
 \nomenclature{$\theta\in[-\pi,\pi)$}{pitch angle (see Figure \ref{fig:wing_Euler})}
 \nomenclature{$\psi\in[-\pi,\pi)$}{deviation angle (see Figure \ref{fig:wing_Euler})}
@@ -244,10 +246,8 @@ The time-derivative of $Q_R$ is given by
 \begin{align}
     \dot Q_R = Q_R \hat \Omega_R,
 \end{align}
-where $\Omega_R$ is defined as
-\begin{itemize}[leftmargin=2.5cm]
-    \item[$\Omega_R\in\Re^3$]  the angular velocity of the right wing relative to $\mathcal{F}_b$ resolved in $\mathcal{F}_R$.
-\end{itemize}
+where $\Omega_R\in\Re^3$ is the angular velocity of the right wing relative to $\mathcal{F}_b$ resolved in $\mathcal{F}_R$.
+\nomenclature{$\Omega_R\in\Re^3$}{the angular velocity of the right wing relative to $\mathcal{F}_b$ resolved in $\mathcal{F}_R$}
 One can show that the angular velocity of the right wing is obtained from the time-derivatives of the Euler-angles as 
 \begin{align}
     \Omega_R & =
@@ -267,11 +267,14 @@ This is not restrictive as the deviation angle is small in general.
 
 \paragraph{Left Wing}
 
-Let $\mathcal{F}_L$ be the frame fixed to the left wing.
+Similarly, let $\mathcal{F}_L$ be the frame fixed to the left wing.
 It can be obtained by translating $\mathcal{F}_R$ to the root of the left wing.
 More specifically, its origin is located at the joint of the left wing, where the left wing is attached to the thorax. 
 The first two axes span the plane of the wing, where the first axis points toward the leading edge and the second axis points toward the right wing, opposite to the left wing tip.
 Consequently, the third axis is normal to the wing plane, and it points toward the ventral side when there is no rotation of the left wing.
+\nomenclature{$\mathcal{F}_L$}{frame fixed to the left wing (see Figure~\ref{fig:FL})}
+\nomenclature{$\mathbf{l}_x,\mathbf{l}_y,\mathbf{l}_z$}{basis vector of $\mathcal{F}_L$}
+\nomenclature{$\mu_L\in\Re^3$}{the fixed vector from the mass center of the body to the root of the left wing resolved in $\mathcal{F}_B$}
 
 \setlength{\unitlength}{0.1\columnwidth}
 \begin{figure}[h]
@@ -285,24 +288,23 @@ Consequently, the third axis is normal to the wing plane, and it points toward t
            \put(2.85,0.75){$\mathbf{b}_y$}
         \end{picture}
     \end{center}
-    \caption{The body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue), the left wing frame $\mathcal{F}_L=\{\mathbf{l}_x,\mathbf{l}_y,\mathbf{l}_z\}$ (red)}
+    \caption{The body-fixed frame $\mathcal{F}_B=\{\mathbf{b}_x,\mathbf{b}_y,\mathbf{b}_z\}$ (blue), the left wing frame $\mathcal{F}_L=\{\mathbf{l}_x,\mathbf{l}_y,\mathbf{l}_z\}$ (red)}\label{fig:FL}
 \end{figure}
 
 Similar as the right wing, the motion of the left wing relative to the thorax is described by $Q_L\in\SO$, which is described by successive rotations as
 \begin{align}
     Q_L(t) = \exp(\beta \hat e_2)\exp(-\phi_L(t) \hat e_1) \exp(\psi_L(t) \hat e_3) \exp(\theta_L(t) \hat e_2),
 \end{align}
-where the definition of $(\phi_L,\theta_L,\psi_L)$ are compatible to those of the right wing.
+where the definition of the Euler-angles $(\phi_L,\theta_L,\psi_L)$ are consistent with those of the right wing.
 The wing kinematics become symmetric when $(\phi_R,\theta_R,\psi_R)=(\phi_L,\theta_L,\psi_L)$. 
+\nomenclature{$Q_L\in\SO$}{the attitude of the left wing,  the linear transformation of the representation of a vector from $\mathcal{F}_L$ to $\mathcal{F}_B$}
+\nomenclature{$\Omega_L\in\Re^3$}{the angular velocity of the left wing relative to $\mathcal{F}_b$ resolved in $\mathcal{F}_L$}
 
 The time-derivative of $Q_L$ is given by
 \begin{align}
     \dot Q_L = Q_L \hat \Omega_L,
 \end{align}
-where
-\begin{itemize}[leftmargin=2.5cm]
-    \item[$\Omega_L\in\Re^3$]  the angular velocity of the left wing relative to $\mathcal{F}_B$ resolved in $\mathcal{F}_L$
-\end{itemize}
+where $\Omega_L\in\Re^3$ is the angular velocity of the left wing relative to $\mathcal{F}_B$ resolved in $\mathcal{F}_L$.
 One can show
 \begin{align}
     \Omega_L & =
@@ -319,8 +321,9 @@ One can show
 \subsubsection{Wing Kinematics}
 
 We consider the wing kinematics model presented in~\cite{berman2007energy}.
-Let $f\in\Re$ be the frequency of the flapping.
-\nomenclature{$f\in\Re$}{flapping frequency}
+Let $f\in\Re$ be the angular frequency of the flapping in \textrm{rad/sec}. i.e., the period of the flapping is $T=\frac{2\pi}{f}$. 
+\nomenclature{$f\in\Re$}{flapping frequency in \textrm{rad/sec}, $f=\frac{2\pi}{T}$}
+\nomenclature{$T\in\Re$}{flapping period, $T=\frac{2\pi}{f}$}
 
 The flapping angle is given by a smoothed triangular waveform,
 \begin{align}
@@ -329,10 +332,10 @@ The flapping angle is given by a smoothed triangular waveform,
 where $\phi_m\in\Re$ is the amplitude of flapping, and $\phi_0\in\Re$ is the offset. 
 The parameter $0 < \phi_K \leq 1$ determines the shape of flapping waveform (sinusoidal when $\phi_K\rightarrow 0$; triangular when $\phi_K\rightarrow 1$).
 The initial pitch angle is $\phi(0)=\phi_m+\phi_0$.
-During $0\leq t \leq \frac{1}{2f}$, the pitch angle decreases to $\phi(\frac{1}{2f}) = -\phi_m+\phi_0$. 
-Therefore, it represents upstroke when $0\leq t \leq \frac{1}{2f}$, and it represents downstroke when $\frac{1}{2f} \leq t \leq \frac{}{f}$.
+During $0\leq t \leq \frac{T}{2}$, the pitch angle decreases to $\phi(\frac{T}{2}) = -\phi_m+\phi_0$. 
+Therefore, it represents upstroke when $0\leq t \leq \frac{T}{2}$, and it represents downstroke when $\frac{T}{2} \leq t \leq T$.
 
-In~\cite{berman2007energy}, the inner term is given by $\sin(2\pi f t)$, instead of $\cos(2\pi f t)$ in~\eqref{eqn:phi}. 
+In~\cite{berman2007energy}, the inner term is given by $\sin(2\pi f t)$, instead of $\cos(2\pi f t)$ as in~\eqref{eqn:phi}. 
 By following the convention of~\cite{bluman2017wing}, we use the cosine.
 This is to ensure that in the subsequent expression of the pitch angle, the pitch angle reversal happens at the end of the downstroke or at the end of upstorke when there is no phase offset ($\theta_a=0$).
 
@@ -388,7 +391,7 @@ See Figure \ref{fig:wing_kinematics} for the trajectories of these angles for se
 
 The quasi-steady assumption implies that the aerodynamic force and moment generated by the flapping wing are equivalent to those for steady motion at the same instantaneous velocity and the angle of attack. 
 
-\subsubsection{Wing Moment Parameters}
+\subsubsection{Wing Morphological Parameters}
 
 \setlength{\unitlength}{0.1\columnwidth}
 \begin{figure}[h]
@@ -405,56 +408,63 @@ The quasi-steady assumption implies that the aerodynamic force and moment genera
            \put(1.8,1.05){$r$}
         \end{picture}
     \end{center}
-    \caption{Infinitesimal wing segment }
+    \caption{Infinitesimal wing segment }\label{fig:wing_segment}
 \end{figure}
+
+We present several morphological parameters of the wing as formulated in to~\cite{ellington1984aerodynamics}, after making a few changes in the notation.  
+More specifically, the symbol $\hat{}$ is used to denote normalized variables in~\cite{ellington1984aerodynamics}.
+Here we use the symbol $\tilde{}$ instead to avoid conflict with~\eqref{eqn:hat_map}.
+Also, the morphological parameters are defined for a single wing as the aerodynamic force of the left wing will be distinguished from the right wing for non-symmetric flapping. 
 
 Let $dr$ be the infinitesimal wing segment located distanced at $r$ from the wing root. 
 Let its chord be defined as $c(r)$. 
 The wing segment is parallel to $\mathbf{r}_x$ and the distance is measured along $\mathbf{r}_y$.
 Assume that the aerodynamic center of the segment is along $\mathbf{r}_y$, i.e., the resultant force generated by the wing segment is located along $\mathbf{r}_y$ with zero moment. 
 Consequently, it is located at $re_2$ when resolved in $\mathcal{F}_R$.
+\nomenclature{$c(r)\in\Re$}{the length of the chord at the distance $r$ from the wing root (see Figure~\ref{fig:wing_segment})}
 
 The area of the right wing is given by
 \begin{align}
     S = \int_0^{l} c(r) dr,
 \end{align}
 where $l>0$ is the wing span, i.e., the distance between the wing root and the wing tip measure along $\mathbf{r}_y$. 
-\begin{itemize}[leftmargin=2.5cm]
-    \item[$S\in\Re$]  the area of the right wing (In~\cite{ellington1984aerodynamics}, the symbol $S$ used for the total area of the left wing and the right wing)
-    \item[$l\in\Re$]  the span of the right wing, i.e., the length of the right wing from the wing root and the wing tip
-\end{itemize}
-\def\AR{\text{\itshape\clipbox{0pt 0pt .32em 0pt}\AE\kern-.30emR}}
+\nomenclature{$S\in\Re$}{the area of the right wing (In~\cite{ellington1984aerodynamics}, the symbol $S$ used for the total area of the left wing and the right wing)}
+\nomenclature{$l\in\Re$}{the span of the right wing, i.e., the length of the right wing from the wing root and the wing tip}
 The non-dimensional aspect ratio is
 \begin{align}
     \AR = \frac{l^2}{S}.
 \end{align}
+\nomenclature{$\AR$}{the aspect ratio of the wing \nomrefeq}
 The mean chord is the area divided by the span, i.e., $\bar c = \frac{S}{l}$, and the normalized wing chord is
 \begin{align}
     \tilde c = \frac{c}{\bar c} = \frac{c l}{S}.
 \end{align}
+\nomenclature{$\bar c\in\Re$}{mean chord, \nomrefeq}
+\nomenclature{$\tilde c\in\Re$}{normalized chord, \nomrefeq (this is equivalent to $\hat c$ in~\cite{ellington1984aerodynamics})}
 Also, the non-dimensional radius is defined as
 \begin{align}
     \tilde r = \frac{r}{l}.
 \end{align}
-
-\begin{itemize}[leftmargin=2.5cm]
-    \item[$\tilde c \in\Re$]  non-dimensional chord (this is equivalent to $\hat c$ in~\cite{ellington1984aerodynamics})
-    \item[${\tilde r \in[0,1]}$]  non-dimensional radius (this is equivalent to $\hat r$ in~\cite{ellington1984aerodynamics})
-\end{itemize}
+\nomenclature{$\tilde r\in\Re$}{normalized radius, \nomrefeq (this is equivalent to $\hat r$ in~\cite{ellington1984aerodynamics})}
 
 The $k$-th moment of wing area is defined as
 \begin{align}
-    S_k = \int_0^{l} r^k c(r) dr = Sl^k \int_0^1 \tilde r^k \tilde c  d\tilde r.
+    S_k = \int_0^{l} r^k c(r) dr = Sl^k \int_0^1 \tilde r^k \tilde c  d\tilde r,
 \end{align}
+with $S_0=0$. 
 The non-dimensional radius of the $k$-th moment of wing area is defined as
 \begin{align}
     \tilde r_k = \parenth{\frac{S_k}{Sl^k}}^{\frac{1}{k}} 
     = \parenth{\frac{1}{Sl^k} \int_0^{l} r^k c(r) dr}^{\frac{1}{k}} 
-    = \parenth{\int_0^1 \tilde r^k \tilde c d\tilde r}^{\frac{1}{k}}. \label{eqn:tilde_r_k}
+    = \parenth{\int_0^1 \tilde r^k \tilde c d\tilde r}^{\frac{1}{k}}, \label{eqn:tilde_r_k}
 \end{align}
+such that $S_k = (\tilde r_k l)^k S$, i.e., if all of the wing area is located at a distance $\tilde r_k l$, the $k$-th moment of area is equal to $S_k$.
+\nomenclature{${S_k \in\Re}$}{the $k$-th moment of wing area}
 \nomenclature{${\tilde r_k \in\Re}$}{non-dimensional radius of the $k$-th moment of wing area (this is equivalent to $\hat r_k(S)$, or (7) of ~\cite{ellington1984aerodynamics})}
 
-Next, the normalized virtual mass is defined as
+Next, when a wing is accelerated, it causes the motion of the surrounding air.
+The inertia of the wing is increased by the mass of air that is accelerated, and therefore there is an increase in the wing mass. 
+The normalized virtual mass is defined as
 \begin{align}
     \tilde v = \int_0^1 \tilde c^2 d\tilde r.
 \end{align}
@@ -466,22 +476,18 @@ And the corresponding normalized radius of the $k$-th moment of virtual mass is
 \end{align}
 \nomenclature{${\tilde r_k(v) \in\Re}$}{non-dimensional radius of the $k$-th moment of wing volume (this is equivalent to $\hat r_k(v)$, or (16) of ~\cite{ellington1984aerodynamics})}
 
-
 Later, we need to compute the following quantity:
 \begin{align}
     \int_0^l r c^2(r) dr & = l^2 \bar c^2 \int_0^1 \tilde r \tilde c^2 d\tilde r = l^2 \bar c^2 \tilde v \tilde r_1(v),\label{eqn:int_rc2dr} \\
     \int_0^l r^2 c^2(r) dr & = l^3 \bar c^2 \int_0^1 \tilde r^2 \tilde c^2 d\tilde r = l^2 \bar c^2 \tilde v \tilde r_2^2(v).\label{eqn:int_r2c2dr} 
 \end{align}
 
-
 \subsubsection{Blade-Element Theory: Right Wing}
-
-   
-
 
 \paragraph{Angle of Attack}
 
-When resolved in the inertial frame, the location of the aerodynamic center from the origin of the inertial frame is given by
+When resolved in the inertial frame, the root of the right wing is located at $x+R\mu_R$. 
+Thus, the aerodynamic center of the chord at the distance $r$ from the wing root is
 \[
     x+R\mu_R + RQ_R r e_2.
 \]
@@ -489,7 +495,7 @@ Therefore, its velocity in $\mathcal{F}_I$ is
 \[
     \dot x+ R\hat\Omega \mu_R + R \hat\Omega Q_R re_2 + R Q_R \hat \Omega_R r e_2,   
 \]
-which is transformed to $\mathcal{F}_R$ as
+which is transformed to $\mathcal{F}_R$ by left-multiplying $Q_R^T R^T$ as
 \begin{align*}
     Q_R^T R^T \dot x & +  Q_R^T \hat\Omega \mu_R +  Q_R^T \hat\Omega Q_R re_2 +  \hat \Omega_R r e_2\\
               & = Q_R^T( R^T \dot x + \Omega\times \mu_R ) + r  (Q_R\Omega + \Omega_R )\times e_2,
@@ -509,12 +515,10 @@ Therefore, we project the above velocity to the $\mathbf{r}_x$--$\mathbf{r}_z$ p
 \end{align}
 where $I_{3\times 3} - e_2e_2^T= \mathrm{diag}[1,0,1]\in\Re^{3\times 3}$ corresponds to the projection operator. 
 The second term is not affected by the projection as it is already normal to $e_2$.
-\begin{itemize}[leftmargin=2.5cm]
-    \item[$U(r)\in\Re^3$]  the velocity of the aerodynamic center of the chord $c(r)$ relative to the ambient wind, resolved in $\mathcal{F}_R$; this is projected to the $\mathbf{r}_x$--$\mathbf{r}_z$ plane so that the second component is always zero. 
-\end{itemize}
+\nomenclature{$U(r)\in\Re^3$}{the velocity of the aerodynamic center of the chord $c(r)$ relative to the ambient wind, resolved in $\mathcal{F}_R$; this is projected to the $\mathbf{r}_x$--$\mathbf{r}_z$ plane so that the second component is always zero, \nomrefeq}
 
-The angle of attack $\alpha(r)$ is the angle between the chord line $e_1$ and the above velocity $U(r)$. 
-Assuming that the chord is a thin blade, when $\alpha(r)>\frac{\pi}{2}$, we flip the leading edge and the trailing edge of the chord.
+The angle of attack $\alpha(r)$ is the angle between the chord line $\pm e_1$ and the above velocity $U_R(r)$. 
+Assuming that the chord is a thin blade, when the angle is greater than $\frac{\pi}{2}$, we flip the leading edge and the trailing edge of the chord.
 This ensures that $\alpha(r)\in[0,\frac{\pi}{2}]$ always. 
 More explicitly, 
 \begin{align}
@@ -523,7 +527,7 @@ More explicitly,
 \end{align}
 The above expression has a singularity when $U(r)=0$. 
 But, the value of $\alpha(r)$ does not matter when $U(r)=0$, as the resulting aerodynamic force and moment will vanish.
-Or equivalently,
+Or equivalently, it can be written as
 \begin{align}
     \alpha (r) & = 
     \sin^{-1} ( \frac{|e_3^T U(r)|}{\|U(r)\|} ).\label{eqn:alpha_3}
@@ -531,16 +535,19 @@ Or equivalently,
 
 \subsubsection{Translational Forces: Right Wing}
 
+Here we find the expression of the lift and the drag. 
 The magnitude of the lift generated by the infinitesimal wing segment $c(r)$ is
 \[
-    \frac{1}{2}\rho \|U(r)\|^2 C_L(\alpha(r)) c(r) dr.
+    \frac{1}{2}\rho \|U(r)\|^2 C_L(\alpha(r)) c(r) dr,
 \]
+where $\rho\in\Re$ is the atmospheric density, and $C_L\in\Re$ is the lift coefficient given as a function of the angle of attack. 
+\nomenclature{$\rho\in\Re$}{atmospheric density}
+\nomenclature{$C_L\in\Re$}{lift coefficient}
+
 The direction of the lift is normal to both of the velocity $U(r)$ and the wing span-wise direction $e_2$. 
 As such, the direction of the lift is along $\pm e_2\times U(r)$ in $\mathcal{F}_R$. 
 The ambiguity of the sign can be resolved by the fact that when the $\mathbf{r}_x$--$\mathbf{r}_z$ plane is divided by the chord line $\mathbf{r}_x$, the velocity vector $U(r)$ and the lift vector occupy the opposite side with each other. 
-More specifically, consider the following four cases. 
-
-\begin{figure}[h]
+\begin{figure}
     \centerline{
         \footnotesize
         \subfigure[Case 1]{
@@ -610,36 +617,34 @@ More specifically, consider the following four cases.
     }
     \caption{Direction of the velocity and the lift in the $\mathbf{r}_x$--$\mathbf{r}_z$ plane}\label{fig:lift_direction}
 \end{figure}
+
+More specifically, consider the four cases illustrated in Figure~\ref{fig:lift_direction}.
 These show that the direction of lift is $e_2\times U(r)$ when $e_1^T U(r)$ and $e_3^TU(r)$ have the same sign (Case 1 and Case 4), and it is $-e_2\times U(r)$ when they have the opposite sign (Case 2 and Case 3).
 Therefore, the infinitesimal lift vector resolved in $\mathcal{F}_R$ is given by
 \begin{align}
     dL_R(r) & = \frac{1}{2}\rho U^2(r) C_L(\alpha(r)) c(r) \mathrm{sgn} (e_1^T U(r) e_3^T U(r)) \frac{e_2\times U(r)}{\|e_2\times U(r)\|} dr \nonumber \\
             & = \frac{1}{2}\rho  C_L(\alpha(r)) c(r) \mathrm{sgn} (e_1^T U(r) e_3^T U(r)) (e_2\times U(r))\|U(r)\|  dr,\label{eqn:dLR}
 \end{align}
-where the second equality is obtained by $|U(r)|=|e_2\times U(r)|$.
-The total lift is obtained by integrating above span-wise for $r\in[0,l]$.
+where the second equality is obtained by $\|U(r)\|=\|e_2\times U(r)\|$.
+
+The total lift of the right wing is obtained by integrating above span-wise for $r\in[0,l]$.
 \begin{align}
     L_R = \int_{0}^{l} dL_R(r),
 \end{align}
 which is resolved in $\mathcal{F}_R$. 
-\begin{itemize}[leftmargin=2.5cm]
-    \item[$L_R\in\Re^3$]  the lift vector of the right wing resolved in $\mathcal{F}_R$.
-\end{itemize}
+\nomenclature{$L_R\in\Re^3$}{the lift vector of the right wing resolved in $\mathcal{F}_R$}
 
 Next, the drag is always opposite to $U(r)$. 
 Similar with the above expressions, 
 \begin{align}
     dD_R(r) = - \frac{1}{2}\rho  C_D(\alpha(r)) c(r) \|U(r)\|U(r) dr.
 \end{align}
-The total lift is obtained by integrating above span-wise for $r\in[0,l]$, where $l>0$ is the span of the right wing, i.e., the length of the right wing along $\mathbf{r}_y$. 
+The total lift is obtained by integrating above span-wise for $r\in[0,l]$ as
 \begin{align}
     D_R = \int_{0}^{l} dD_R (r),
 \end{align}
 which is resolved in $\mathcal{F}_R$. 
-\begin{itemize}[leftmargin=2.5cm]
-    \item[$D_R\in\Re^3$]  the drag vector of the right wing resolved in $\mathcal{F}_R$.
-\end{itemize}
-
+\nomenclature{$D_R\in\Re^3$}{the drag vector of the right wing resolved in $\mathcal{F}_R$}
 
 \paragraph{Special Case: Small Body Velocities}
 

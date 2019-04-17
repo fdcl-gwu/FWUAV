@@ -72,10 +72,12 @@ h_L=legend('$\theta_C=0.1$','$\theta_C=3$','$\theta_C=100$');
 set(h_L,'interpreter','latex');
 set(gca,'XTick',[0 0.5 1]);
 set(gca,'FontSize',14);
+
 subplot(3,1,3);
 plot(t/T,psi*180/pi);
 grid on;
 ylabel('$\theta$','interpreter','latex');
+xlabel('$t/T$','interpreter','latex');
 h_L=legend('$\psi_N=1$','$\psi_N=2$');
 set(h_L,'interpreter','latex');
 set(gca,'XTick',[0 0.5 1]);
