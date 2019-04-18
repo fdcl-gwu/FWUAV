@@ -44,37 +44,18 @@ R=expmso3(pi/3*e2);
 [Euler Euler_dot Euler_ddot]=wing_kinematics(t(k),WK);
 [Q_R Q_L W_R W_L W_R_dot W_L_dot]=wing_attitude(WK.beta, Euler, Euler, Euler_dot, Euler_dot, Euler_ddot, Euler_ddot);
 h_fig=figure('color','w');
-[h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[0 0 0]);
-[L_R D_R M_R F_rot_R M_rot_R alpha U_alpha_dot U_R]=wing_QS_aerodynamics(MONARCH, W_R, W_R_dot);
+[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[0 0 0]);
+[L_R L_L D_R D_L M_R M_L F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(MONARCH, W_R, W_L, W_R_dot, W_L_dot);
+[h_F_R h_F_L]=patch_force(x,R,Q_R,Q_L,L_R,L_L,D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L);
 
-x_cp = x + R*Q_R*50*e2;
-lwidth=1;
-alength=12;
-awidth=alength*tand(10);
-scale_Force=0.5e6;
-acolor=[1 0 0]';
-[h_La, h_Ll]=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*L_R, acolor, lwidth, alength, awidth);
-acolor=[0 0 1]';
-[h_Da, h_Dl]=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*D_R, acolor, lwidth, alength, awidth);
-acolor=[0.72,0.27,1.00]';
-[h_Fa, h_Fl]=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*(D_R+L_R), acolor, lwidth, alength, awidth);
-acolor=[0 1 0]';
-[h_F_rot_a, h_F_rot_l]=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*(F_rot_R), acolor, lwidth, alength, awidth);
-acolor=[0 0 0]';
-[h_F_tot_a, h_F_tot_l]=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*(D_R+L_R+F_rot_R), acolor, lwidth, alength, awidth);
 %% animation
 
 for k=floor(linspace(1,N,101))
     [Euler Euler_dot Euler_ddot]=wing_kinematics(t(k),WK);
     [Q_R Q_L W_R W_L W_R_dot W_L_dot]=wing_attitude(WK.beta, Euler, Euler, Euler_dot, Euler_dot, Euler_ddot, Euler_ddot);
-    [L_R D_R M_R F_rot_R M_rot_R alpha U_alpha_dot U_R]=wing_QS_aerodynamics(MONARCH, W_R, W_R_dot);
+    [L_R L_L D_R D_L M_R M_L F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(MONARCH, W_R, W_L, W_R_dot, W_L_dot);
     update_monarch(h_fig,[h_body, h_wr, h_wl], fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L);
-    x_cp = x + R*Q_R*50*e2;
-    update_arrow(h_La, h_Ll, x_cp, x_cp + scale_Force*R*Q_R*L_R, alength, awidth);
-    update_arrow(h_Da, h_Dl, x_cp, x_cp + scale_Force*R*Q_R*D_R, alength, awidth);
-    update_arrow(h_Fa, h_Fl, x_cp, x_cp + scale_Force*R*Q_R*(L_R+D_R), alength, awidth);   
-    update_arrow(h_F_rot_a, h_F_rot_l, x_cp, x_cp + scale_Force*R*Q_R*(F_rot_R), alength, awidth);
-    update_arrow(h_F_tot_a, h_F_tot_l, x_cp, x_cp + scale_Force*R*Q_R*(D_R+L_R+F_rot_R), alength, awidth);
+    update_force(h_F_R,h_F_L,  x,R,Q_R,Q_L,  L_R,L_L,D_R,D_L,M_R,M_L,  F_rot_R,F_rot_L,M_rot_R,M_rot_L);
 end
 
 %% save
@@ -87,6 +68,62 @@ evalin('base',['load ' filename]);
 
 end
 
+function [h_F_R h_F_L]=patch_force(x,R,Q_R,Q_L,L_R,L_L,D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L)
+global scale_Force
+e2=[0 1 0]';
+lwidth=1;
+alength=12;
+awidth=alength*tand(10);
+scale_Force=0.5e6;
+
+x_cp = x + R*Q_R*50*e2;
+acolor=[1 0 0]';
+h_L_R=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*L_R, acolor, lwidth, alength, awidth);
+acolor=[0 0 1]';
+h_D_R=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*D_R, acolor, lwidth, alength, awidth);
+acolor=[0.72,0.27,1.00]';
+h_LD_R=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*(D_R+L_R), acolor, lwidth, alength, awidth);
+acolor=[0 1 0]';
+h_F_rot_R=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*(F_rot_R), acolor, lwidth, alength, awidth);
+acolor=[0 0 0]';
+h_F_tot_R=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*(D_R+L_R+F_rot_R), acolor, lwidth, alength, awidth);
+
+x_cp = x - R*Q_L*50*e2;
+acolor=[1 0 0]';
+h_L_L=patch_arrow(x_cp, x_cp + scale_Force*R*Q_L*L_L, acolor, lwidth, alength, awidth);
+acolor=[0 0 1]';
+h_D_L=patch_arrow(x_cp, x_cp + scale_Force*R*Q_L*D_L, acolor, lwidth, alength, awidth);
+acolor=[0.72,0.27,1.00]';
+h_LD_L=patch_arrow(x_cp, x_cp + scale_Force*R*Q_L*(D_L+L_L), acolor, lwidth, alength, awidth);
+acolor=[0 1 0]';
+h_F_rot_L=patch_arrow(x_cp, x_cp + scale_Force*R*Q_L*(F_rot_L), acolor, lwidth, alength, awidth);
+acolor=[0 0 0]';
+h_F_tot_L=patch_arrow(x_cp, x_cp + scale_Force*R*Q_R*(D_L+L_L+F_rot_L), acolor, lwidth, alength, awidth);
+
+h_F_R=[h_L_R, h_D_R, h_LD_R, h_F_rot_R, h_F_tot_R];
+h_F_L=[h_L_L, h_D_L, h_LD_L, h_F_rot_L, h_F_tot_L];
+end
+
+function update_force(h_F_R,h_F_L,x,R,Q_R,Q_L,L_R,L_L,D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L)
+global scale_Force
+e2=[0 1 0]';
+alength=12;
+awidth=alength*tand(10);
+
+x_cp = x + R*Q_R*50*e2;
+update_arrow(h_F_R(:,1), x_cp, x_cp + scale_Force*R*Q_R*L_R, alength, awidth);
+update_arrow(h_F_R(:,2), x_cp, x_cp + scale_Force*R*Q_R*D_R, alength, awidth);
+update_arrow(h_F_R(:,3), x_cp, x_cp + scale_Force*R*Q_R*(L_R+D_R), alength, awidth);
+update_arrow(h_F_R(:,4), x_cp, x_cp + scale_Force*R*Q_R*(F_rot_R), alength, awidth);
+update_arrow(h_F_R(:,5), x_cp, x_cp + scale_Force*R*Q_R*(D_R+L_R+F_rot_R), alength, awidth);
+
+x_cp = x - R*Q_L*50*e2;
+update_arrow(h_F_L(:,1), x_cp, x_cp + scale_Force*R*Q_L*L_L, alength, awidth);
+update_arrow(h_F_L(:,2), x_cp, x_cp + scale_Force*R*Q_L*D_L, alength, awidth);
+update_arrow(h_F_L(:,3), x_cp, x_cp + scale_Force*R*Q_L*(L_L+D_L), alength, awidth);
+update_arrow(h_F_L(:,4), x_cp, x_cp + scale_Force*R*Q_L*(F_rot_L), alength, awidth);
+update_arrow(h_F_L(:,5), x_cp, x_cp + scale_Force*R*Q_L*(D_L+L_L+F_rot_L), alength, awidth);
+end
 
 
 function [v_body, v_wr, v_wl]=compute_vertices(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L)
@@ -106,7 +143,7 @@ end
 
 end
 
-function [h_body, h_wr, h_wl, h_FB, h_FR, f_FL]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, varargin)
+function [h_body, h_wr, h_wl, h_FB, h_FR, f_FL]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, varargin)
 if nargin < 8
     bool_FB=true; % show the body-fixed frame
     bool_FR=false; % show the right wing frame
@@ -148,7 +185,7 @@ awidth=alength*tand(10);
 if bool_FB
     acolor=[0 0 1];
     for i=1:3
-        h_FB(i)=patch_arrow(x', x'+140*(R*II(:,i))', acolor, lwidth, alength, awidth);
+        h_FB(:,i)=patch_arrow(x', x'+140*(R*II(:,i))', acolor, lwidth, alength, awidth);
     end
 end
 
@@ -156,7 +193,7 @@ acolor=[1 0 0];
 mu_R=[12 8 -3]';
 if bool_FR
     for i=1:3
-        h_FR(i)=patch_arrow(R*mu_R, R*mu_R+ 120*R*Q_R*II(:,i), acolor, lwidth, alength, awidth);
+        h_FR(:,i)=patch_arrow(R*mu_R, R*mu_R+ 120*R*Q_R*II(:,i), acolor, lwidth, alength, awidth);
     end
 end
 
@@ -164,7 +201,7 @@ acolor=[1 0 0];
 mu_L=[12 -8 -3]';
 if bool_FL
     for i=1:3
-        h_FL(i)=patch_arrow(R*mu_L, R*mu_L+ 120*R*Q_R*II(:,i), acolor, lwidth, alength, awidth);
+        h_FL(:,i)=patch_arrow(R*mu_L, R*mu_L+ 120*R*Q_R*II(:,i), acolor, lwidth, alength, awidth);
     end
 end
 
@@ -406,7 +443,7 @@ end
 line(x_arc(1,:),x_arc(2,:),x_arc(3,:),'linewidth',1,'color',[0 0 0]);
 end
 
-function [ha hl]=patch_arrow(p1,p2,acolor,lwidth,alength,awidth)
+function h=patch_arrow(p1,p2,acolor,lwidth,alength,awidth)
 % acolor=[0 0 1];
 % alength=1;
 % awidth=1;
@@ -436,9 +473,10 @@ faces=[1:N-1 1:N-1; 2:N 2:N; N+1*ones(1,N-1) N+2*ones(1,N-1)]';
 ha=patch('Vertices',vertice,'Faces',faces,'FaceColor',acolor,'LineStyle','none');
 hl=line([p1(1) origin(1)],[p1(2) origin(2)],[p1(3) origin(3)],'Color',acolor,'LineWidth',lwidth);
 
+h=[ha; hl];
 end
 
-function update_arrow(ha, hl, p1,p2 ,alength,awidth)
+function update_arrow(h, p1,p2 ,alength,awidth)
 
 if size(p1,1)>1
     p1=p1(:)';
@@ -462,8 +500,8 @@ end
 vertice=[vertice;origin;origin+alength*dir];
 faces=[1:N-1 1:N-1; 2:N 2:N; N+1*ones(1,N-1) N+2*ones(1,N-1)]';
 
-set(ha,'Vertices',vertice,'Faces',faces);
-set(hl,'XData',[p1(1) origin(1)], 'YData', [p1(2) origin(2)], 'ZData', [p1(3) origin(3)]);
+set(h(1),'Vertices',vertice,'Faces',faces);
+set(h(2),'XData',[p1(1) origin(1)], 'YData', [p1(2) origin(2)], 'ZData', [p1(3) origin(3)]);
 end
 
 

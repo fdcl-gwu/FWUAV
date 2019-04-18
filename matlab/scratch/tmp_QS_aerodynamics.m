@@ -46,10 +46,15 @@ load('morp_MONARCH');
 
 for k=1:N
     [E_R(:,k) E_R_dot(:,k), E_R_ddot(:,k)]=wing_kinematics(t(k),WK);
-    [Q_R(:,:,k) Q_L(:,:,k) W_R(:,k) W_L(:,k) W_R_dot(:,k) W_L_dot(:,k)]=wing_attitude(WK.beta, E_R(:,k), E_R(:,k), E_R_dot(:,k), E_R_dot(:,k), E_R_ddot(:,k), E_R_ddot(:,k));
-    [L_R(:,k) D_R(:,k) M_R(:,k) F_rot_R(:,k) M_rot_R(:,k) alpha(k) U_alpha_dot(:,k) U_R(:,k)]=wing_QS_aerodynamics(MONARCH, W_R(:,k), W_R_dot(:,k));
+    [E_L(:,k) E_L_dot(:,k), E_L_ddot(:,k)]=wing_kinematics(t(k),WK);
+    [Q_R(:,:,k) Q_L(:,:,k) W_R(:,k) W_L(:,k) W_R_dot(:,k) W_L_dot(:,k)]=wing_attitude(WK.beta, E_R(:,k), E_L(:,k), E_R_dot(:,k), E_L_dot(:,k), E_R_ddot(:,k), E_L_ddot(:,k));
+    [L_R(:,k) L_L(:,k) D_R(:,k) D_L(:,k) M_R(:,k) M_L(:,k) ...
+        F_rot_R(:,k) F_rot_L(:,k) M_rot_R(:,k) M_rot_L(:,k) ...
+        alpha_R(k) alpha_L(:,k) U_alpha_dot_R(:,k) U_alpha_dot_L(:,k) U_R(:,k) U_L(:,k)]...
+        =wing_QS_aerodynamics(MONARCH, W_R(:,k), W_L(:,k), W_R_dot(:,k), W_L_dot(:,k));
     norm_U(k)=norm(U_R(:,k));
-    alpha_dot(k)=U_alpha_dot(k)/norm(U_R(:,k));
+    alpha_R_dot(k)=U_alpha_dot_R(k)/norm(U_R(:,k));
+    alpha_L_dot(k)=U_alpha_dot_L(k)/norm(U_L(:,k));
     
     L_R_in_B(:,k) = Q_R(:,:,k)*L_R(:,k);
     D_R_in_B(:,k) = Q_R(:,:,k)*D_R(:,k);
@@ -57,15 +62,13 @@ for k=1:N
 
 end
 
-
-
 figure;
-plot(t,alpha,'b');
+plot(t,alpha_R,'b');
 ylabel('$\alpha$','interpreter','latex');
 figure;
-plot(t,alpha_dot,'r');
+plot(t,alpha_R_dot,'r'); 
 hold on;
-plot(t(2:end),diff(alpha)./diff(t),'b--');
+plot(t(2:end),diff(alpha_R)./diff(t),'b--');
 ylabel('$\dot\alpha$','interpreter','latex');
 
 figure;
@@ -74,7 +77,7 @@ axis equal;
 grid on;
 
 figure;
-plot(t,U_alpha_dot);
+plot(t,U_alpha_dot_R);
 ylabel('$\dot \alpha \| U\|$','interpreter','latex');
 
 % figure;
@@ -82,7 +85,6 @@ ylabel('$\dot \alpha \| U\|$','interpreter','latex');
 % ylabel('$\| U\|$','interpreter','latex');
 
 figure;
-
 for ii=1:3
     subplot(3,1,ii);
     plot(t,L_R(ii,:),'r',t,D_R(ii,:),'b',t,F_rot_R(ii,:),'m--');
@@ -93,6 +95,20 @@ subplot(3,1,1);
 hl=legend({'$L_R$','$D_R$','$F_{\mathrm{rot}}$','$F_{\mathrm{total}}$'});
 set(hl,'interpreter','latex');
 title('Aerodynamic forces in the wing-fixed frame');
+
+figure;
+for ii=1:3
+    subplot(3,1,ii);
+    plot(t,L_L(ii,:),'r',t,D_L(ii,:),'b',t,F_rot_L(ii,:),'m--');
+    hold on;
+    plot(t,L_L(ii,:)+D_L(ii,:)+F_rot_L(ii,:),'k','LineWidth',1.2);
+end
+subplot(3,1,1);
+hl=legend({'$L_L$','$D_L$','$F_{\mathrm{rot}}$','$F_{\mathrm{total}}$'});
+set(hl,'interpreter','latex');
+title('Aerodynamic forces in the wing-fixed frame');
+
+
 
 figure;
 for ii=1:3

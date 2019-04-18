@@ -1,4 +1,6 @@
-function [L_R D_R M_R F_rot_R M_rot_R alpha_R U_alpha_R_dot U_R]=wing_QS_aerodynamics(INSECT, W_R, W_R_dot)
+function [L_R L_L D_R D_L M_R M_L ...
+    F_rot_R F_rot_L M_rot_R M_rot_L ...
+    alpha_R alpha_L U_alpha_R_dot U_alpha_L_dot U_R U_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot)
 global e1 e2 e3
 e1=[1 0 0]';
 e2=[0 1 0]';
@@ -9,6 +11,14 @@ U_R_dot = INSECT.tilde_r_2*INSECT.l*cross(W_R_dot,e2);
 [L_R D_R M_R]=compute_LD(INSECT, U_R);
 
 [F_rot_R M_rot_R alpha_R U_alpha_R_dot]=compute_rotational_force(INSECT, U_R, U_R_dot);
+
+U_L = -INSECT.tilde_r_2*INSECT.l*cross(W_L,e2);
+U_L_dot = -INSECT.tilde_r_2*INSECT.l*cross(W_L_dot,e2);
+[L_L D_L M_L]=compute_LD(INSECT, U_L);
+M_L=-M_L;
+
+[F_rot_L M_rot_L alpha_L U_alpha_L_dot]=compute_rotational_force(INSECT, U_L, U_L_dot);
+
 end
 
 function [L D M alpha]=compute_LD(INSECT, U)
