@@ -47,6 +47,7 @@
 
 \newcommand{\bfi}{\bfseries\itshape\selectfont}
 \def\AR{\text{\itshape\clipbox{0pt 0pt .32em 0pt}\AE\kern-.30emR}}
+\newcommand{\rot}{\ensuremath{\mathrm{rot}}}
 
 \renewcommand{\baselinestretch}{1.2}
 
@@ -439,7 +440,7 @@ The mean chord is the area divided by the span, i.e., $\bar c = \frac{S}{l}$, an
 \begin{align}
     \tilde c = \frac{c}{\bar c} = \frac{c l}{S}.
 \end{align}
-\nomenclature{$\bar c\in\Re$}{mean chord, \nomrefeq}
+\nomenclature{$\bar c\in\Re$}{mean chord \nomrefeq}
 \nomenclature{$\tilde c\in\Re$}{normalized chord, \nomrefeq (this is equivalent to $\hat c$ in~\cite{ellington1984aerodynamics})}
 Also, the non-dimensional radius is defined as
 \begin{align}
@@ -793,21 +794,25 @@ The angle of attack is given by
 \end{align}
 The translational force and the moment for the left wing are 
 \begin{align}
-    L_L & = \frac{1}{2}\rho  C_L(\alpha) \mathrm{sgn} (e_1^T U_R e_3^T U_R ) \hat e_2 U_R \|U_R\| S,\\
+    L_L & = \frac{1}{2}\rho  C_L(\alpha) \mathrm{sgn} (e_1^T U_L e_3^T U_L ) \hat e_2 U_L \|U_L\| S,\\
     D_L & = - \frac{1}{2}\rho  C_D(\alpha)  \|U_L \| U_L  S,\\
-    M_L & = - r_{cp} e_2 \times (L_L + D_L).
+    M_L & = - r_{cp} e_2 \times (L_L + D_L),\label{eqn:M_L}
 \end{align}
-
-
-
+which are resolved in $\mathcal{F}_L$. 
+All of these expressions are consistent with the right wing, except the negative sign in \eqref{eqn:M_L}. 
 
 \subsubsection{Rotational Force}
 
-\newcommand{\rot}{\mathrm{rot}}
+
+The wing's own rotation may cause additional circulation about the chord that generate a normal force. 
+This is referred to as a rotational force~\cite{sane2002aerodynamic}.
+The expression of the rotational force of the right wing is identical to that of the left wing, except the flipped sign in the corresponding moment. 
+As such, in this section, we do not distinguish the right wing from the left wing with the subscript $R$. 
+
 According to~\cite{sane2002aerodynamic}, the magnitude of the rotational lift for the infinitesimal wing segment is given by
-\[
- \rho \|U(r)\| C_\rot |\dot\alpha(r)|  c^2(r) dr,
-\]
+\begin{align}
+    \rho \|U(r)\| C_\rot |\dot\alpha(r)|  c^2(r) dr,\label{eqn:F_rot_mag}
+\end{align}
 where the last part $C_\rot |\dot\alpha(R)| c^2$ corresponds to the rotational circulation.
 From \eqref{eqn:alpha_R}, the time-derivative of the angle of attack is given by
 \begin{align}
@@ -901,62 +906,198 @@ Therefore, when $\alpha >0$, the direction of the rotational lift is $-\mathrm{s
 For the case of $\alpha=0$, the direction of the rotational lift is illustrated in Figure \ref{fig:lift_rot}, where the rotational lift is always opposite to $e_3^T \dot U$.
 Therefore, its direction is given by $-\mathrm{sgn}(e_3^T \dot U) e_3$. 
 
-These two cases can be combined into
+These two cases for the direction can be combined into
 \begin{equation}
-    \mathrm{sgn}(\alpha(r))\{-\mathrm{sgn}(e_3^T U(r) )\mathrm{sgn}(\dot \alpha(r)) \} + (1-\mathrm{sgn}(\alpha(r)))\{-\mathrm{sgn}(e_3^T \dot U(r)) \},
+    \mathrm{sig}_\rot (r) e_3, 
+\end{equation}
+where
+\begin{equation}
+    \mathrm{sig}_\rot = \mathrm{sgn}(\alpha(r))\{-\mathrm{sgn}(e_3^T U(r) )\mathrm{sgn}(\dot \alpha(r)) \} + (1-\mathrm{sgn}(\alpha(r)))\{-\mathrm{sgn}(e_3^T \dot U(r)) \},
 \end{equation}
 which takes the value of $\pm 1$. 
-For convenience, define
-\begin{equation}
-    \mathrm{sgn}_\rot (r) = \mathrm{sgn}(\dot\alpha(r))\bracket{
-    \mathrm{sgn}(\alpha(r))\{-\mathrm{sgn}(e_3^T U(r) )\mathrm{sgn}(\dot \alpha(r)) \} + (1-\mathrm{sgn}(\alpha(r)))\{-\mathrm{sgn}(e_3^T \dot U(r)) \}}.
-\end{equation}
-Since $|\dot\alpha| = |\dot\alpha| (\mathrm{sgn}(\dot\alpha))^2 = \dot\alpha \mathrm{sgn}(\dot\alpha)$, the infinitesimal rotational force resolved in $\mathcal{F}_R$ is 
-\begin{align*}
-d F_\rot & = \rho \|U(r)\| C_\rot \dot\alpha(r) \mathrm{sgn}_\rot (r) e_3  c^2(r) dr,
-\end{align*}
+Thus, the rotational lift vector is the product of the above direction and the magnitude \eqref{eqn:F_rot_mag}. 
+\begin{align}
+d F_\rot & = \rho \|U(r)\| C_\rot |\dot\alpha(r)| \mathrm{sgn}_\rot (r) e_3  c^2(r) dr,
+\end{align}
 which is integrated to obtain the rotational force
-\begin{align*}
+\begin{align}
     F_\rot = \int_0^{l} dF_\rot.
-\end{align*}
+\end{align}
+\nomenclature{$F_\rot\in\Re^3$}{rotational force resolved in the wing fixed frame}
 
-\paragraph{Special Case: Small Body Velocities}
-
-As discussed above, when $\|\dot x\|,\|\Omega\|, \|v_{\mathrm{wind}}\| \ll 1$, $U(r)$ reduces to
+For the right wing, the above rotational force generate the moment about the wing root as follows.
 \[
-    U(r) = r \Omega_R \times e_2,
+    M_{\rot_R} = \int_0^l re_2 \times d F_\rot,
+\]
+which is resolved in $\mathcal{F}_R$. 
+For the left wing, the chord is located at $-r e_2$ in $\mathcal{F}_L$, and consequently
+\[
+    M_{\rot_L} = -\int_0^l re_2 \times d F_\rot.
+\]
+\nomenclature{$M_\rot\in\Re^3$}{moment about the wing root due to the rotational force, resolved in the wing fixed frame}
+
+\subsubsection{Rotational Force for Small Body Velocities}
+
+\paragraph{Right Wing}
+
+Under the assumption of small body velocities, we present an expression for the rotational force that does not require a span-wise integration. 
+As discussed above, when $\|\dot x\|,\|\Omega\|, \|v_{\mathrm{wind}}\| \ll 1$, $U_R(r)$ reduces to
+\[
+    U_R(r) = r \Omega_R \times e_2,
 \]
 so that $\alpha,\dot\alpha$ remains fixed span-wise. 
 Thus,
 \begin{align*}
-    F_\rot & = \rho C_\rot  \|\Omega_R \times e_2 \| \dot\alpha(t)\; \mathrm{sgn}_\rot(t)  e_3 \int_0^l r c^2(r) dr,
+    F_{\rot_R} & = \rho C_\rot  \|\Omega_R \times e_2 \| |\dot\alpha(t)|\; \mathrm{sgn}_\rot(t)  e_3 \int_0^l r c^2(r) dr,
 \end{align*}
 Substituting \eqref{eqn:int_rc2dr},
 \begin{align*}
-    F_\rot & = \rho C_\rot  \|\Omega_R \times e_2 \| \dot\alpha(t)\; \mathrm{sgn}_\rot(t)  e_3 l^2 \bar c^2 \tilde v \tilde r_1(v).
+    F_{\rot_R} & = \rho C_\rot  \|\Omega_R \times e_2 \| |\dot\alpha(t)|\; \mathrm{sgn}_\rot(t)  e_3 l^2 \bar c^2 \tilde v \tilde r_1(v).
 \end{align*}
 Substituting \eqref{eqn:U_R}, 
 \begin{align}
-    F_\rot & = \rho C_\rot  \|U_R \| \dot\alpha(t)\; \mathrm{sgn}_\rot(t)  e_3 l \bar c^2 \frac{\tilde v \tilde r_1(v)}{\tilde r_2}. \label{eqn:F_rot}
+    F_{\rot_R} & = \rho C_\rot  \|U_R \| |\dot\alpha(t)|\; \mathrm{sgn}_\rot(t)  e_3 l \bar c^2 \frac{\tilde v \tilde r_1(v)}{\tilde r_2}. \label{eqn:F_rot}
 \end{align}
 
-\paragraph{Moment Generated by Rotational Force}
-
-The above rotational force generate the moment about the wing root as follows.
-\[
-    M_\rot = \int_0^l re_2 \times d F_\rot.
-\]
-Define $r_\rot\in\Re$ such that the above moment is equivalent to the rotational force acting on $r_\rot e_2$, i.e.,
+Define $r_\rot\in\Re$ such that the moment about the wing root generated by the rotational force is written as
 \begin{equation}
-    M_\rot = r_\rot e_2 \times F_\rot.
+    M_{\rot_R} = r_\rot e_2 \times F_{\rot_R}.
 \end{equation}
-For the special case presented above, using \eqref{eqn:int_rc2dr} and \eqref{eqn:int_r2c2dr}, one can show
+Using \eqref{eqn:int_rc2dr} and \eqref{eqn:int_r2c2dr}, one can show
 \begin{align}
     r_\rot & = \frac{\int_0^l r^2 c^2(r) dr}{\int_0^l r c^2(r) dr} = \frac{l\tilde r_2^2(v)}{\tilde r_1(v)}.
 \end{align}
 
+\paragraph{Left Wing}
 
+For the left wing,
+\begin{align}
+    F_{\rot_L} & = \rho C_\rot  \|U_L \| |\dot\alpha(t)|\; \mathrm{sgn}_\rot(t)  e_3 l \bar c^2 \frac{\tilde v \tilde r_1(v)}{\tilde r_2}, \label{eqn:F_rot_L}\\
+    M_{\rot_L} &  = -r_\rot e_2 \times F_{\rot_L}.
+\end{align}
 
+\subsubsection{Numerical Example}
+
+\begin{figure}[p]
+    \centerline{
+        \subfigure[$\phi,\theta,\psi$]{
+            \includegraphics[width=0.45\textwidth]{QS_adv_E}
+        }
+        \hfill
+        \subfigure[$\alpha$]{
+            \includegraphics[width=0.45\textwidth]{QS_adv_alpha}
+        }
+    }
+    \centerline{
+        \subfigure[$U$]{
+            \includegraphics[width=0.45\textwidth]{QS_adv_U}
+        }
+        \hfill
+        \subfigure[$\dot\alpha \|U\|$]{
+            \includegraphics[width=0.45\textwidth]{QS_adv_U_alpha_dot}
+        }
+    }
+    \centerline{
+        \subfigure[Aerodynamic forces in the wing-fixed frame]{
+            \includegraphics[width=0.45\textwidth]{QS_adv_F_W}
+        }
+        \hfill
+        \subfigure[Aerodynamic forces in the body-fixed frame]{
+            \includegraphics[width=0.45\textwidth]{QS_adv_F_B}
+        }
+    }
+    \caption{Advanced}
+\end{figure}
+
+\begin{figure}[p]
+    \centerline{
+        \subfigure[$\phi,\theta,\psi$]{
+            \includegraphics[width=0.45\textwidth]{QS_sym_E}
+        }
+        \hfill
+        \subfigure[$\alpha$]{
+            \includegraphics[width=0.45\textwidth]{QS_sym_alpha}
+        }
+    }
+    \centerline{
+        \subfigure[$U$]{
+            \includegraphics[width=0.45\textwidth]{QS_sym_U}
+        }
+        \hfill
+        \subfigure[$\dot\alpha \|U\|$]{
+            \includegraphics[width=0.45\textwidth]{QS_sym_U_alpha_dot}
+        }
+    }
+    \centerline{
+        \subfigure[Aerodynamic forces in the wing-fixed frame]{
+            \includegraphics[width=0.45\textwidth]{QS_sym_F_W}
+        }
+        \hfill
+        \subfigure[Aerodynamic forces in the body-fixed frame]{
+            \includegraphics[width=0.45\textwidth]{QS_sym_F_B}
+        }
+    }
+    \caption{Symmetric}
+\end{figure}
+
+\begin{figure}[p]
+    \centerline{
+        \subfigure[$\phi,\theta,\psi$]{
+            \includegraphics[width=0.45\textwidth]{QS_dly_E}
+        }
+        \hfill
+        \subfigure[$\alpha$]{
+            \includegraphics[width=0.45\textwidth]{QS_dly_alpha}
+        }
+    }
+    \centerline{
+        \subfigure[$U$]{
+            \includegraphics[width=0.45\textwidth]{QS_dly_U}
+        }
+        \hfill
+        \subfigure[$\dot\alpha \|U\|$]{
+            \includegraphics[width=0.45\textwidth]{QS_dly_U_alpha_dot}
+        }
+    }
+    \centerline{
+        \subfigure[Aerodynamic forces in the wing-fixed frame]{
+            \includegraphics[width=0.45\textwidth]{QS_dly_F_W}
+        }
+        \hfill
+        \subfigure[Aerodynamic forces in the body-fixed frame]{
+            \includegraphics[width=0.45\textwidth]{QS_dly_F_B}
+        }
+    }
+    \caption{Delayed}
+\end{figure}
+
+\newpage
+
+\subsection{Flapping Wing UAV Dynamics}
+
+\subsubsection{Equations of Motion}
+
+We present the equations of motion assuming that the mass and the inertia of both wings are negligible. 
+Let $J\in\Re^{3\times 3}$ be the inertia matrix of the body in $\mathcal{F}_B$, and let $m\in\Re$ be the mass of the body. 
+\nomenclature{$m\in\Re$}{mass of the body}
+\nomenclature{$J\in\Re^{3\times 3}$}{inertia matrix of the body about its mass center resolved in $\mathcal{F}_B$}
+
+From Netwon's second law, 
+\begin{align}
+    m \ddot x & =  RQ_R (L_R+D_R+F_{\rot _R}) + R Q_L (L_L+D_L + F_{\rot_L}),\\
+    J\dot\Omega + \Omega\times J\Omega & =  (\mu_R + r_{cp} Q_R e_2) \times Q_R (L_R+D_R) + (\mu_R + r_{\rot} Q_R e_2)\times Q_R F_{\rot_R}\nonumber\\
+                                       & \quad + (\mu_L - r_{cp} Q_L e_2) \times Q_L (L_L+D_L) + (\mu_L + r_{\rot} Q_L e_2)\times Q_L F_{\rot_L},
+\end{align}
+with the kinematics equations copied below
+\begin{align}
+    \dot R & = R\hat\Omega,\\
+    \dot Q_R & = Q_R \hat\Omega_R,\\
+    \dot Q_L & = Q_L \hat\Omega_L.
+\end{align}
+These are driven by the wing kinematics that describe the attitude of the wings relative to the body, namely $Q_R(t), Q_L(t)$.
+
+\bibliographystyle{IEEEtran}
+\bibliography{FWUAV}
 
 \appendix
 
@@ -985,16 +1126,6 @@ For $x\in\Re$,
         -1 & x<0.
     \end{cases}
 \end{align}
-
-
-
-
-
-
-
-\bibliographystyle{IEEEtran}
-\bibliography{FWUAV}
-
 
 \end{document}
 

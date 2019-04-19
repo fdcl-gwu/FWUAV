@@ -15,9 +15,10 @@ U_R_dot = INSECT.tilde_r_2*INSECT.l*cross(W_R_dot,e2);
 U_L = -INSECT.tilde_r_2*INSECT.l*cross(W_L,e2);
 U_L_dot = -INSECT.tilde_r_2*INSECT.l*cross(W_L_dot,e2);
 [L_L D_L M_L]=compute_LD(INSECT, U_L);
-M_L=-M_L;
+M_L = -M_L;
 
 [F_rot_L M_rot_L alpha_L U_alpha_L_dot]=compute_rotational_force(INSECT, U_L, U_L_dot);
+M_rot_L = -M_rot_L;
 
 end
 
@@ -35,8 +36,8 @@ end
 function [F_rot M_rot alpha U_alpha_dot]=compute_rotational_force(INSECT, U, U_dot)
 global e1 e2 e3
 [alpha U_alpha_dot]=compute_alpha(U, U_dot);
-sgn_rot = sign(U_alpha_dot) * (  sign(alpha)*-sign(U(3))*sign(U_alpha_dot)...
-    +(1-sign(alpha))*(-sign(U_dot(3)))  );
+
+sgn_rot = sign(alpha)*-sign(U(3))*sign(U_alpha_dot) + (1-sign(alpha))*(-sign(U_dot(3)));
 
 % S. P. Sane and M. H. Dickinson, "The aerodynamic effects of wing rotation
 % and a revised quasi-steady model of flapping flight," 
