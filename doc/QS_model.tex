@@ -328,7 +328,7 @@ Also, we have
 \subsubsection{Wing Kinematics}
 
 We consider the wing kinematics model presented in~\cite{berman2007energy}.
-Let $f\in\Re$ be the frequency of the flapping in \mathrm{Hz}.
+Let $f\in\Re$ be the frequency of the flapping in $\mathrm{Hz}$.
 Thus, the period of the flapping is $T=\frac{1}{f}$. 
 \nomenclature{$f\in\Re$}{flapping frequency}
 \nomenclature{$T\in\Re$}{flapping period}
@@ -1137,6 +1137,53 @@ with the kinematics equations copied below
     \dot Q_L & = Q_L \hat\Omega_L.
 \end{align}
 These are driven by the wing kinematics that describe the attitude of the wings relative to the body, namely $Q_R(t), Q_L(t)$.
+
+\subsubsection{Lagrangian Mechanics}
+
+Next, we consider the mass and the inertia of the wing. 
+The kinetic energy of the body is given by
+\begin{align}
+    T_B = \frac{1}{2}m \|\dot x\|^2 + \frac{1}{2} \Omega^T J\Omega.
+\end{align}
+
+Since the contribution of the left wing is identical to the right wing, we use the subscript $i\in\{R,L\}$ to denote the variables related to a single wing. 
+Consider a mass element $dm$ in the wing, whose location is given by $\xi\in\Re^3$ in $\mathcal{F}_i$. 
+Its location in the inertial frame $\mathcal{F}_I$ is $x + R\mu_i + R Q_i \xi$, and its velocity is 
+\[
+    \dot x + R\hat \Omega (\mu_i + Q_i\xi ) + R Q_i \hat\Omega_i \xi.
+\]
+The kinetic energy of the right wing is 
+\begin{align*}
+    T_i = \int_{\mathcal{B}_i} \frac{1}{2} \|\dot x + R\hat \Omega (\mu_i + Q_i\xi ) + R Q_i \hat\Omega_i \xi \|^2 dm,
+\end{align*}
+where $\mathcal{B}_i$ denotes the space occupied by the right wing.
+
+Let $m_i\in\Re$ be the mass of the right wing, and let
+\begin{align}
+    \xi_i & = \frac{1}{m_i} \int_{\mathcal{B}_i} \xi dm,\\
+    J_i & = \int_{\mathcal{B}_i} \hat \xi^T \hat \xi  dm.
+\end{align}
+Thus $\xi_i\in\Re^3$ is the vector from the wing root to the mass center of the wing resolved in $\mathcal{F}_i$, and $J_i\in\Re^{3\times 3}$ is the inertia matrix of the right wing about the wing root resolved in $\mathcal{F}_i$. 
+\nomenclature{$m_i\in\Re$}{mass of the right wing}
+\nomenclature{$\xi_i\in\Re^3$}{the vector from the wing root to the mass center of the wing resolved in $\mathcal{F}_i$}
+\nomenclature{$J_i\in\Re^{3\times 3}$}{the inertia matrix of the right wing about the wing root resolved in $\mathcal{F}_i$}
+After rearranging, one can show
+\begin{align*}
+    T_i & = \frac{1}{2}m_i \|\dot x\|^2 + \frac{1}{2} m_i \Omega^T \hat \mu_i^T \hat \mu_i \Omega + \frac{1}{2} \Omega^T Q_i J_i Q_i^T \Omega  + \frac{1}{2}\Omega_i^T J_i \Omega_i\\
+        & \quad + m_i \dot x^T R\hat\Omega \mu_i + m_i \dot x^T R\hat\Omega Q_i \xi_i + m_i \dot x^T R Q_i \hat\Omega_i \xi_i  \\
+        & \quad + m_i \Omega^T \hat\mu_i^T \widehat{Q_i\xi_i} \Omega + m_i \Omega^T \hat\mu_i^T Q_i \hat\xi_i \Omega_i + \Omega^T Q_i J_i \Omega_i. 
+\end{align*}
+The derivatives of the kinetic energy are given by
+\begin{align*}
+    \deriv{T_i}{\dot x} & = m_i ( \dot x - R\hat\mu_i \Omega  - R\widehat{Q_i \xi_i} \Omega - R Q_i \hat \xi_i \Omega_i  ),\\
+    \deriv{T_i}{\Omega} & = ( m_i \hat\mu_i^T \hat\mu_i \Omega + Q J_i Q^T + m_i \hat\mu_i^T\widehat{Q_i\xi_i} + m_i \widehat{Q_i\xi_i}^T\hat\mu_i)  \Omega + m_i ( \hat\mu_i + \widehat{Q_i\xi_i} )  R^T \dot x  + (m_i \hat\mu_i^T Q_i \hat\xi_i + Q_i J_i) \Omega_i, \\
+    \deriv{T_i}{\Omega_i} & = J_i \Omega_i + m_i\hat\xi_i Q_i^T R^T \dot x + (m_i \hat\xi_i^T Q^T \hat\mu_i + J_i Q_i^T)\Omega,\\
+    \deriv{T_i}{R} \cdot R\hat\eta & = \eta^T \{ - m_i \widehat{R^T \dot x} (\hat\Omega\mu_i + \hat\Omega Q_i \xi_i + Q_i \hat\Omega_i \xi_i ) \},\\
+    \deriv{T_i}{Q_i} \cdot R\hat\eta_i & = \eta_i^T \{ (J_iQ_i^T\Omega)\times Q_i^T \Omega - m_i \hat\xi_i Q_i^T\hat\Omega R^T \dot x + m_i \widehat{\Omega_i \xi_i} Q_i^T R^T \dot x - m_i\hat \xi_i Q_i^T \hat\Omega^T \hat\mu_i \Omega + m_i \widehat{\hat \xi_i\Omega_i} Q_i^T \hat\mu_i \Omega + (J_i\Omega_i)\times Q_i^T \Omega \}.
+\end{align*}
+
+
+
 
 \bibliographystyle{IEEEtran}
 \bibliography{FWUAV}
