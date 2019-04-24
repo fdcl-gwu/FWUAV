@@ -1,8 +1,8 @@
 clear all;
 close all;
 
-WK.f=50;
-WK.beta=5*pi/180;
+WK.f=10;
+WK.beta=0*pi/180;
 N=301;
 T=1/WK.f;
 t=linspace(0,T,N);

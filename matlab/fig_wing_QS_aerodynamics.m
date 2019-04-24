@@ -1,7 +1,7 @@
 function fig_wing_QS_aerodynamics
 close all;
 
-WK.f=50;
+WK.f=10;
 WK.beta=0*pi/180;
 
 WK.phi_m=60*pi/180;

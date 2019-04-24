@@ -52,7 +52,9 @@ WK.psi_0=0;
 load('morp_MONARCH');
 
 %% generate figures for the note
-%fig_note(fv_body, fv_wr, fv_wl, true);
+fig_note(fv_body, fv_wr, fv_wl, true);
+
+return;
 
 %% generate the initial object when k=1
 k=1;
@@ -253,7 +255,7 @@ x=100*[-1.5 1 -1]';
 R=expmso3(-pi/12*e3)*expmso3(pi/6*e2)*expmso3(-pi/12*e1);
 Q_R=eye(3);
 Q_L=eye(3);
-[h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[1,0,0]);
+[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[1,0,0]);
 alpha([h_body, h_wr, h_wl],0.25);
 
 % show the inertial frame
@@ -272,7 +274,7 @@ x=[0 0 0]';
 R=eye(3);
 Q_R=eye(3);
 Q_L=eye(3);
-[h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[1 1 0]);
+[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[1 1 0]);
 alpha([h_body, h_wr, h_wl],0.25);
 view(-90,90);
 
@@ -284,7 +286,7 @@ x=[0 0 0]';
 R=eye(3);
 Q_R=eye(3);
 Q_L=eye(3);
-[h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[1 0 1]);
+[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[1 0 1]);
 alpha([h_body, h_wr, h_wl],0.25);
 view(-90,90);
 
@@ -299,7 +301,7 @@ R=expmso3(pi/6*e2);
 patch_circle(R*mu_R, R*expmso3(beta*e2)*e1, 170);
 
 [Q_R Q_L]=wing_attitude(beta,[-pi/6,0,0]);
-[h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [1 0 0]);
+[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [1 0 0]);
 alpha([h_body, h_wr, h_wl],0.8);
 hold on;
 view(370,-0);
@@ -318,7 +320,7 @@ R=expmso3(pi/6*e2);
 beta=15*pi/180;
 
 [Q_R Q_L]=wing_attitude(beta,[pi/3,0,0]);
-[h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [0 0 0]);
+[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [0 0 0]);
 alpha([h_body, h_wr, h_wl],0.9);
 hold on;
 view(270,-5);
@@ -340,7 +342,7 @@ R=expmso3(pi/6*e2);
 beta=15*pi/180;
 
 [Q_R Q_L]=wing_attitude(beta,[0,pi/6,0]);
-[h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [0 0 0]);
+[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [0 0 0]);
 alpha([h_body, h_wr, h_wl],0.9);
 hold on;
 view(360.54,2);
@@ -362,8 +364,8 @@ x=[0 0 0]';
 R=expmso3(pi/6*e2);
 beta=15*pi/180;
 
-[Q_R Q_L]=wing_attitude(beta,[0,0,pi/12]);
-[h_body, h_wr, h_wl]=generate_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [0 0 0]);
+[Q_R Q_L]=wing_attitude(beta,[0,0,pi/9]);
+[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [0 0 0]);
 alpha([h_body, h_wr, h_wl],0.9);
 hold on;
 view(270,35);
