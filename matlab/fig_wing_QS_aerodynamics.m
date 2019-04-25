@@ -18,11 +18,14 @@ WK.psi_N=0;
 WK.psi_a=0;
 WK.psi_0=0;
 
+WK.type='BermanWang';
 myfig(WK,'QS_sym',true);
 WK.theta_a=0.3;
 myfig(WK,'QS_adv',true);
 WK.theta_a=-0.3;
 myfig(WK,'QS_dly',true);
+WK.type='Monarch';
+myfig(WK,'QS_Monarch',true);
 
 end
 

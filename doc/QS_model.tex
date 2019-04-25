@@ -991,25 +991,26 @@ For the left wing,
 \subsubsection{Numerical Example}
 
 The shape of the wing of an actual Monarch butterfly has been captured in~$[\mathrm{ref}]$. 
-The wing span of the right wing is $l=\num{5.22e-2}\si{m}$, and
-the chord length is fitted by a $5$-th order polynomial as
+The wing span of the right wing is $l=\num{6.0996e-2}\si{m}$, and
+the chord length is fitted by a $6$-th order polynomial as
 \[
-    c(r) = -0.0083r^5 + 0.1392r^4 -0.7801 r^3 + 1.2861 r^2 + 1.092 r +0.23074,
+    c(r) = \num{-5.7601e-03} r^6 + \num{9.8017e-02} r^5 -\num{5.8232e-01} r^4 + \num{1.3617e+00} r^3  - \num{1.1626e+00} r^2  + \num{1.5571e+00} r + \num{1.6491e-01}.
 \]
 where the unit of both of $c(r)$ and $r$ is centimeters. 
 From the above, we compute wing morphological parameters to obtain
 \begin{gather*}
-    l=\num{5.2200e-02}\si{m},\quad
+    l=\num{6.0996e-2}\si{m},\quad
     S=\num{1.2171e-03}\si{m^2},\quad
-    \bar c=\num{2.3316e-02}\si{m},\\
-    \tilde r_1= \num{5.2095e-01},\quad
-    \tilde r_2 = \num{5.7139e-01},\quad
-    \tilde r_3 = \num{6.1104e-01},\quad
-    r_{cp} = \num{5.5822e-02},\\
-    \tilde v = \num{1.1494e+00},\quad
-    \tilde r_1(v) = \num{5.1650e-01},\quad
-    \tilde r_2(v) = \num{5.5330e-01},\quad
-    r_\rot = \num{3.0940e-02}.
+    \bar c=\num{2.0905e-02}\si{m},\quad
+    \AR = \num{2.9178e+00},\\
+    \tilde r_1= \num{4.9761e-01},\quad
+    \tilde r_2 = \num{5.4332e-01},\quad
+    \tilde r_3 = \num{5.8030e-01},\quad
+    r_{cp} = \num{6.5148e-02},\\
+    \tilde v = \num{1.2496e+00},\quad
+    \tilde r_1(v) = \num{4.8750e-01},\quad
+    \tilde r_2(v) = \num{5.1653e-01},\quad
+    r_\rot = \num{3.3383e-02}.
 \end{gather*}
 
 We evaluate the aerodynamic forces with the following lift/drag coefficient~\cite{sane2002aerodynamic}
@@ -1019,7 +1020,10 @@ We evaluate the aerodynamic forces with the following lift/drag coefficient~\cit
     C_\rot &  = \pi(0.75 - \hat x_0),
 \end{align*}
 where $\alpha^\circ = \alpha \frac{180}{\pi}$ is the angle of attack in degrees and $\hat x_0$ is chosen as $\hat x_0=0.5$. 
-or both of the left wing and the right wing, parameters for the wing kinematics are chosen as
+
+\paragraph{Kinematics Model~\cite{berman2007energy}}
+
+For both of the left wing and the right wing, parameters for the wing kinematics are chosen as
 \begin{gather*}
     f=10\,\mathrm{Hz},\quad \beta=0,\quad \phi_M=60^\circ, \quad \phi_K=0.9, \quad \phi_0 = 10^\circ,\\
     \theta_M = 50^\circ, \quad \theta_C = 4, \quad \theta_0 =0, \quad \psi_M=0.
@@ -1064,7 +1068,7 @@ It is shown that the advanced rotation generates an additional lift from the rot
             \includegraphics[width=0.45\textwidth]{QS_sym_F_B}
         }
     }
-    \caption{Symmetric rotation}\label{fig:QS_sym}
+    \caption{Wing Kinematics in~\cite{berman2007energy}: Symmetric rotation}\label{fig:QS_sym}
 \end{figure}
 
 \begin{figure}[p]
@@ -1095,7 +1099,7 @@ It is shown that the advanced rotation generates an additional lift from the rot
             \includegraphics[width=0.45\textwidth]{QS_adv_F_B}
         }
     }
-    \caption{Advanced rotation}\label{fig:QS_adv}
+    \caption{Wing Kinematics in~\cite{berman2007energy}: Advanced rotation}\label{fig:QS_adv}
 \end{figure}
 
 \begin{figure}[p]
@@ -1126,10 +1130,47 @@ It is shown that the advanced rotation generates an additional lift from the rot
             \includegraphics[width=0.45\textwidth]{QS_dly_F_B}
         }
     }
-    \caption{Delayed rotation}\label{fig:QS_dly}
+    \caption{Wing Kinematics in~\cite{berman2007energy}: Delayed rotation}\label{fig:QS_dly}
 \end{figure}
 
+\paragraph{Monarch Experiments} 
+
+\begin{figure}[p]
+    \centerline{
+        \subfigure[$\phi,\theta,\psi$]{
+            \includegraphics[width=0.45\textwidth]{QS_Monarch_E}
+        }
+        \hfill
+        \subfigure[$\alpha$]{
+            \includegraphics[width=0.45\textwidth]{QS_Monarch_alpha}
+        }
+    }
+    \centerline{
+        \subfigure[$U$]{
+            \includegraphics[width=0.45\textwidth]{QS_Monarch_U}
+        }
+        \hfill
+        \subfigure[$\dot\alpha \|U\|$]{
+            \includegraphics[width=0.45\textwidth]{QS_Monarch_U_alpha_dot}
+        }
+    }
+    \centerline{
+        \subfigure[Aerodynamic forces in the wing-fixed frame]{
+            \includegraphics[width=0.45\textwidth]{QS_Monarch_F_W}
+        }
+        \hfill
+        \subfigure[Aerodynamic forces in the body-fixed frame]{
+            \includegraphics[width=0.45\textwidth]{QS_Monarch_F_B}
+        }
+    }
+    \caption{Wing kinematics captured by Monarch flights}\label{fig:QS_Monarch}
+\end{figure}
+
+
+
 \newpage
+
+
 
 \subsection{Flapping Wing UAV Dynamics}
 
@@ -1170,7 +1211,11 @@ Its location in the inertial frame $\mathcal{F}_I$ is $x + R\mu_i + R Q_i \xi$, 
 \]
 The kinetic energy of the right wing is 
 \begin{align*}
-    T_i = \int_{\mathcal{B}_i} \frac{1}{2} \|\dot x + R\hat \Omega (\mu_i + Q_i\xi ) + R Q_i \hat\Omega_i \xi \|^2 dm,
+    T_i & = \int_{\mathcal{B}_i} \frac{1}{2} \|\dot x + R\hat \Omega (\mu_i + Q_i\xi ) + R Q_i \hat\Omega_i \xi \|^2 dm\\
+        & = \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}^T
+    \begin{bmatrix}
+        m_i I_{3\times 3} & -m_i R(\hat \mu_i + \widehat{Q_i\xi_i}) & - m_i R Q_i \hat \xi_i \\
+        m_i (\hat \mu_i + \widehat{Q_i\xi_i}) R^T & m_i \hat\mu_i^T\hat\mu_i + Q_i J_i Q_i^T + \frac{1}{2}m_i (\hatmu
 \end{align*}
 where $\mathcal{B}_i$ denotes the space occupied by the right wing.
 
@@ -1180,9 +1225,9 @@ Let $m_i\in\Re$ be the mass of the right wing, and let
     J_i & = \int_{\mathcal{B}_i} \hat \xi^T \hat \xi  dm.
 \end{align}
 Thus $\xi_i\in\Re^3$ is the vector from the wing root to the mass center of the wing resolved in $\mathcal{F}_i$, and $J_i\in\Re^{3\times 3}$ is the inertia matrix of the right wing about the wing root resolved in $\mathcal{F}_i$. 
-\nomenclature{$m_i\in\Re$}{mass of the right wing}
-\nomenclature{$\xi_i\in\Re^3$}{the vector from the wing root to the mass center of the wing resolved in $\mathcal{F}_i$}
-\nomenclature{$J_i\in\Re^{3\times 3}$}{the inertia matrix of the right wing about the wing root resolved in $\mathcal{F}_i$}
+\nomenclature{$m_i\in\Re$}{mass of the wing for $i\in\{R,L\}$}
+\nomenclature{$\xi_i\in\Re^3$}{the vector from the wing root to the mass center of the wing resolved in $\mathcal{F}_i$, for $i\in\{L,R\}$}
+\nomenclature{$J_i\in\Re^{3\times 3}$}{the inertia matrix of the wing about the wing root resolved in $\mathcal{F}_i$, for $i\in\{L,R\}$}
 After rearranging, one can show
 \begin{align*}
     T_i & = \frac{1}{2}m_i \|\dot x\|^2 + \frac{1}{2} m_i \Omega^T \hat \mu_i^T \hat \mu_i \Omega + \frac{1}{2} \Omega^T Q_i J_i Q_i^T \Omega  + \frac{1}{2}\Omega_i^T J_i \Omega_i\\

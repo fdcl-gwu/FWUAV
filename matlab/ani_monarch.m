@@ -11,9 +11,9 @@ load STLRead/fv_monarch;
 
 %% Wing kinematics
 
-WK.f=50;
-WK.beta=5*pi/180;
-N=301;
+WK.f=10;
+WK.beta=20*pi/180;
+N=1001;
 T=5/WK.f;
 t=linspace(0,T,N);
 
@@ -31,36 +31,36 @@ t=linspace(0,T,N);
 % WK.psi_a=0;
 % WK.psi_0=0;
 
-WK.f=50;
-WK.beta=5*pi/180;
-
-WK.phi_m=50*pi/180;
-WK.phi_K=0.4;
-WK.phi_0=10*pi/180;
-
-WK.theta_m=45*pi/180;
-WK.theta_C=5;
-WK.theta_0=0;
-WK.theta_a=0.3;
-
-WK.psi_m=10*pi/180;
-WK.psi_N=2;
-WK.psi_a=0;
-WK.psi_0=0;
+% WK.f=50;
+% WK.beta=5*pi/180;
+% 
+% WK.phi_m=50*pi/180;
+% WK.phi_K=0.4;
+% WK.phi_0=10*pi/180;
+% 
+% WK.theta_m=45*pi/180;
+% WK.theta_C=5;
+% WK.theta_0=0;
+% WK.theta_a=0.3;
+% 
+% WK.psi_m=10*pi/180;
+% WK.psi_N=2;
+% WK.psi_a=0;
+% WK.psi_0=0;
 
 
 load('morp_MONARCH');
 
 %% generate figures for the note
-fig_note(fv_body, fv_wr, fv_wl, true);
-
-return;
+%fig_note(fv_body, fv_wr, fv_wl, true);
+%return;
 
 %% generate the initial object when k=1
 k=1;
 x=[0 0 0]';
-R=expmso3(60*pi/180*e2);
+R=expmso3(30*pi/180*e2);
 
+WK.type='Monarch';
 [Euler Euler_dot Euler_ddot]=wing_kinematics(t(k),WK);
 [Q_R Q_L W_R W_L W_R_dot W_L_dot]=wing_attitude(WK.beta, Euler, Euler, Euler_dot, Euler_dot, Euler_ddot, Euler_ddot);
 h_fig=figure('color','w');
@@ -70,7 +70,7 @@ h_fig=figure('color','w');
 
 %% animation
 
-for k=floor(linspace(1,N,101))
+for k=floor(linspace(1,N,301))
     [Euler Euler_dot Euler_ddot]=wing_kinematics(t(k),WK);
     [Q_R Q_L W_R W_L W_R_dot W_L_dot]=wing_attitude(WK.beta, Euler, Euler, Euler_dot, Euler_dot, Euler_ddot, Euler_ddot);
     [L_R L_L D_R D_L M_R M_L F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(MONARCH, W_R, W_L, W_R_dot, W_L_dot);
@@ -94,7 +94,7 @@ e2=[0 1 0]';
 lwidth=1;
 alength=12;
 awidth=alength*tand(10);
-scale_Force=0.1e5;
+scale_Force=0.1e4;
 
 x_cp = x + R*Q_R*50*e2;
 acolor=[1 0 0]';
@@ -192,6 +192,8 @@ alpha([h_body, h_wr, h_wl],0.8);
 axis('image');
 
 view(180+10,30);
+view(90,20);
+view(270,80);
 
 set(gca,'Zdir','reverse','YDir','reverse');
 axis(180*[-1 1 -1 1 -1 1]);
@@ -241,7 +243,7 @@ set(h_body,'faces',fv_body.faces,'vertices',v_body);
 set(h_wr,'faces',fv_wr.faces,'vertices',v_wr);
 set(h_wl,'faces',fv_wl.faces,'vertices',v_wl);
 figure(h_fig);
-view(180+10,30);
+
 drawnow;
 end
 
