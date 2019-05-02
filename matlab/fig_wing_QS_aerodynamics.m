@@ -8,15 +8,15 @@ WK.phi_m=60*pi/180;
 WK.phi_K=0.9;
 WK.phi_0=10*pi/180;
 
-WK.theta_m=50*pi/180;
+WK.theta_m=40*pi/180;
 WK.theta_C=4;
-WK.theta_0=0;
+WK.theta_0=20*pi/180;
 WK.theta_a=0;
 
-WK.psi_m=0*pi/180;
-WK.psi_N=0;
+WK.psi_m=30*pi/180;
+WK.psi_N=1;
 WK.psi_a=0;
-WK.psi_0=0;
+WK.psi_0=10*pi/180;
 
 WK.type='BermanWang';
 myfig(WK,'QS_sym',true);
@@ -24,6 +24,7 @@ WK.theta_a=0.3;
 myfig(WK,'QS_adv',true);
 WK.theta_a=-0.3;
 myfig(WK,'QS_dly',true);
+
 WK.type='Monarch';
 myfig(WK,'QS_Monarch',true);
 
@@ -76,7 +77,7 @@ ylabel('$\theta$','interpreter','latex');
 subplot(3,1,3);
 plot(t/T,E_R(3,:)*180/pi);
 grid on;set(gca,'XTick',[0 0.5 1]);
-ylabel('$\theta$','interpreter','latex');
+ylabel('$\psi$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
 
 h_alpha=figure;

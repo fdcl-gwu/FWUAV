@@ -1026,7 +1026,8 @@ where $\alpha^\circ = \alpha \frac{180}{\pi}$ is the angle of attack in degrees 
 For both of the left wing and the right wing, parameters for the wing kinematics are chosen as
 \begin{gather*}
     f=10\,\mathrm{Hz},\quad \beta=0,\quad \phi_M=60^\circ, \quad \phi_K=0.9, \quad \phi_0 = 10^\circ,\\
-    \theta_M = 50^\circ, \quad \theta_C = 4, \quad \theta_0 =0, \quad \psi_M=0.
+    \theta_M = 30^\circ, \quad \theta_C = 4, \quad \theta_0 = 10^\circ,\\
+    \psi_M=30^\circ, \quad \psi_N=1, \quad \psi_a=0,\quad \psi_0=10^\circ.
 \end{gather*}
 Therefore, the motion of the left wing is symmetric to the right wing.
 Three cases are considered for $\phi_a=0$ (symmetric rotation), $\phi_a=0.3$ (advanced rotation), and $\phi_a=-0.3$ (delayed rotation).
@@ -1037,7 +1038,7 @@ Thus, the resultant force is normal to the chord.
 
 Next, the last subfigures, namely (f) present the aerodynamic forces resolved in $\mathcal{F}_B$. 
 Since $\beta=0$, the first component is the resultant lift normal to the stroke plane. 
-It is shown that the advanced rotation generates an additional lift from the rotational force at the end of the upstroke and the downstroke. 
+%It is shown that the advanced rotation generates an additional lift from the rotational force at the end of the upstroke and the downstroke. 
 
 
 \begin{figure}[p]
@@ -1135,6 +1136,9 @@ It is shown that the advanced rotation generates an additional lift from the rot
 
 \paragraph{Monarch Experiments} 
 
+Next, we use the wing kinematics capture by Monarch flights. 
+The results are illustrated in Figure~\ref{fig:QS_Monarch}.
+
 \begin{figure}[p]
     \centerline{
         \subfigure[$\phi,\theta,\psi$]{
@@ -1164,6 +1168,28 @@ It is shown that the advanced rotation generates an additional lift from the rot
         }
     }
     \caption{Wing kinematics captured by Monarch flights}\label{fig:QS_Monarch}
+\end{figure}
+
+\begin{figure}[p]
+    \centerline{
+        \subfigure[$\phi,\theta,\psi$]{
+            \includegraphics[width=0.45\textwidth]{exp_E}
+        }
+        \hfill
+        \subfigure[$v$]{
+            \includegraphics[width=0.45\textwidth]{exp_v}
+        }
+    }
+    \centerline{
+        \subfigure[$a$]{
+            \includegraphics[width=0.45\textwidth]{exp_a}
+        }
+        \hfill
+        \subfigure[Aerodynamic forces in the body-fixed frame ($ma_B/2$)]{
+            \includegraphics[width=0.45\textwidth]{exp_F_B}
+        }
+    }
+    \caption{Monarch experiment data for five consecutive cycle}\label{fig:exp}
 \end{figure}
 
 
@@ -1197,6 +1223,7 @@ These are driven by the wing kinematics that describe the attitude of the wings 
 
 \subsubsection{Lagrangian Mechanics}
 
+\paragraph{Kinetic Energy} 
 Next, we consider the mass and the inertia of the wing. 
 The kinetic energy of the body is given by
 \begin{align}
@@ -1211,11 +1238,17 @@ Its location in the inertial frame $\mathcal{F}_I$ is $x + R\mu_i + R Q_i \xi$, 
 \]
 The kinetic energy of the right wing is 
 \begin{align*}
-    T_i & = \int_{\mathcal{B}_i} \frac{1}{2} \|\dot x + R\hat \Omega (\mu_i + Q_i\xi ) + R Q_i \hat\Omega_i \xi \|^2 dm\\
+    T_i & = \frac{1}{2} \int_{\mathcal{B}_i} \frac{1}{2} \|\dot x + R\hat \Omega (\mu_i + Q_i\xi_i ) + R Q_i \hat\Omega_i \xi_i \|^2 dm\\
         & = \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}^T
     \begin{bmatrix}
         m_i I_{3\times 3} & -m_i R(\hat \mu_i + \widehat{Q_i\xi_i}) & - m_i R Q_i \hat \xi_i \\
-        m_i (\hat \mu_i + \widehat{Q_i\xi_i}) R^T & m_i \hat\mu_i^T\hat\mu_i + Q_i J_i Q_i^T + \frac{1}{2}m_i (\hatmu
+        m_i (\hat \mu_i + \widehat{Q_i\xi_i}) R^T & m_i \hat\mu_i^T\hat\mu_i + Q_i J_i Q_i^T + m_i (\hat \mu_i^T \widehat{Q_i\xi_i} + \widehat{Q_i\xi_i}^T \hat\mu_i ) & Q_i J_i + m_i \hat\mu_i^T Q_i \hat\xi_i \\
+        m_i\hat\xi_i Q_i^T R^T & J_i Q_i^T + m_i \hat\xi_i^T Q_i^T \hat\mu_i & J_i 
+    \end{bmatrix}
+    \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}\\
+        & = \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}^T
+    \mathcal{M}_i (R, Q_i) 
+    \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix},
 \end{align*}
 where $\mathcal{B}_i$ denotes the space occupied by the right wing.
 
@@ -1237,15 +1270,88 @@ After rearranging, one can show
 The derivatives of the kinetic energy are given by
 \begin{align*}
     \deriv{T_i}{\dot x} & = m_i ( \dot x - R\hat\mu_i \Omega  - R\widehat{Q_i \xi_i} \Omega - R Q_i \hat \xi_i \Omega_i  ),\\
-    \deriv{T_i}{\Omega} & = ( m_i \hat\mu_i^T \hat\mu_i \Omega + Q J_i Q^T + m_i \hat\mu_i^T\widehat{Q_i\xi_i} + m_i \widehat{Q_i\xi_i}^T\hat\mu_i)  \Omega + m_i ( \hat\mu_i + \widehat{Q_i\xi_i} )  R^T \dot x  + (m_i \hat\mu_i^T Q_i \hat\xi_i + Q_i J_i) \Omega_i, \\
+    \deriv{T_i}{\Omega} & = m_i ( \hat\mu_i + \widehat{Q_i\xi_i} )  R^T \dot x  + ( m_i \hat\mu_i^T \hat\mu_i  + Q J_i Q^T + m_i \hat\mu_i^T\widehat{Q_i\xi_i} + m_i \widehat{Q_i\xi_i}^T\hat\mu_i)  \Omega  + (m_i \hat\mu_i^T Q_i \hat\xi_i + Q_i J_i) \Omega_i, \\
     \deriv{T_i}{\Omega_i} & = J_i \Omega_i + m_i\hat\xi_i Q_i^T R^T \dot x + (m_i \hat\xi_i^T Q^T \hat\mu_i + J_i Q_i^T)\Omega,\\
-    \deriv{T_i}{R} \cdot R\hat\eta & = \eta^T \{ - m_i \widehat{R^T \dot x} (\hat\Omega\mu_i + \hat\Omega Q_i \xi_i + Q_i \hat\Omega_i \xi_i ) \},\\
-    \deriv{T_i}{Q_i} \cdot R\hat\eta_i & = \eta_i^T \{ (J_iQ_i^T\Omega)\times Q_i^T \Omega - m_i \hat\xi_i Q_i^T\hat\Omega R^T \dot x + m_i \widehat{\Omega_i \xi_i} Q_i^T R^T \dot x - m_i\hat \xi_i Q_i^T \hat\Omega^T \hat\mu_i \Omega + m_i \widehat{\hat \xi_i\Omega_i} Q_i^T \hat\mu_i \Omega + (J_i\Omega_i)\times Q_i^T \Omega \}.
+    \deriv{T_i}{R} \cdot R\hat\eta & = \eta^T \{ m_i \widehat{R^T \dot x} (\hat\mu_i+\widehat{Q_i\xi_i} \Omega +  Q_i \hat \xi_i \hat\Omega_i  ) \},\\
+    \deriv{T_i}{Q_i} \cdot R\hat\eta_i & = \eta_i^T \{ (J_iQ_i^T\Omega)\times Q_i^T \Omega - m_i \hat\xi_i Q_i^T\hat\Omega R^T \dot x + m_i \widehat{\hat \Omega_i \xi_i} Q_i^T R^T \dot x - m_i\hat \xi_i Q_i^T \hat\Omega^T \hat\mu_i \Omega + m_i \widehat{\hat \xi_i\Omega_i} Q_i^T \hat\mu_i \Omega + \widehat{J_i\Omega_i}Q_i^T \Omega \}.
 \end{align*}
 
+The total kinetic energy is
+\[
+    T = T_B + T_R + T_L.
+\]
 
+\paragraph{Potential Energy}
 
+The gravitational potential energy of the body is $U_B = -m g e_3^T x$. 
+The gravitational potential energy of a wing is
+\[
+    U_i = -m_ig e_3^T (x + R\mu_i + RQ_i \xi_i.
+\]
+The total potential energy is
+\[
+    U = U_B + U_R + U_L.
+\]
 
+\paragraph{Virtual Work}
+
+Consider an infinitesimal aerodynamic force $dF(\xi)\in\Re^3$ acting at the location of $\xi\in\Re^3$ of the wing. 
+In the inertial frame, the location of the force is given by $x+ R\mu_i + R Q_i\xi$. 
+Thus, the corresponding virtual work due to the aerodynamic force is
+\begin{align*}
+    \int_{\mathcal{B}_i} \delta(x + R\mu_i + R Q_i\xi) \cdot R Q_i dF(\xi) d\xi
+                      & =  (\delta x + R\hat\eta \mu_i) R Q_i \int dF(\xi) + \eta_i \cdot \int \xi \times dF(\xi).
+\end{align*}
+Let the resultant aerodynamic force and the moment about the wing root be
+\[
+    F_i = \int dF_i(\xi) ,\quad M_i = \int \xi\times dF_i(\xi).
+\]
+Also, let $\tau_i\in\Re^3$ be the control torque exerted at the wing root, resolved in the body-fixed frame. 
+
+The total virtual work due to the aerodynamic force and the control torque can be written as
+\begin{align}
+    \delta\mathcal{W} = \delta x \cdot R Q_i F_i + \eta\cdot (\mu_i\times Q_i F_i -\tau_i) + \eta_i \cdot ( M_i+ Q_i^T \tau_i).
+\end{align}
+
+\paragraph{Euler--Lagrange Equations}
+
+Let the Lagrangian be
+\[
+    L = T - U.
+\]
+According to Lagrange d'Alembert principle, 
+\[
+    \delta \int_{t_0}^{t_f} L dt  + \delta \mathcal{W} = 0.
+\]
+Consequently, the Euler-Lagrange equations are obtained as 
+\begin{gather*}
+    \frac{d}{dt} \deriv{L}{\dot x} - \deriv{L}{x} = \sum_i R Q_i F_i,\\
+    \frac{d}{dt} \deriv{L}{\Omega} + \Omega\times \deriv{L}{\Omega} - \T^*_e\L_R\cdot  \D_R L = \sum_i \hat\mu_i Q_iF_i -\tau_i,\\
+    \frac{d}{dt} \deriv{L}{\Omega_i} + \Omega_i\times \deriv{L}{\Omega_i} - \T^*_e\L_{Q_i}\cdot  \D_{Q_i} L = M_i + Q_i^T \tau_i.
+\end{gather*}
+
+Let $\mathcal{M}_B = \mathrm{diag}[m_B I_{3\times 3}, J, 0_{3\times 3}]$.
+\begin{gather*}
+    ( \mathcal{M}_B + \mathcal{M}_i )
+    \begin{bmatrix} \ddot x \\ \ddot\Omega \\ \ddot\Omega_i \end{bmatrix}
+    +
+    \begin{bmatrix}
+        -m_i R\hat\Omega(\hat\mu_i +\widehat{Q_i\xi_i})\Omega - m_i R Q_i\hat\Omega_i\hat\xi_i \Omega_i \\
+        m_i(\hat\Omega(\mu_i + Q_i\xi_))^\wedge R^T\dot x + m_i (Q_i\hat\Omega_i\xi_i)^\wedge R^T \dot x + Q_i(\hat\Omega_i J_i - J_i\hat\Omega_i) Q^T \Omega \\ 
+        + m_i(\hat\mu_i(Q_i\hat\Omega_i\xi_i)^\wedge + (Q_i\hat\Omega_i \xi_i)^\wedge \hat\mu_i)\Omega + Q_i\hat\Omega_i J_i\Omega_i + m_i\hat\mu_i^T Q_i\hat\Omega_i \hat\xi_i \Omega_i \\
+        + \hat\Omega( m_i\hat\mu_i^T\hat\mu_i + Q_i J_i Q_i^T + \hat\mu_i^T \widehat{Q_i\xi_i} + \widehat{Q_i\xi_i}^T\hat\mu_i )\Omega \\
+        m_i\hat\Omega \hat\mu_i^T Q_i \hat\xi_i \Omgea_i + \hat\Omega Q_i J_i \Omega_i\\
+        - m_i \widehat{R^T \dot x} (\hat\mu_i+\widehat{Q_i\xi_i} \Omega +  Q_i \hat \xi_i \hat\Omega_i ) \\
+        -m_i \hat\xi_i \hat\Omega_i Q_i^T R^T \dot x - m_i\hat\xi_i Q_i^T \hat\Omega R^T \dot x + m_i \hat\xi_i\hat\Omega_i Q_i^T \hat\mu_i \Omega - J_i\hat\Omega_i Q_i^T \Omega -\T_e^* \L_{Q_i} \cdot \D_{Q_i} L 
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        R Q_i F_i \\
+        \hat \mu_i Q_i F_i - \tau_i \\
+        \\ \\ \\ \\
+        M_i
+    \end{bmatrix}
+\end{gather*}
 \bibliographystyle{IEEEtran}
 \bibliography{FWUAV}
 

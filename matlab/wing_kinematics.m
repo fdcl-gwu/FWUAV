@@ -33,7 +33,11 @@ switch WK.type
         F_psi.AN = [34.8540; -3.0510; -3.9149; -1.9479; 1.1978; -0.0376; - 0.1545; -0.1020; 0.0494; 0.0893;];
         F_psi.BN = [3.2831; 4.0611; 4.7746; -0.3536; -0.4101; 1.4448; 0.5952; 0.3598; 0.3204; 0.3519;];
         
+        
         [psi psi_dot psi_ddot]=Fourier_eval(t, WK.f, F_psi);
+%         psi=0;
+%         psi_dot=0;
+%         psi_ddot=0;
         
     %case 'BermanWang'
     otherwise
