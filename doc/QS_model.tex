@@ -35,6 +35,7 @@
 \renewcommand{\S}{\Sph}
 \newcommand{\J}{\ensuremath{\mathbf{J}}}
 \newcommand{\Ad}{\ensuremath{\mathrm{Ad}}}
+\newcommand{\ad}{\ensuremath{\mathrm{ad}}}
 \newcommand{\intp}{\ensuremath{\mathbf{i}}}
 \newcommand{\extd}{\ensuremath{\mathbf{d}}}
 \newcommand{\hor}{\ensuremath{\mathrm{hor}}}
@@ -77,7 +78,7 @@
 
 \tableofcontents
 
-\printnomenclature[4cm]
+%\printnomenclature[4cm]
 
 \subsection{Flapping Wing UAV Model}
 
@@ -1340,7 +1341,7 @@ Let $\mathcal{M}_B = \mathrm{diag}[m_B I_{3\times 3}, J, 0_{3\times 3}]$.
         m_i(\hat\Omega(\mu_i + Q_i\xi_))^\wedge R^T\dot x + m_i (Q_i\hat\Omega_i\xi_i)^\wedge R^T \dot x + Q_i(\hat\Omega_i J_i - J_i\hat\Omega_i) Q^T \Omega \\ 
         + m_i(\hat\mu_i(Q_i\hat\Omega_i\xi_i)^\wedge + (Q_i\hat\Omega_i \xi_i)^\wedge \hat\mu_i)\Omega + Q_i\hat\Omega_i J_i\Omega_i + m_i\hat\mu_i^T Q_i\hat\Omega_i \hat\xi_i \Omega_i \\
         + \hat\Omega( m_i\hat\mu_i^T\hat\mu_i + Q_i J_i Q_i^T + \hat\mu_i^T \widehat{Q_i\xi_i} + \widehat{Q_i\xi_i}^T\hat\mu_i )\Omega \\
-        m_i\hat\Omega \hat\mu_i^T Q_i \hat\xi_i \Omgea_i + \hat\Omega Q_i J_i \Omega_i\\
+        m_i\hat\Omega \hat\mu_i^T Q_i \hat\xi_i \Omega_i + \hat\Omega Q_i J_i \Omega_i\\
         - m_i \widehat{R^T \dot x} (\hat\mu_i+\widehat{Q_i\xi_i} \Omega +  Q_i \hat \xi_i \hat\Omega_i ) \\
         -m_i \hat\xi_i \hat\Omega_i Q_i^T R^T \dot x - m_i\hat\xi_i Q_i^T \hat\Omega R^T \dot x + m_i \hat\xi_i\hat\Omega_i Q_i^T \hat\mu_i \Omega - J_i\hat\Omega_i Q_i^T \Omega -\T_e^* \L_{Q_i} \cdot \D_{Q_i} L 
     \end{bmatrix}
@@ -1349,9 +1350,65 @@ Let $\mathcal{M}_B = \mathrm{diag}[m_B I_{3\times 3}, J, 0_{3\times 3}]$.
         R Q_i F_i \\
         \hat \mu_i Q_i F_i - \tau_i \\
         \\ \\ \\ \\
-        M_i
+        M_i + Q_i^T \tau_i
     \end{bmatrix}
 \end{gather*}
+
+
+
+\paragraph{Lagrangian Mechanics}
+
+Consider a dynamic system evolving on a Lie group $\G$. 
+The kinematics equation is given by
+\[
+    \dot g = g \xi,
+\]
+for $\xi\in\g$.
+Consequently $\T\G$ is identified with $\G\times \g$.
+Let $\mathbf{J}:\G\times \g\rightarrow \g^*$ be a symmetric, positive-definite inertia tensor. 
+The Lagrangian $L:\G\times \g \rightarrow \Re$ is given by
+\[
+    L(g,\xi) = \frac{1}{2} \pair{ \mathbf{J}_g(\xi), \xi } - U(g),
+\]
+for a configuration dependent potential $U:\SO\rightarrow \Re$. 
+Also, define $(\mathbf{K}_g(\xi))(\cdot):\G\times \g\rightarrow \g^*$ such that
+\[
+    \T_e^* \L_g \cdot \D_g \mathbf{J}_g(\xi) \cdot \chi = (\mathbf{K}_g(\xi)) (\chi) = \mathbf{K}_g(\xi)\chi
+\]
+It is straightforward to $\mathbf{K}_g(\xi)$ is a linear operator.
+Therefore, by selecting a basis of $\g$, $\mathbf{K}_g(\xi)$ can be represented by a matrix
+
+We have
+\begin{align*}
+    \D_\xi L(g,\xi) & = \mathbf{J}_g(\xi),\\
+    \frac{d}{dt} \D_\xi L(g,\xi) & = \mathbf{J}_g(\dot \xi) + \mathbf{K}_g(\xi)\xi,\\
+    \T^*_e \L_g \cdot \D_g L(g,\xi)\cdot\chi & = \frac{1}{2}\pair{\mathbf{K}_g(\xi)\chi , \xi} - \T_e^* \L_g U(g)\cdot \chi\\
+                                             & = \braces{ \frac{1}{2}\mathbf{K}_g^*(\xi)\xi - \T^*_e \L_g U(g)} \cdot \chi,
+\end{align*}
+where $\g^*$ is identified with $\g$ with the pairing. 
+Thus, the Euler--Lagrange equations are given by
+\[
+    \mathbf{J}_g(\dot \xi) + \mathbf{K}_g(\xi)\xi - \ad^*_\xi \cdot \mathbf{J}_g(\xi)  - \frac{1}{2}\mathbf{K}^*_g(\xi)\xi + \T_e^* \L_g U(g) =0.
+\]
+
+
+\begin{align*}
+    \T^*_e \L_g T_i  \cdot \zeta = 
+    \begin{bmatrix}
+        0 & m_i R ((\hat\mu_i+\widehat{Q_i\xi_i})\Omega)^\wedge + m_i R (Q_i\hat\xi_i\Omega_i)^\wedge 
+        & -m_i R\hat\Omega Q_i \hat\xi_i + m_i R Q_i \widehat{\hat \xi_i \Omega_i}\\
+        0 & m_i(\hat\mu_i + \widehat{Q_i\xi_i})\widehat{R^T \dot x}
+        & m_i\widehat{R^T\dot x}Q_i\hat\xi_i - Q_i (J_iQ_i^T\Omega)^\wedge + Q_i J_i \widehat{Q_i^T\Omega} \\
+        & & - m_i\hat\mu_i\hat\Omega Q_i\hat\xi_i - m_i\widehat{\hat\mu_i\Omega} Q_i \hat\xi_i \\
+        & & - Q_i \widehat{J_i\Omega_i} + m_i \hat\mu_i Q_i \widehat{\hat\xi_i \Omega_i} \\
+        0 & m_i \hat\xi_i Q_i^T \widehat{R^T\dot x}
+        & m_i \hat\xi_i (Q_i^T R^T \dot x)^\wedge + J_i\widehat{Q_i^T\Omega} - m_i\hat\xi (Q^T\hat\mu_i \Omega)^\wedge
+    \end{bmatrix}
+    \begin{bmatrix}
+        \delta\dot x \\ \eta \\ \eta_i
+    \end{bmatrix}
+\end{align*}
+
 \bibliographystyle{IEEEtran}
 \bibliography{FWUAV}
 
