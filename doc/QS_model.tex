@@ -1,4 +1,4 @@
-\documentclass[10pt]{article}
+\documentclass[10pt,draft]{article}
 \usepackage[letterpaper,text={6.5in,8.6in},centering]{geometry}
 \usepackage{amssymb,amsmath,amsthm,times,graphicx,subfigure}
 \usepackage{enumitem}
@@ -1193,66 +1193,93 @@ The results are illustrated in Figure~\ref{fig:QS_Monarch}.
     \caption{Monarch experiment data for five consecutive cycle}\label{fig:exp}
 \end{figure}
 
-
-
-\newpage
-
-
+\clearpage\newpage
 
 \subsection{Flapping Wing UAV Dynamics}
 
-\subsubsection{Equations of Motion}
+\subsubsection{Lagrangian Mechanics on a Lie Group}
 
-We present the equations of motion assuming that the mass and the inertia of both wings are negligible. 
-Let $J\in\Re^{3\times 3}$ be the inertia matrix of the body in $\mathcal{F}_B$, and let $m\in\Re$ be the mass of the body. 
-\nomenclature{$m\in\Re$}{mass of the body}
-\nomenclature{$J\in\Re^{3\times 3}$}{inertia matrix of the body about its mass center resolved in $\mathcal{F}_B$}
+Consider a dynamic system evolving on a Lie group $\G$. 
+The kinematics equation is given by
+\[
+    \dot g = g \xi,
+\]
+for $\xi\in\g$ corresponding to the left-trivialized velocity.
+Consequently the tangent bundle $\T\G$ is identified with $\G\times \g$.
+Let $\mathbf{J}:\G\times \g\rightarrow \g^*$ be a symmetric, positive-definite inertia tensor, i.e., 
+\begin{gather*}
+    \pair{\mathbf{J}_g(\xi), \xi} \geq 0,\\
+    \pair{\mathbf{J}_g(\xi), \xi} = 0\; \Leftrightarrow \; \xi=0\\
+    \pair{\mathbf{J}_g(\xi_1), \xi_2} = \pair{\mathbf{J}_g(\xi_2), \xi_1},
+\end{gather*}
+for any $g\in\G$ and $\xi,\xi_1,\xi_2\in\g$. 
+Also, define $(\mathbf{K}_g(\xi))(\cdot):\G\times \g\rightarrow \g^*$ such that
+\[
+    \T_e^* \L_g \cdot \D_g \mathbf{J}_g(\xi) \cdot \chi = (\mathbf{K}_g(\xi)) (\chi) = \mathbf{K}_g(\xi)\chi
+\]
+It is straightforward to $\mathbf{K}_g(\xi)$ is a linear operator.
+Therefore, by selecting a basis of $\g$, $\mathbf{K}_g(\xi)$ can be represented by a matrix.
+Intuitively, it is the left-trivialize derivative of $\mathbf{J}_g(\xi)$ with respect to $g$. 
 
-From Netwon's second law, 
-\begin{align}
-    m \ddot x & =  RQ_R (L_R+D_R+F_{\rot _R}) + R Q_L (L_L+D_L + F_{\rot_L}) + mg e_3,\\
-    J\dot\Omega + \Omega\times J\Omega & =  (\mu_R + r_{cp} Q_R e_2) \times Q_R (L_R+D_R) + (\mu_R + r_{\rot} Q_R e_2)\times Q_R F_{\rot_R}\nonumber\\
-                                       & \quad + (\mu_L - r_{cp} Q_L e_2) \times Q_L (L_L+D_L) + (\mu_L + r_{\rot} Q_L e_2)\times Q_L F_{\rot_L},
-\end{align}
-with the kinematics equations copied below
-\begin{align}
-    \dot R & = R\hat\Omega,\\
-    \dot Q_R & = Q_R \hat\Omega_R,\\
-    \dot Q_L & = Q_L \hat\Omega_L.
-\end{align}
-These are driven by the wing kinematics that describe the attitude of the wings relative to the body, namely $Q_R(t), Q_L(t)$.
+Suppose that the Lagrangian $L:\G\times \g \rightarrow \Re$ is given by
+\[
+    L(g,\xi) = \frac{1}{2} \pair{ \mathbf{J}_g(\xi), \xi } - U(g),
+\]
+for a configuration dependent potential $U:\SO\rightarrow \Re$. 
+We have
+\begin{align*}
+    \D_\xi L(g,\xi) & = \mathbf{J}_g(\xi),\\
+    \frac{d}{dt} \D_\xi L(g,\xi) & = \mathbf{J}_g(\dot \xi) + \mathbf{K}_g(\xi)\xi,\\
+    \T^*_e \L_g \cdot \D_g L(g,\xi)\cdot\chi & = \frac{1}{2}\pair{\mathbf{K}_g(\xi)\chi , \xi} - \T_e^* \L_g U(g)\cdot \chi\\
+                                             & = \braces{ \frac{1}{2}\mathbf{K}_g^*(\xi)\xi - \T^*_e \L_g U(g)} \cdot \chi,
+\end{align*}
+where $\g^*$ is identified with $\g$ with the pairing. 
+Thus, the Euler--Lagrange equations are given by
+\begin{gather}
+    \mathbf{J}_g(\dot \xi) + \mathbf{K}_g(\xi)\xi - \ad^*_\xi \cdot \mathbf{J}_g(\xi)  - \frac{1}{2}\mathbf{K}^*_g(\xi)\xi + \T_e^* \L_g U(g) =0.
+\end{gather}
 
-\subsubsection{Lagrangian Mechanics}
+The total energy is
+\begin{align*}
+    E = \frac{1}{2}\pair{\mathbf{J}_g(\xi), \xi} + U(g).
+\end{align*}
+Its time-derivative is
+\begin{align*}
+    \dot E & = \pair{ \dot{\mathbf{J}}_g(\xi), \xi} + \dot U(g)\\
+           & =  \frac{1}{2}\pair{\dot{\mathbf{J}}_g( \xi),\xi} +
+           \frac{1}{2} \pair{ \mathbf{J}_g(\xi),\dot \xi} 
+           +  \T_e^*\L_g U(g)\cdot \xi\\
+           & = \frac{1}{2}\pair{\mathbf{J}_g(\dot \xi), \xi} + \frac{1}{2}\pair{\mathbf{K}_g(\xi)\xi, \xi} 
+           + \frac{1}{2} \pair{ \mathbf{J}_g(\xi),\dot \xi} 
+           +  \T_e^*\L_g U(g)\cdot \xi\\
+           & = \pair{ - \mathbf{K}_g(\xi)\xi + \ad^*_\xi \cdot \mathbf{J}_g(\xi)  + \frac{1}{2}\mathbf{K}^*_g(\xi)\xi, \xi} + \frac{1}{2}\pair{\mathbf{K}_g(\xi)\xi, \xi} \\
+           & = \pair{-\mathbf{K}_g(\xi)\xi, \xi} + \pair{\mathbf{J}_g(\xi), \ad_\xi\cdot \xi} + \frac{1}{2} \pair{\xi, \mathbf{K}_g(\xi)\xi} + \frac{1}{2}\pair{\mathbf{K}_g(\xi)\xi, \xi}  = 0,
+\end{align*}
+which shows the energy conservation in the absence of external force or moment. 
+
+\subsubsection{Lagrangian Mechanics of Flapping Wing UAV}
+
+The configuration of the given flapping wing UAV model is described by $(x,R,Q_R,Q_L)$. 
+Consequently, the configuration space is a Lie group $\G=\Re^3\times \SO^3$. 
 
 \paragraph{Kinetic Energy} 
-Next, we consider the mass and the inertia of the wing. 
 The kinetic energy of the body is given by
 \begin{align}
     T_B = \frac{1}{2}m \|\dot x\|^2 + \frac{1}{2} \Omega^T J\Omega.
 \end{align}
 
-Since the contribution of the left wing is identical to the right wing, we use the subscript $i\in\{R,L\}$ to denote the variables related to a single wing. 
+Next, we find the expression for the kinetic energy of wings. 
+Since the contribution of the left wing is identical to the right wing, we use the subscript $i\in\{R,L\}$ to denote the variables related to a particular wing. 
 Consider a mass element $dm$ in the wing, whose location is given by $\xi\in\Re^3$ in $\mathcal{F}_i$. 
 Its location in the inertial frame $\mathcal{F}_I$ is $x + R\mu_i + R Q_i \xi$, and its velocity is 
 \[
     \dot x + R\hat \Omega (\mu_i + Q_i\xi ) + R Q_i \hat\Omega_i \xi.
 \]
-The kinetic energy of the right wing is 
+Thus, the kinetic energy is 
 \begin{align*}
-    T_i & = \frac{1}{2} \int_{\mathcal{B}_i} \frac{1}{2} \|\dot x + R\hat \Omega (\mu_i + Q_i\xi_i ) + R Q_i \hat\Omega_i \xi_i \|^2 dm\\
-        & = \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}^T
-    \begin{bmatrix}
-        m_i I_{3\times 3} & -m_i R(\hat \mu_i + \widehat{Q_i\xi_i}) & - m_i R Q_i \hat \xi_i \\
-        m_i (\hat \mu_i + \widehat{Q_i\xi_i}) R^T & m_i \hat\mu_i^T\hat\mu_i + Q_i J_i Q_i^T + m_i (\hat \mu_i^T \widehat{Q_i\xi_i} + \widehat{Q_i\xi_i}^T \hat\mu_i ) & Q_i J_i + m_i \hat\mu_i^T Q_i \hat\xi_i \\
-        m_i\hat\xi_i Q_i^T R^T & J_i Q_i^T + m_i \hat\xi_i^T Q_i^T \hat\mu_i & J_i 
-    \end{bmatrix}
-    \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}\\
-        & = \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}^T
-    \mathcal{M}_i (R, Q_i) 
-    \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix},
+    T_i & = \frac{1}{2} \int_{\mathcal{B}_i} \frac{1}{2} \|\dot x + R\hat \Omega (\mu_i + Q_i\xi_i ) + R Q_i \hat\Omega_i \xi_i \|^2 dm,
 \end{align*}
 where $\mathcal{B}_i$ denotes the space occupied by the right wing.
-
 Let $m_i\in\Re$ be the mass of the right wing, and let
 \begin{align}
     \xi_i & = \frac{1}{m_i} \int_{\mathcal{B}_i} \xi dm,\\
@@ -1264,18 +1291,33 @@ Thus $\xi_i\in\Re^3$ is the vector from the wing root to the mass center of the 
 \nomenclature{$J_i\in\Re^{3\times 3}$}{the inertia matrix of the wing about the wing root resolved in $\mathcal{F}_i$, for $i\in\{L,R\}$}
 After rearranging, one can show
 \begin{align*}
-    T_i & = \frac{1}{2}m_i \|\dot x\|^2 + \frac{1}{2} m_i \Omega^T \hat \mu_i^T \hat \mu_i \Omega + \frac{1}{2} \Omega^T Q_i J_i Q_i^T \Omega  + \frac{1}{2}\Omega_i^T J_i \Omega_i\\
-        & \quad + m_i \dot x^T R\hat\Omega \mu_i + m_i \dot x^T R\hat\Omega Q_i \xi_i + m_i \dot x^T R Q_i \hat\Omega_i \xi_i  \\
-        & \quad + m_i \Omega^T \hat\mu_i^T \widehat{Q_i\xi_i} \Omega + m_i \Omega^T \hat\mu_i^T Q_i \hat\xi_i \Omega_i + \Omega^T Q_i J_i \Omega_i. 
+        T_i & = \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}^T
+    \begin{bmatrix}
+        m_i I_{3\times 3} & -m_i R(\hat \mu_i + \widehat{Q_i\xi_i}) & - m_i R Q_i \hat \xi_i \\
+        m_i (\hat \mu_i + \widehat{Q_i\xi_i}) R^T & m_i \hat\mu_i^T\hat\mu_i + Q_i J_i Q_i^T + m_i (\hat \mu_i^T \widehat{Q_i\xi_i} + \widehat{Q_i\xi_i}^T \hat\mu_i ) & Q_i J_i + m_i \hat\mu_i^T Q_i \hat\xi_i \\
+        m_i\hat\xi_i Q_i^T R^T & J_i Q_i^T + m_i \hat\xi_i^T Q_i^T \hat\mu_i & J_i 
+    \end{bmatrix}
+    \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}\\
+    & = 
+    \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}^T
+    \mathbf{J}_i(R,Q_i)
+    \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}.
 \end{align*}
-The derivatives of the kinetic energy are given by
+The derivative of the inertia is
 \begin{align*}
-    \deriv{T_i}{\dot x} & = m_i ( \dot x - R\hat\mu_i \Omega  - R\widehat{Q_i \xi_i} \Omega - R Q_i \hat \xi_i \Omega_i  ),\\
-    \deriv{T_i}{\Omega} & = m_i ( \hat\mu_i + \widehat{Q_i\xi_i} )  R^T \dot x  + ( m_i \hat\mu_i^T \hat\mu_i  + Q J_i Q^T + m_i \hat\mu_i^T\widehat{Q_i\xi_i} + m_i \widehat{Q_i\xi_i}^T\hat\mu_i)  \Omega  + (m_i \hat\mu_i^T Q_i \hat\xi_i + Q_i J_i) \Omega_i, \\
-    \deriv{T_i}{\Omega_i} & = J_i \Omega_i + m_i\hat\xi_i Q_i^T R^T \dot x + (m_i \hat\xi_i^T Q^T \hat\mu_i + J_i Q_i^T)\Omega,\\
-    \deriv{T_i}{R} \cdot R\hat\eta & = \eta^T \{ m_i \widehat{R^T \dot x} (\hat\mu_i+\widehat{Q_i\xi_i} \Omega +  Q_i \hat \xi_i \hat\Omega_i  ) \},\\
-    \deriv{T_i}{Q_i} \cdot R\hat\eta_i & = \eta_i^T \{ (J_iQ_i^T\Omega)\times Q_i^T \Omega - m_i \hat\xi_i Q_i^T\hat\Omega R^T \dot x + m_i \widehat{\hat \Omega_i \xi_i} Q_i^T R^T \dot x - m_i\hat \xi_i Q_i^T \hat\Omega^T \hat\mu_i \Omega + m_i \widehat{\hat \xi_i\Omega_i} Q_i^T \hat\mu_i \Omega + \widehat{J_i\Omega_i}Q_i^T \Omega \}.
+    \mathbf{K}_i(R,Q_i,\Omega,\Omega_i) = 
+    \begin{bmatrix}
+        0 & m_i R ((\hat\mu_i+\widehat{Q_i\xi_i})\Omega)^\wedge + m_i R (Q_i\hat\xi_i\Omega_i)^\wedge 
+        & -m_i R\hat\Omega Q_i \hat\xi_i + m_i R Q_i \widehat{\hat \xi_i \Omega_i}\\
+        0 & m_i(\hat\mu_i + \widehat{Q_i\xi_i})\widehat{R^T \dot x}
+        & m_i\widehat{R^T\dot x}Q_i\hat\xi_i - Q_i (J_iQ_i^T\Omega)^\wedge + Q_i J_i \widehat{Q_i^T\Omega} \\
+        & & - m_i\hat\mu_i\hat\Omega Q_i\hat\xi_i - m_i\widehat{\hat\mu_i\Omega} Q_i \hat\xi_i \\
+        & & - Q_i \widehat{J_i\Omega_i} + m_i \hat\mu_i Q_i \widehat{\hat\xi_i \Omega_i} \\
+        0 & m_i \hat\xi_i Q_i^T \widehat{R^T\dot x}
+        & m_i \hat\xi_i (Q_i^T R^T \dot x)^\wedge + J_i\widehat{Q_i^T\Omega} - m_i\hat\xi (Q^T\hat\mu_i \Omega)^\wedge
+    \end{bmatrix}.
 \end{align*}
+
 
 The total kinetic energy is
 \[
@@ -1284,10 +1326,13 @@ The total kinetic energy is
 
 \paragraph{Potential Energy}
 
-The gravitational potential energy of the body is $U_B = -m g e_3^T x$. 
+The gravitational potential energy of the body is 
+\[
+    U_B = -m g e_3^T x.
+\]
 The gravitational potential energy of a wing is
 \[
-    U_i = -m_ig e_3^T (x + R\mu_i + RQ_i \xi_i.
+    U_i = -m_ig e_3^T (x + R\mu_i + RQ_i \xi_i).
 \]
 The total potential energy is
 \[
@@ -1311,103 +1356,52 @@ Also, let $\tau_i\in\Re^3$ be the control torque exerted at the wing root, resol
 
 The total virtual work due to the aerodynamic force and the control torque can be written as
 \begin{align}
-    \delta\mathcal{W} = \delta x \cdot R Q_i F_i + \eta\cdot (\mu_i\times Q_i F_i -\tau_i) + \eta_i \cdot ( M_i+ Q_i^T \tau_i).
+    \delta\mathcal{W} = \sum_{i\in\{R,L\}} \delta x \cdot R Q_i F_i + \eta\cdot (\mu_i\times Q_i F_i -\tau_i) + \eta_i \cdot ( M_i+ Q_i^T \tau_i).
 \end{align}
 
 \paragraph{Euler--Lagrange Equations}
 
-Let the Lagrangian be
-\[
-    L = T - U.
-\]
-According to Lagrange d'Alembert principle, 
-\[
-    \delta \int_{t_0}^{t_f} L dt  + \delta \mathcal{W} = 0.
-\]
-Consequently, the Euler-Lagrange equations are obtained as 
-\begin{gather*}
-    \frac{d}{dt} \deriv{L}{\dot x} - \deriv{L}{x} = \sum_i R Q_i F_i,\\
-    \frac{d}{dt} \deriv{L}{\Omega} + \Omega\times \deriv{L}{\Omega} - \T^*_e\L_R\cdot  \D_R L = \sum_i \hat\mu_i Q_iF_i -\tau_i,\\
-    \frac{d}{dt} \deriv{L}{\Omega_i} + \Omega_i\times \deriv{L}{\Omega_i} - \T^*_e\L_{Q_i}\cdot  \D_{Q_i} L = M_i + Q_i^T \tau_i.
-\end{gather*}
+Let $g=(x, R, Q_R, Q_L)$ and $\xi=(\dot x, \Omega, \Omega_R, \Omega_L)$.
+The inertia tensor is written as
+\begin{align}
+    \mathbf{J}_g = \begin{bmatrix}
+        m I_{3\times 3} + \mathbf{J}_{R_{11}} + \mathbf{J}_{L_{11}} 
+        & \mathbf{J}_{R_{12 }} + \mathbf{J}_{L_{12}}
+        & \mathbf{J}_{R_{13 }}
+        & \mathbf{J}_{L_{13}} \\
+        \cdot & J + \mathbf{J}_{R_{22}} +\mathbf{J}_{L_{22}}
+        & \mathbf{J}_{R_{23}} 
+        & \mathbf{J}_{L_{23}} \\
+        \cdot & \cdot &  \mathbf{J}_{R_{33}}
+              & 0 \\
+        \cdot & \cdot & \cdot 
+              & \mathbf{J}_{L_{33}}
+    \end{bmatrix},
+\end{align}
+where the subscript $ij$ refers to the $i,j$-th block, and the unspecified blocks are chosen such that $\mathbf{J}_g$ becomes symmetric.
+The derivatives of the inertia are
+\begin{align}
+    \mathbf{K}_g = \begin{bmatrix}
+        0 & \mathbf{K}_{R_{12}} + \mathbf{K}_{L_{12}} & \mathbf{K}_{R_{13}} & \mathbf{K}_{L_{13}} \\
+        0 & \mathbf{K}_{R_{22}} + \mathbf{K}_{L_{22}}& \mathbf{K}_{R_{23}} & \mathbf{K}_{L_{23}} \\
+        0 & \mathbf{K}_{R_{32}} & \mathbf{K}_{R_{33}} & 0 \\
+        0 & \mathbf{K}_{L_{32}} & 0 & \mathbf{K}_{L_{33}}
+    \end{bmatrix}.
+\end{align}
+The co-adjoint operator corresponds to the following matrix,
+\begin{align}
+    \mathrm{ad}^*_\xi = \mathrm{diag}[0_{3\times 3}, -\hat\Omega, -\hat\Omega_R, -\hat\Omega_L].
+\end{align}
+The derivatives of the potential energy are
+\begin{align}
+    \T^*_e\L_g U = \begin{bmatrix}
+    - (m+m_R+m_L)g e_3\\
+    m_Rg \widehat{R^T e_3} (\mu_R + Q_R \xi_R) + m_L g \widehat{R^T e_3} (\mu_L + Q_L \xi_L)\\
+    m_R g  (Q_R^T R^T e_3)^\wedge \xi_R\\
+    m_L g  (Q_L^T R^T e_3)^\wedge \xi_L\\
+\end{bmatrix}.
+\end{align}
 
-Let $\mathcal{M}_B = \mathrm{diag}[m_B I_{3\times 3}, J, 0_{3\times 3}]$.
-\begin{gather*}
-    ( \mathcal{M}_B + \mathcal{M}_i )
-    \begin{bmatrix} \ddot x \\ \ddot\Omega \\ \ddot\Omega_i \end{bmatrix}
-    +
-    \begin{bmatrix}
-        -m_i R\hat\Omega(\hat\mu_i +\widehat{Q_i\xi_i})\Omega - m_i R Q_i\hat\Omega_i\hat\xi_i \Omega_i \\
-        m_i(\hat\Omega(\mu_i + Q_i\xi_))^\wedge R^T\dot x + m_i (Q_i\hat\Omega_i\xi_i)^\wedge R^T \dot x + Q_i(\hat\Omega_i J_i - J_i\hat\Omega_i) Q^T \Omega \\ 
-        + m_i(\hat\mu_i(Q_i\hat\Omega_i\xi_i)^\wedge + (Q_i\hat\Omega_i \xi_i)^\wedge \hat\mu_i)\Omega + Q_i\hat\Omega_i J_i\Omega_i + m_i\hat\mu_i^T Q_i\hat\Omega_i \hat\xi_i \Omega_i \\
-        + \hat\Omega( m_i\hat\mu_i^T\hat\mu_i + Q_i J_i Q_i^T + \hat\mu_i^T \widehat{Q_i\xi_i} + \widehat{Q_i\xi_i}^T\hat\mu_i )\Omega \\
-        m_i\hat\Omega \hat\mu_i^T Q_i \hat\xi_i \Omega_i + \hat\Omega Q_i J_i \Omega_i\\
-        - m_i \widehat{R^T \dot x} (\hat\mu_i+\widehat{Q_i\xi_i} \Omega +  Q_i \hat \xi_i \hat\Omega_i ) \\
-        -m_i \hat\xi_i \hat\Omega_i Q_i^T R^T \dot x - m_i\hat\xi_i Q_i^T \hat\Omega R^T \dot x + m_i \hat\xi_i\hat\Omega_i Q_i^T \hat\mu_i \Omega - J_i\hat\Omega_i Q_i^T \Omega -\T_e^* \L_{Q_i} \cdot \D_{Q_i} L 
-    \end{bmatrix}
-    =
-    \begin{bmatrix}
-        R Q_i F_i \\
-        \hat \mu_i Q_i F_i - \tau_i \\
-        \\ \\ \\ \\
-        M_i + Q_i^T \tau_i
-    \end{bmatrix}
-\end{gather*}
-
-
-
-\paragraph{Lagrangian Mechanics}
-
-Consider a dynamic system evolving on a Lie group $\G$. 
-The kinematics equation is given by
-\[
-    \dot g = g \xi,
-\]
-for $\xi\in\g$.
-Consequently $\T\G$ is identified with $\G\times \g$.
-Let $\mathbf{J}:\G\times \g\rightarrow \g^*$ be a symmetric, positive-definite inertia tensor. 
-The Lagrangian $L:\G\times \g \rightarrow \Re$ is given by
-\[
-    L(g,\xi) = \frac{1}{2} \pair{ \mathbf{J}_g(\xi), \xi } - U(g),
-\]
-for a configuration dependent potential $U:\SO\rightarrow \Re$. 
-Also, define $(\mathbf{K}_g(\xi))(\cdot):\G\times \g\rightarrow \g^*$ such that
-\[
-    \T_e^* \L_g \cdot \D_g \mathbf{J}_g(\xi) \cdot \chi = (\mathbf{K}_g(\xi)) (\chi) = \mathbf{K}_g(\xi)\chi
-\]
-It is straightforward to $\mathbf{K}_g(\xi)$ is a linear operator.
-Therefore, by selecting a basis of $\g$, $\mathbf{K}_g(\xi)$ can be represented by a matrix
-
-We have
-\begin{align*}
-    \D_\xi L(g,\xi) & = \mathbf{J}_g(\xi),\\
-    \frac{d}{dt} \D_\xi L(g,\xi) & = \mathbf{J}_g(\dot \xi) + \mathbf{K}_g(\xi)\xi,\\
-    \T^*_e \L_g \cdot \D_g L(g,\xi)\cdot\chi & = \frac{1}{2}\pair{\mathbf{K}_g(\xi)\chi , \xi} - \T_e^* \L_g U(g)\cdot \chi\\
-                                             & = \braces{ \frac{1}{2}\mathbf{K}_g^*(\xi)\xi - \T^*_e \L_g U(g)} \cdot \chi,
-\end{align*}
-where $\g^*$ is identified with $\g$ with the pairing. 
-Thus, the Euler--Lagrange equations are given by
-\[
-    \mathbf{J}_g(\dot \xi) + \mathbf{K}_g(\xi)\xi - \ad^*_\xi \cdot \mathbf{J}_g(\xi)  - \frac{1}{2}\mathbf{K}^*_g(\xi)\xi + \T_e^* \L_g U(g) =0.
-\]
-
-
-\begin{align*}
-    \T^*_e \L_g T_i  \cdot \zeta = 
-    \begin{bmatrix}
-        0 & m_i R ((\hat\mu_i+\widehat{Q_i\xi_i})\Omega)^\wedge + m_i R (Q_i\hat\xi_i\Omega_i)^\wedge 
-        & -m_i R\hat\Omega Q_i \hat\xi_i + m_i R Q_i \widehat{\hat \xi_i \Omega_i}\\
-        0 & m_i(\hat\mu_i + \widehat{Q_i\xi_i})\widehat{R^T \dot x}
-        & m_i\widehat{R^T\dot x}Q_i\hat\xi_i - Q_i (J_iQ_i^T\Omega)^\wedge + Q_i J_i \widehat{Q_i^T\Omega} \\
-        & & - m_i\hat\mu_i\hat\Omega Q_i\hat\xi_i - m_i\widehat{\hat\mu_i\Omega} Q_i \hat\xi_i \\
-        & & - Q_i \widehat{J_i\Omega_i} + m_i \hat\mu_i Q_i \widehat{\hat\xi_i \Omega_i} \\
-        0 & m_i \hat\xi_i Q_i^T \widehat{R^T\dot x}
-        & m_i \hat\xi_i (Q_i^T R^T \dot x)^\wedge + J_i\widehat{Q_i^T\Omega} - m_i\hat\xi (Q^T\hat\mu_i \Omega)^\wedge
-    \end{bmatrix}
-    \begin{bmatrix}
-        \delta\dot x \\ \eta \\ \eta_i
-    \end{bmatrix}
-\end{align*}
 
 \bibliographystyle{IEEEtran}
 \bibliography{FWUAV}
@@ -1441,4 +1435,26 @@ For $x\in\Re$,
 \end{align}
 
 \end{document}
+
+\subsubsection{Equations of Motion}
+
+We present the equations of motion assuming that the mass and the inertia of both wings are negligible. 
+Let $J\in\Re^{3\times 3}$ be the inertia matrix of the body in $\mathcal{F}_B$, and let $m\in\Re$ be the mass of the body. 
+\nomenclature{$m\in\Re$}{mass of the body}
+\nomenclature{$J\in\Re^{3\times 3}$}{inertia matrix of the body about its mass center resolved in $\mathcal{F}_B$}
+
+From Netwon's second law, 
+\begin{align}
+    m \ddot x & =  RQ_R (L_R+D_R+F_{\rot _R}) + R Q_L (L_L+D_L + F_{\rot_L}) + mg e_3,\\
+    J\dot\Omega + \Omega\times J\Omega & =  (\mu_R + r_{cp} Q_R e_2) \times Q_R (L_R+D_R) + (\mu_R + r_{\rot} Q_R e_2)\times Q_R F_{\rot_R}\nonumber\\
+                                       & \quad + (\mu_L - r_{cp} Q_L e_2) \times Q_L (L_L+D_L) + (\mu_L + r_{\rot} Q_L e_2)\times Q_L F_{\rot_L},
+\end{align}
+with the kinematics equations copied below
+\begin{align}
+    \dot R & = R\hat\Omega,\\
+    \dot Q_R & = Q_R \hat\Omega_R,\\
+    \dot Q_L & = Q_L \hat\Omega_L.
+\end{align}
+These are driven by the wing kinematics that describe the attitude of the wings relative to the body, namely $Q_R(t), Q_L(t)$.
+
 
