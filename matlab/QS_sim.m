@@ -6,11 +6,11 @@ filename='QS_sim';
 INSECT.g=9.81;
 INSECT.m_R=rand;
 INSECT.mu_R=0.3*rand(3,1);
-INSECT.xi_R=0.5*rand(3,1);
+INSECT.nu_R=0.5*rand(3,1);
 INSECT.J_R=rand_spd;
 INSECT.m_L=rand;
 INSECT.mu_L=0.3*rand(3,1);
-INSECT.xi_L=0.5*rand(3,1);
+INSECT.nu_L=0.5*rand(3,1);
 INSECT.J_L=rand_spd;
 INSECT.J=rand_spd;
 INSECT.m=rand;
@@ -89,8 +89,8 @@ X_dot=[x_dot; reshape(R_dot,9,1); reshape(Q_R_dot,9,1); reshape(Q_L_dot,9,1); xi
 end
 
 function [JJ KK] = inertia(INSECT, R, Q_R, Q_L, x_dot, W, W_R, W_L)
-[JJ_R KK_R] = inertia_wing_sub(INSECT.m_R, INSECT.mu_R, INSECT.xi_R, INSECT.J_R, R, Q_R, x_dot, W, W_R);
-[JJ_L KK_L] = inertia_wing_sub(INSECT.m_L, INSECT.mu_L, INSECT.xi_L, INSECT.J_L, R, Q_L, x_dot, W, W_L);
+[JJ_R KK_R] = inertia_wing_sub(INSECT.m_R, INSECT.mu_R, INSECT.nu_R, INSECT.J_R, R, Q_R, x_dot, W, W_R);
+[JJ_L KK_L] = inertia_wing_sub(INSECT.m_L, INSECT.mu_L, INSECT.nu_L, INSECT.J_L, R, Q_L, x_dot, W, W_L);
 
 JJ=zeros(12,12);
 JJ(1:3,1:3) = INSECT.m*eye(3) + JJ_R(1:3,1:3) + JJ_L(1:3,1:3);
@@ -167,8 +167,8 @@ e3=[0 0 1]';
 mg=INSECT.m*INSECT.g;
 mg_R=INSECT.m_R*INSECT.g;
 mg_L=INSECT.m_L*INSECT.g;
-rho_R = INSECT.mu_R + Q_R*INSECT.xi_R;
-rho_L = INSECT.mu_L + Q_L*INSECT.xi_L;
+rho_R = INSECT.mu_R + Q_R*INSECT.nu_R;
+rho_L = INSECT.mu_L + Q_L*INSECT.nu_L;
 
 U_B = -mg*e3'*x;
 U_R = -mg_R*e3' * (x + R*rho_R);
@@ -177,8 +177,8 @@ U = U_B + U_R + U_L;
 
 dU = [-(INSECT.m + INSECT.m_R + INSECT.m_L ) * INSECT.g * e3;
     mg_R*hat(R'*e3)*rho_R + mg_L*hat(R'*e3)*rho_L;
-    mg_R*hat(Q_R'*R'*e3)*INSECT.xi_R;
-    mg_L*hat(Q_L'*R'*e3)*INSECT.xi_L];
+    mg_R*hat(Q_R'*R'*e3)*INSECT.nu_R;
+    mg_L*hat(Q_L'*R'*e3)*INSECT.nu_L];
 
 end
 
