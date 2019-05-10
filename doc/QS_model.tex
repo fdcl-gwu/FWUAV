@@ -1216,11 +1216,12 @@ The results are illustrated in Figure~\ref{fig:QS_Monarch}.
 
 \subsubsection{Lagrangian Mechanics on a Lie Group}
 
-Consider a dynamic system evolving on a Lie group $\G$. 
-The kinematics equation is given by
-\[
-    \dot g = g \xi,
-\]
+Consider a dynamic system evolving on an abstract Lie group $\G$. 
+We develop Euler--Lagrange equations for the arbitrary Lie group $\G$, which are utilized later for the flapping wing UAV. 
+The kinematics equation on $\G$ is given by
+\begin{equation}
+    \dot g = g \xi,\label{eqn:dot_g}
+\end{equation}
 for $\xi\in\g$ corresponding to the left-trivialized velocity.
 Consequently the tangent bundle $\T\G$ is identified with $\G\times \g$.
 Let $\mathbf{J}:\G\times \g\rightarrow \g^*$ be a symmetric, positive-definite inertia tensor, i.e., 
@@ -1253,7 +1254,7 @@ We have
 where $\g^*$ is identified with $\g$ with the pairing. 
 Thus, the Euler--Lagrange equations are given by
 \begin{gather}
-    \mathbf{J}_g(\dot \xi) + \mathbf{K}_g(\xi)\xi - \ad^*_\xi \cdot \mathbf{J}_g(\xi)  - \frac{1}{2}\mathbf{K}^*_g(\xi)\xi + \T_e^* \L_g U(g) =0.
+    \mathbf{J}_g(\dot \xi) + \mathbf{K}_g(\xi)\xi - \ad^*_\xi \cdot \mathbf{J}_g(\xi)  - \frac{1}{2}\mathbf{K}^*_g(\xi)\xi + \T_e^* \L_g U(g) =0. \label{eqn:EL_G}
 \end{gather}
 
 The total energy is
@@ -1276,8 +1277,10 @@ which shows the energy conservation in the absence of external force or moment.
 
 \subsubsection{Lagrangian Mechanics of Flapping Wing UAV}
 
-The configuration of the given flapping wing UAV model is described by $(x,R,Q_R,Q_L, Q_A)$. 
+The configuration of the given flapping wing UAV model is described by $g=(x,R,Q_R,Q_L, Q_A)$. 
 Consequently, the configuration space is a Lie group $\G=\Re^3\times \SO^4$. 
+As it is a product of $\Re^3$ and four copies of $\SO$, the Lie algebra is simply $\g = \Re^3 \times \so^4 \simeq \Re^3 \times (\Re^3)^4$.
+The kinematics equation is identical to \eqref{eqn:dot_g} with $\xi = (\dot x, \Omega, \Omega_R, \Omega_L, \Omega_A)\in\g$. 
 
 \paragraph{Kinetic Energy} 
 The kinetic energy of the body is given by
@@ -1288,12 +1291,12 @@ The kinetic energy of the body is given by
 Next, we find the expression for the kinetic energy of the wings and the abdomen. 
 Since the contribution of the left wing is identical to the right wing and the abdomen, we use the subscript $i\in\{R,L,A\}$ to denote the variables related to a particular wing or the abdomen, which is referred to as $\mathcal{B}_i$.
 
-Consider a mass element $dm$ in $\mathcal{B}_i$, whose location is given by $\nu\in\Re^3$ in $\mathcal{F}_i$. 
-Its location in the inertial frame $\mathcal{F}_I$ is $x + R\mu_i + R Q_i \nu$, and its velocity is 
+Consider a mass element $dm$ in $\mathcal{B}_i$, whose location is given by $\nu\in\Re^3$ in $\mathcal{F}_i$, i.e., $\nu$ is the vector from the joint to the mass element resolved in $\mathcal{F}_i$. 
+Thus, its location from the origin of the inertial frame, resolved in the inertial frame $\mathcal{F}_I$ is $x + R\mu_i + R Q_i \nu$, and its velocity is 
 \[
     \dot x + R\hat \Omega (\mu_i + Q_i\nu ) + R Q_i \hat\Omega_i \nu.
 \]
-Thus, the kinetic energy is 
+Therefore, the kinetic energy is 
 \begin{align*}
     T_i & = \frac{1}{2} \int_{\mathcal{B}_i} \frac{1}{2} \|\dot x + R\hat \Omega (\mu_i + Q_i\nu_i ) + R Q_i \hat\Omega_i \nu_i \|^2 dm.
 \end{align*}
@@ -1337,7 +1340,7 @@ The derivative of the inertia is
 \end{align*}
 
 
-The total kinetic energy is
+The total kinetic energy is the sum of the contributions of the body, the wings and the abdomen, as given by
 \[
     T = T_B + T_R + T_L + T_A.
 \]
@@ -1356,70 +1359,100 @@ The total potential energy is
 \[
     U = U_B + U_R + U_L + U_A.
 \]
+The negative derivatives of the potential energy corresponds to the gravitational force and moment given by
+\begin{align}
+    \mathbf{f}_g \triangleq - \T^*_e\L_g U = \begin{bmatrix}
+     (m+m_R+m_L+ m_A )g e_3\\
+    m_Rg (\mu_R + Q_R \nu_R)^\wedge {R^T e_3}  + m_L g (\mu_L + Q_L \nu_L)^\wedge {R^T e_3}  + m_A g (\mu_A + Q_A \nu_A)^\wedge {R^T e_3}  \\
+    m_R g \hat\nu_R (Q_R^T R^T e_3) \\
+    m_L g \hat\nu_L (Q_L^T R^T e_3) \\
+    m_A g \hat\nu_A (Q_A^T R^T e_3) 
+\end{bmatrix}.
+\end{align}
+
 
 \paragraph{Virtual Work}
 
-Consider an infinitesimal aerodynamic force $dF(\nu)\in\Re^3$ acting at the location of $\nu\in\Re^3$ of the wing. 
+Consider an infinitesimal aerodynamic force $dF(\nu)\in\Re^3$ acting at the location of $\nu\in\Re^3$ of the wing or the abdomen. 
 In the inertial frame, the location of the force is given by $x+ R\mu_i + R Q_i\nu$. 
 Thus, the corresponding virtual work due to the aerodynamic force is
 \begin{align*}
     \int_{\mathcal{B}_i} \delta(x + R\mu_i + R Q_i\nu) \cdot R Q_i dF(\nu) d\nu
-                      & =  (\delta x + R\hat\eta \mu_i) R Q_i \int dF(\nu) + \eta_i \cdot \int \nu \times dF(\nu).
+                      & =  (\delta x + R\hat\eta \mu_i) \cdot R Q_i \int dF(\nu) + \eta_i \cdot \int \nu \times dF(\nu).
 \end{align*}
-Let the resultant aerodynamic force and the moment about the wing root be
+Let the resultant aerodynamic force and the moment about the wing root or the joint connecting the abdomen be
 \[
     F_i = \int dF_i(\nu) ,\quad M_i = \int \nu\times dF_i(\nu).
 \]
-Also, let $\tau_i\in\Re^3$ be the control torque exerted at the wing root, resolved in the body-fixed frame. 
+Also, let $\tau_i\in\Re^3$ be the control torque exerted at the wing root or at the joint connecting the abdomen, resolved in the body-fixed frame. 
+As it is an internal torque, there will be a reactive torque, namely $-\tau_i$ exerted to the body. 
 
 The total virtual work due to the aerodynamic force and the control torque can be written as
 \begin{align}
-    \delta\mathcal{W} = \sum_{i\in\{R,L\}} \delta x \cdot R Q_i F_i + \eta\cdot (\mu_i\times Q_i F_i -\tau_i) + \eta_i \cdot ( M_i+ Q_i^T \tau_i).
+    \delta\mathcal{W} & = \sum_{i\in\{R,L,A\}} \delta x \cdot R Q_i F_i + \eta\cdot (\mu_i\times Q_i F_i -\tau_i) + \eta_i \cdot ( M_i+ Q_i^T \tau_i) \nonumber \\
+                      & = (\mathbf{f}_{a} + \mathbf{f}_\tau)  \cdot \xi,
+\end{align}
+where $\mathbf{f}_a, \mathbf{f}_\tau \in\Re^{15}$ denote the contributions of the aerodynamic forces and the control torque, respectively. 
+They are given by
+\begin{align}
+    \mathbf{f}_a & = 
+    \begin{bmatrix}
+        RQ_R F_R  + R Q_L F_L + R Q_A F_A \\
+        \hat \mu_R Q_RF_R + \hat\mu_L Q_L F_L + \hat\mu_A Q_A F_A \\
+        M_R  \\
+        M_L  \\
+        M_A   
+    \end{bmatrix},\\
+    \mathbf{f}_\tau & = 
+    \begin{bmatrix}
+        0 \\
+         -\tau_R  -\tau_L  -\tau_A \\
+        Q_R^T \tau_R \\
+        Q_L^T \tau_L \\
+        Q_A^T \tau_A
+    \end{bmatrix}.
 \end{align}
 
 \paragraph{Euler--Lagrange Equations}
 
-Let $g=(x, R, Q_R, Q_L)$ and $\nu=(\dot x, \Omega, \Omega_R, \Omega_L)$.
 The inertia tensor is written as
 \begin{align}
-    \mathbf{J}_g = \begin{bmatrix}
-        m I_{3\times 3} + \mathbf{J}_{R_{11}} + \mathbf{J}_{L_{11}} 
-        & \mathbf{J}_{R_{12 }} + \mathbf{J}_{L_{12}}
+    \mathbf{J}_g(\xi) = \begin{bmatrix}
+        m I_{3\times 3} + \mathbf{J}_{R_{11}} + \mathbf{J}_{L_{11}} + \mathbf{J}_{A_{11}}
+        & \mathbf{J}_{R_{12 }} + \mathbf{J}_{L_{12}} + \mathbf{J}_{A_{12}}
         & \mathbf{J}_{R_{13 }}
-        & \mathbf{J}_{L_{13}} \\
-        \cdot & J + \mathbf{J}_{R_{22}} +\mathbf{J}_{L_{22}}
+        & \mathbf{J}_{L_{13}} 
+        & \mathbf{J}_{A_{13}} \\
+        \cdot & J + \mathbf{J}_{R_{22}} + \mathbf{J}_{L_{22}} + \mathbf{J}_{A_{22}}
         & \mathbf{J}_{R_{23}} 
-        & \mathbf{J}_{L_{23}} \\
+        & \mathbf{J}_{L_{23}} 
+        & \mathbf{J}_{A_{12}} \\
         \cdot & \cdot &  \mathbf{J}_{R_{33}}
-              & 0 \\
+              & 0 & 0 \\
         \cdot & \cdot & \cdot 
-              & \mathbf{J}_{L_{33}}
+              & \mathbf{J}_{L_{33}} & 0 \\
+        \cdot & \cdot & \cdot & \cdot & \mathbf{J}_{A_{33}}
     \end{bmatrix},
 \end{align}
 where the subscript $ij$ refers to the $i,j$-th block, and the unspecified blocks are chosen such that $\mathbf{J}_g$ becomes symmetric.
 The derivatives of the inertia are
 \begin{align}
     \mathbf{K}_g = \begin{bmatrix}
-        0 & \mathbf{K}_{R_{12}} + \mathbf{K}_{L_{12}} & \mathbf{K}_{R_{13}} & \mathbf{K}_{L_{13}} \\
-        0 & \mathbf{K}_{R_{22}} + \mathbf{K}_{L_{22}}& \mathbf{K}_{R_{23}} & \mathbf{K}_{L_{23}} \\
-        0 & \mathbf{K}_{R_{32}} & \mathbf{K}_{R_{33}} & 0 \\
-        0 & \mathbf{K}_{L_{32}} & 0 & \mathbf{K}_{L_{33}}
+        0 & \mathbf{K}_{R_{12}} + \mathbf{K}_{L_{12}} + \mathbf{K}_{A_{12}} & \mathbf{K}_{R_{13}} & \mathbf{K}_{L_{13}} & \mathbf{K}_{A_{13}}\\
+        0 & \mathbf{K}_{R_{22}} + \mathbf{K}_{L_{22}} + \mathbf{K}_{A_{22}} & \mathbf{K}_{R_{23}} & \mathbf{K}_{L_{23}} & \mathbf{K}_{A_{23}} \\
+        0 & \mathbf{K}_{R_{32}} & \mathbf{K}_{R_{33}} & 0 & 0 \\
+        0 & \mathbf{K}_{L_{32}} & 0 & \mathbf{K}_{L_{33}} & 0 \\
+        0 & \mathbf{K}_{A_{32}} & 0 & 0 & \mathbf{K}_{A_{33}}
     \end{bmatrix}.
 \end{align}
 The co-adjoint operator corresponds to the following matrix,
 \begin{align}
-    \mathrm{ad}^*_\nu = \mathrm{diag}[0_{3\times 3}, -\hat\Omega, -\hat\Omega_R, -\hat\Omega_L].
+    \mathrm{ad}^*_\nu = \mathrm{diag}[0_{3\times 3}, -\hat\Omega, -\hat\Omega_R, -\hat\Omega_L, \hat\Omega_A].
 \end{align}
-The derivatives of the potential energy are
-\begin{align}
-    \T^*_e\L_g U = \begin{bmatrix}
-    - (m+m_R+m_L)g e_3\\
-    m_Rg \widehat{R^T e_3} (\mu_R + Q_R \nu_R) + m_L g \widehat{R^T e_3} (\mu_L + Q_L \nu_L)\\
-    m_R g  (Q_R^T R^T e_3)^\wedge \nu_R\\
-    m_L g  (Q_L^T R^T e_3)^\wedge \nu_L\\
-\end{bmatrix}.
-\end{align}
-
+The Euler--Lagrange equations are given according to \eqref{eqn:EL_G} as
+\begin{gather}
+    \mathbf{J}_g(\dot \xi) - \ad^*_\xi \cdot \mathbf{J}_g(\xi) + \mathbf{K}_g(\xi)\xi   - \frac{1}{2}\mathbf{K}^T_g(\xi)\xi  = \mathbf{f}_a + \mathbf{f}_g + \mathbf{f}_\tau. \label{eqn:EL}
+\end{gather}
 
 \bibliographystyle{IEEEtran}
 \bibliography{FWUAV}

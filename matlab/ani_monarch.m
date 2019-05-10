@@ -50,6 +50,7 @@ t=linspace(0,T,N);
 
 
 load('morp_MONARCH');
+bool_video=1;
 
 %% generate figures for the note
 %fig_note(fv_body, fv_wr, fv_wl, true);
@@ -70,12 +71,25 @@ h_fig=figure('color','w');
 
 %% animation
 
+if bool_video
+    vidObj = VideoWriter('peaks.avi');
+    open(vidObj);
+end
+    
 for k=floor(linspace(1,N,301))
     [Euler Euler_dot Euler_ddot]=wing_kinematics(t(k),WK);
     [Q_R Q_L W_R W_L W_R_dot W_L_dot]=wing_attitude(WK.beta, Euler, Euler, Euler_dot, Euler_dot, Euler_ddot, Euler_ddot);
     [L_R L_L D_R D_L M_R M_L F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(MONARCH, W_R, W_L, W_R_dot, W_L_dot);
     update_monarch(h_fig,[h_body, h_wr, h_wl], fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L);
     update_force(h_F_R,h_F_L,  x,R,Q_R,Q_L,  L_R,L_L,D_R,D_L,M_R,M_L,  F_rot_R,F_rot_L,M_rot_R,M_rot_L);
+    
+    if bool_video
+        writeVideo(vidObj,getframe(gcf));
+    end
+end
+
+if bool_video
+    close(vidObj);
 end
 
 %% save
@@ -192,8 +206,8 @@ alpha([h_body, h_wr, h_wl],0.8);
 axis('image');
 
 view(180+10,30);
-view(90,20);
-view(270,80);
+%view(90,20);
+%view(270,80);
 
 set(gca,'Zdir','reverse','YDir','reverse');
 axis(180*[-1 1 -1 1 -1 1]);
