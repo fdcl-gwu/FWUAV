@@ -7,6 +7,7 @@
 \usepackage{trimclip} % for AR symbol
 \usepackage{nomencl} % nomenclature
 \usepackage{siunitx}
+\usepackage[paper=portrait,pagesize,DIV=13]{typearea}
 
 \newcommand{\norm}[1]{\ensuremath{\left\| #1 \right\|}}
 \newcommand{\bracket}[1]{\ensuremath{\left[ #1 \right]}}
@@ -1285,7 +1286,7 @@ The kinematics equation is identical to \eqref{eqn:dot_g} with $\xi = (\dot x, \
 \paragraph{Kinetic Energy} 
 The kinetic energy of the body is given by
 \begin{align}
-    T_B = \frac{1}{2}m \|\dot x\|^2 + \frac{1}{2} \Omega^T J\Omega.
+    T_B = \frac{1}{2}m_B \|\dot x\|^2 + \frac{1}{2} \Omega^T J_B\Omega.
 \end{align}
 
 Next, we find the expression for the kinetic energy of the wings and the abdomen. 
@@ -1328,8 +1329,8 @@ The derivative of the inertia is
 \begin{align*}
     \mathbf{K}_i(R,Q_i,\Omega,\Omega_i) = 
     \begin{bmatrix}
-        0 & m_i R ((\hat\mu_i+\widehat{Q_i\nu_i})\Omega)^\wedge + m_i R (Q_i\hat\nu_i\Omega_i)^\wedge 
-        & -m_i R\hat\Omega Q_i \hat\nu_i + m_i R Q_i \widehat{\hat \nu_i \Omega_i}\\
+        0 & m_i R ((\hat\mu_i+\widehat{Q_i\nu_i})\Omega + Q_i\hat\nu_i\Omega_i)^\wedge 
+          & m_i R( -\hat\Omega Q_i \hat\nu_i + Q_i \widehat{\hat \nu_i \Omega_i}) \\
         0 & m_i(\hat\mu_i + \widehat{Q_i\nu_i})\widehat{R^T \dot x}
         & m_i\widehat{R^T\dot x}Q_i\hat\nu_i - Q_i (J_iQ_i^T\Omega)^\wedge + Q_i J_i \widehat{Q_i^T\Omega} \\
         & & - m_i\hat\mu_i\hat\Omega Q_i\hat\nu_i - m_i\widehat{\hat\mu_i\Omega} Q_i \hat\nu_i \\
@@ -1349,7 +1350,7 @@ The total kinetic energy is the sum of the contributions of the body, the wings 
 
 The gravitational potential energy of the body is 
 \[
-    U_B = -m g e_3^T x.
+    U_B = -m_B g e_3^T x.
 \]
 The gravitational potential energy of $\mathcal{B}_i$ is
 \[
@@ -1362,7 +1363,7 @@ The total potential energy is
 The negative derivatives of the potential energy corresponds to the gravitational force and moment given by
 \begin{align}
     \mathbf{f}_g \triangleq - \T^*_e\L_g U = \begin{bmatrix}
-     (m+m_R+m_L+ m_A )g e_3\\
+     (m_B+m_R+m_L+ m_A )g e_3\\
     m_Rg (\mu_R + Q_R \nu_R)^\wedge {R^T e_3}  + m_L g (\mu_L + Q_L \nu_L)^\wedge {R^T e_3}  + m_A g (\mu_A + Q_A \nu_A)^\wedge {R^T e_3}  \\
     m_R g \hat\nu_R (Q_R^T R^T e_3) \\
     m_L g \hat\nu_L (Q_L^T R^T e_3) \\
@@ -1418,20 +1419,20 @@ They are given by
 The inertia tensor is written as
 \begin{align}
     \mathbf{J}_g(\xi) = \begin{bmatrix}
-        m I_{3\times 3} + \mathbf{J}_{R_{11}} + \mathbf{J}_{L_{11}} + \mathbf{J}_{A_{11}}
+        m_B I_{3\times 3} + \mathbf{J}_{R_{11}} + \mathbf{J}_{L_{11}} + \mathbf{J}_{A_{11}}
         & \mathbf{J}_{R_{12 }} + \mathbf{J}_{L_{12}} + \mathbf{J}_{A_{12}}
         & \mathbf{J}_{R_{13 }}
         & \mathbf{J}_{L_{13}} 
         & \mathbf{J}_{A_{13}} \\
-        \cdot & J + \mathbf{J}_{R_{22}} + \mathbf{J}_{L_{22}} + \mathbf{J}_{A_{22}}
+        \cdot & J_B + \mathbf{J}_{R_{22}} + \mathbf{J}_{L_{22}} + \mathbf{J}_{A_{22}}
         & \mathbf{J}_{R_{23}} 
         & \mathbf{J}_{L_{23}} 
-        & \mathbf{J}_{A_{12}} \\
+        & \mathbf{J}_{A_{23}} \\
         \cdot & \cdot &  \mathbf{J}_{R_{33}}
               & 0 & 0 \\
-        \cdot & \cdot & \cdot 
+        \cdot & \cdot & 0
               & \mathbf{J}_{L_{33}} & 0 \\
-        \cdot & \cdot & \cdot & \cdot & \mathbf{J}_{A_{33}}
+        \cdot & \cdot & 0 & 0 & \mathbf{J}_{A_{33}}
     \end{bmatrix},
 \end{align}
 where the subscript $ij$ refers to the $i,j$-th block, and the unspecified blocks are chosen such that $\mathbf{J}_g$ becomes symmetric.
@@ -1447,12 +1448,49 @@ The derivatives of the inertia are
 \end{align}
 The co-adjoint operator corresponds to the following matrix,
 \begin{align}
-    \mathrm{ad}^*_\nu = \mathrm{diag}[0_{3\times 3}, -\hat\Omega, -\hat\Omega_R, -\hat\Omega_L, \hat\Omega_A].
+    \mathrm{ad}^*_\nu = \mathrm{diag}[0_{3\times 3}, -\hat\Omega, -\hat\Omega_R, -\hat\Omega_L, - \hat\Omega_A].
 \end{align}
 The Euler--Lagrange equations are given according to \eqref{eqn:EL_G} as
 \begin{gather}
-    \mathbf{J}_g(\dot \xi) - \ad^*_\xi \cdot \mathbf{J}_g(\xi) + \mathbf{K}_g(\xi)\xi   - \frac{1}{2}\mathbf{K}^T_g(\xi)\xi  = \mathbf{f}_a + \mathbf{f}_g + \mathbf{f}_\tau. \label{eqn:EL}
+    \mathbf{J}_g(\dot \xi) - \ad^*_\xi \cdot \mathbf{J}_g(\xi) + \mathbf{L}_g(\xi) \xi  = \mathbf{f}_a + \mathbf{f}_g + \mathbf{f}_\tau. \label{eqn:EL}
 \end{gather}
+The matrix  $\mathbf{L}_g(\xi) = \mathbf{K}_g(\xi)  - \frac{1}{2}\mathbf{K}^T_g(\xi)\in\Re^{15\times 15}$ represents the effects of the dependency of the inertia on the configuration, 
+and it is more explicitly given in the appendix. 
+
+The above Euler--Lagrange equations are driven by the control torque acting on the joint of the wings and the joint of the abdomen, 
+and they can be simulated by any ODE solver. 
+
+\paragraph{Prescribed Wing Kinematics}
+
+In case the flapping motion of the wings and the relative motion of the abdomen are prescribed, i.e., $Q_R(t), Q_L(t), Q_A(t)$ are given as a function of time, an reduced model for $(x,R)$ can be constructed as follows. 
+
+
+%\subsubsection{Simplified Forms}
+
+%The above Euler--Lagrange equations are driven by the control torque acting on the joint of the wings and the joint of the abdomen.
+
+%Therefore, 
+
+
+%, and to compute the acceleration $\dot\xi$, the inertia $\mathbf{J}_g(\xi)$ should be inverted. 
+
+%Here, we consider several cases for simplification.
+
+%\paragraph{Negligible Wing Mass}
+
+%First, assume $m_R,m_L\ll 1$. 
+%\begin{gather}
+%(m_B+m_A) \ddot x - m_A R(\hat\mu_A + \widehat{Q_A\nu_A}) \dot \Omega  -m_A R Q_A\hat\nu_A\dot\Omega_A \nonumber \\
+%+ m_A R((\hat\mu_A+\widehat{Q_A\nu_A})\Omega + Q_A\hat\nu_A\Omega_A)^\wedge \Omega + m_A R( - \hat\Omega Q_A\hat\nu_A  + Q_A\widehat{\hat\nu_A \Omega_A} )\Omega_A \nonumber \\
+    %= (m_B+m_A)ge_3 + RQ_RF_R + R Q_L F_L + R Q_A F_A,\\
+    %\{ J_B + m_A\hat\mu_A^T\hat\mu_A + Q_A J_A Q_A^T + m_A(\hat\mu_A^T \widehat{Q_A\nu_A} + \widehat{Q_A\nu_A}^T\hat\mu_A) \} \dot\Omega \nonumber \\
+%+ m_A(\hat\mu_A+\widehat{Q_A\nu_A})R^T \dot x  +  (Q_AJ_A + m_A\hat\mu_A^T Q_A\hat\nu_A) \dot\Omega_A \nonumber \\
+%+\hat\Omega 
+%\end{gather}
+
+
+
+
 
 \bibliographystyle{IEEEtran}
 \bibliography{FWUAV}
@@ -1484,6 +1522,41 @@ For $x\in\Re$,
         -1 & x<0.
     \end{cases}
 \end{align}
+
+\newpage
+\KOMAoptions{paper=landscape,pagesize}
+\recalctypearea
+
+\subsubsection*{Effects of Configuration-Dependency in Inertia}
+{\scriptsize\selectfont
+\begin{align}
+    \mathbf{K}_g-\frac{1}{2}\mathbf{K}^T_g = \begin{bmatrix}
+        0 
+        & \mathbf{K}_{R_{12}} + \mathbf{K}_{L_{12}} + \mathbf{K}_{A_{12}} 
+        & \mathbf{K}_{R_{13}} & \mathbf{K}_{L_{13}} & \mathbf{K}_{A_{13}}\\
+        -\frac{1}{2}(\mathbf{K}_{R_{12}} + \mathbf{K}_{L_{12}} + \mathbf{K}_{A_{12}})^T 
+        & \mathbf{K}_{R_{22}} + \mathbf{K}_{L_{22}} + \mathbf{K}_{A_{22}} -\frac{1}{2}(\mathbf{K}_{R_{22}} + \mathbf{K}_{L_{22}} + \mathbf{K}_{A_{22}})^T 
+        & \mathbf{K}_{R_{23}} -\frac{1}{2}\mathbf{K}_{R_{32}}^T 
+        & \mathbf{K}_{L_{23}} -\frac{1}{2}\mathbf{K}_{L_{32}}^T 
+        & \mathbf{K}_{A_{23}} -\frac{1}{2}\mathbf{K}_{A_{32}}^T \\
+        -\frac{1}{2}\mathbf{K}_{R_{13}}^T 
+        & \mathbf{K}_{R_{32}} -\frac{1}{2}\mathbf{K}_{R_{23}}^T 
+        & \mathbf{K}_{R_{33}} - \frac{1}{2}\mathbf{K}_{R_{33}}^T & 0 & 0 \\
+        -\frac{1}{2}\mathbf{K}_{L_{13}}^T 
+        & \mathbf{K}_{L_{32}} -\frac{1}{2}\mathbf{K}_{L_{23}}^T 
+        & 0 
+        & \mathbf{K}_{L_{33}} - \frac{1}{2}\mathbf{K}_{L_{33}}^T & 0 \\
+        -\frac{1}{2}\mathbf{K}_{A_{13}}^T 
+        & \mathbf{K}_{A_{32}} - \frac{1}{2}\mathbf{K}_{A_{23}}^T & 0 & 0 
+        & \mathbf{K}_{A_{33}} - \frac{1}{2}\mathbf{K}_{A_{33}}^T 
+\end{bmatrix}
+\end{align}
+}
+
+\newpage
+\KOMAoptions{paper=portrait,pagesize}
+\recalctypearea
+
 
 \end{document}
 
