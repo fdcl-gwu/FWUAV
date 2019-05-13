@@ -69,6 +69,7 @@ h_fig=figure('color','w');
 [L_R L_L D_R D_L M_R M_L F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(MONARCH, W_R, W_L, W_R_dot, W_L_dot);
 [h_F_R h_F_L]=patch_force(x,R,Q_R,Q_L,L_R,L_L,D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L);
 
+keyboard;
 %% animation
 
 if bool_video

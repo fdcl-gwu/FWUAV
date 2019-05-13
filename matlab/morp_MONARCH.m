@@ -87,20 +87,20 @@ ylabel('$c(r)\;(\mathrm{cm})$','interpreter','latex');
 %% save the computed morphological parameters into a structure variable
 
 MONARCH.rho = 1.225; % air density (kg/m^3)
-MONARCH.l = l*1E-2; % span of the right wing
-MONARCH.S = S*1E-4; % area of the right wing
-MONARCH.c_bar = MONARCH.S / MONARCH.l; % mean chord
+MONARCH.l = l*1E-2; % span of the right wing (m)
+MONARCH.S = S*1E-4; % area of the right wing (m^2)
+MONARCH.c_bar = MONARCH.S / MONARCH.l; % mean chord (m)
 MONARCH.AR = AR;
 
-MONARCH.tilde_r_1 = tilde_r_1; % non-dimensional radius of the second moment of wing area
+MONARCH.tilde_r_1 = tilde_r_1; % non-dimensional radius of the first moment of wing area
 MONARCH.tilde_r_2 = tilde_r_2; % non-dimensional radius of the second moment of wing area
-MONARCH.tilde_r_3 = tilde_r_3; % non-dimensional radius of the thrid moment of wing area (arbitrary value)
-MONARCH.r_cp = MONARCH.l * MONARCH.tilde_r_3 / MONARCH.tilde_r_2;
+MONARCH.tilde_r_3 = tilde_r_3; % non-dimensional radius of the thrid moment of wing area 
+MONARCH.r_cp = MONARCH.l * MONARCH.tilde_r_3 / MONARCH.tilde_r_2; % CP of the translational force (lift and drag) (m)
 
-MONARCH.tilde_v = tilde_v; % non-dimensional virtual mass (arbitrary value)
-MONARCH.tilde_r_v_1 = tilde_r_v_1; % non-dimensional radius of the first moment of wing volume (arbitrary value)
-MONARCH.tilde_r_v_2 = tilde_r_v_2; % non-dimensional radius of the second moment of wing volume (arbitrary value)
-MONARCH.r_rot = MONARCH.l * MONARCH.tilde_r_v_2^2 / MONARCH.tilde_r_v_1; % non-dimensional radius of the second moment of wing volume (arbitrary value)
+MONARCH.tilde_v = tilde_v; % non-dimensional virtual mass 
+MONARCH.tilde_r_v_1 = tilde_r_v_1; % non-dimensional radius of the first moment of wing volume 
+MONARCH.tilde_r_v_2 = tilde_r_v_2; % non-dimensional radius of the second moment of wing volume 
+MONARCH.r_rot = MONARCH.l * MONARCH.tilde_r_v_2^2 / MONARCH.tilde_r_v_1; % CP of the rotational force (m)
 disp(MONARCH);
 
 save('morp_MONARCH','MONARCH');

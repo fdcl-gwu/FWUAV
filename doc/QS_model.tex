@@ -1411,7 +1411,7 @@ They are given by
         Q_R^T \tau_R \\
         Q_L^T \tau_L \\
         Q_A^T \tau_A
-    \end{bmatrix}.
+    \end{bmatrix}.\label{eqn:f_tau}
 \end{align}
 
 \paragraph{Euler--Lagrange Equations}
@@ -1460,12 +1460,39 @@ and it is more explicitly given in the appendix.
 The above Euler--Lagrange equations are driven by the control torque acting on the joint of the wings and the joint of the abdomen, 
 and they can be simulated by any ODE solver. 
 
-\paragraph{Prescribed Wing Kinematics}
+\subsubsection{Prescribed Wing Kinematics}
 
-In case the flapping motion of the wings and the relative motion of the abdomen are prescribed, i.e., $Q_R(t), Q_L(t), Q_A(t)$ are given as a function of time, an reduced model for $(x,R)$ can be constructed as follows. 
+In case the flapping motion of the wings and the relative motion of the abdomen are prescribed, i.e., $Q_R(t), Q_L(t), Q_A(t)$ are given as a function of time, a reduced set of equations for $(x,R)$ can be constructed as follows. 
+
+Let the configuration variables be decomposed into two parts, $g=(g_1,g_2)$ and $\xi=(\xi_1,\xi_2)$ with
+\begin{gather}
+    g_1 = (x, R), \quad \xi_1 = [\dot x, \Omega], \\
+    g_2 = (Q_R, Q_L, Q_A), \quad \xi_2 = [\Omega_R, \Omega_L, \Omega_A].
+\end{gather}
+According to the assumption $(g_2,\xi_2,\dot\xi_2)$ are already known. 
+We construct differential equations for $\xi_1$ as follows. 
+The Euler--Lagrange equation~\eqref{eqn:EL} can be decomposed accordingly as
+\begin{align*}
+    \mathbf{J}_{11}\dot \xi_1 + \mathbf{J}_{12}\dot\xi_2 -\ad^*_{\xi_1}\cdot(\mathbf{J}_{11}\xi_1 + \mathbf{J}_{12}\xi_2) + \mathbf{L}_{11}\xi_1 + \mathbf{L}_{12}\xi_2 = \mathbf{f}_{a_1} + \mathbf{f}_{g_1} + \mathbf{f}_{\tau_1},\\
+    \mathbf{J}_{21}\dot \xi_1 + \mathbf{J}_{22}\dot\xi_2 -\ad^*_{\xi_2}\cdot(\mathbf{J}_{21}\xi_1 + \mathbf{J}_{22}\xi_2) + \mathbf{L}_{21}\xi_1 + \mathbf{L}_{22}\xi_2 = \mathbf{f}_{a_2} + \mathbf{f}_{g_2} + \mathbf{f}_{\tau_2}.
+\end{align*}
+From \eqref{eqn:f_tau},
+\begin{align*}
+    \mathbf{f}_{\tau_1} = \begin{bmatrix} 0 & 0 & 0 \\
+    -Q_R & -Q_L & -Q_A \end{bmatrix} \mathbf{f}_{\tau_2} 
+    \triangleq C \mathbf{f}_{\tau_2},
+\end{align*}
+for $C(Q_R,Q_L,Q_A)\in\Re^{6\times 9}$. 
+We combine these equations to obtain 
+\begin{gather}
+    (\mathbf{J}_{11}-C\mathbf{J}_{21})\dot \xi_1 -(\ad^*_{\xi_1}\mathbf{J}_{11}-C\ad^*_{\xi_2} \mathbf{J}_{21} )\xi_1 + (\mathbf{L}_{11}-C\mathbf{L}_{21})\xi_1 \nonumber \\ 
+=   - (\mathbf{J}_{12}-C\mathbf{J}_{22})\dot \xi_2 +(\ad^*_{\xi_1}\mathbf{J}_{12}-C\ad^*_{\xi_2} \mathbf{J}_{22} )\xi_2 - (\mathbf{L}_{12}-C\mathbf{L}_{22})\xi_2 \nonumber \\ 
++ \mathbf{f}_{a_1}+\mathbf{f}_{g_1}-C(\mathbf{f}_{a_2}+\mathbf{f}_{g_2}),
+\end{gather}
+which can be simulated to construct $(g_1,\xi_1)$. 
 
 
-%\subsubsection{Simplified Forms}
+%\ksubsubsection{Simplified Forms}
 
 %The above Euler--Lagrange equations are driven by the control torque acting on the joint of the wings and the joint of the abdomen.
 
@@ -1528,9 +1555,8 @@ For $x\in\Re$,
 \recalctypearea
 
 \subsubsection*{Effects of Configuration-Dependency in Inertia}
-{\scriptsize\selectfont
 \begin{align}
-    \mathbf{K}_g-\frac{1}{2}\mathbf{K}^T_g = \begin{bmatrix}
+    \mathbf{L}_g = \begin{bmatrix}
         0 
         & \mathbf{K}_{R_{12}} + \mathbf{K}_{L_{12}} + \mathbf{K}_{A_{12}} 
         & \mathbf{K}_{R_{13}} & \mathbf{K}_{L_{13}} & \mathbf{K}_{A_{13}}\\
@@ -1549,9 +1575,8 @@ For $x\in\Re$,
         -\frac{1}{2}\mathbf{K}_{A_{13}}^T 
         & \mathbf{K}_{A_{32}} - \frac{1}{2}\mathbf{K}_{A_{23}}^T & 0 & 0 
         & \mathbf{K}_{A_{33}} - \frac{1}{2}\mathbf{K}_{A_{33}}^T 
-\end{bmatrix}
+\end{bmatrix}.
 \end{align}
-}
 
 \newpage
 \KOMAoptions{paper=portrait,pagesize}
