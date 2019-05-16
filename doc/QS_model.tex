@@ -8,6 +8,8 @@
 \usepackage{nomencl} % nomenclature
 \usepackage{siunitx}
 \usepackage[paper=portrait,pagesize,DIV=13]{typearea}
+\usepackage{array} % for math mode in table
+\usepackage{multicol}
 
 \newcommand{\norm}[1]{\ensuremath{\left\| #1 \right\|}}
 \newcommand{\bracket}[1]{\ensuremath{\left[ #1 \right]}}
@@ -1017,21 +1019,6 @@ the chord length is fitted by a $6$-th order polynomial as
 \]
 where the unit of both of $c(r)$ and $r$ is centimeters. 
 From the above, we compute wing morphological parameters to obtain
-\begin{gather*}
-    l=\num{6.0996e-2}\si{m},\quad
-    S=\num{1.2171e-03}\si{m^2},\quad
-    \bar c=\num{2.0905e-02}\si{m},\quad
-    \AR = \num{2.9178e+00},\\
-    \tilde r_1= \num{4.9761e-01},\quad
-    \tilde r_2 = \num{5.4332e-01},\quad
-    \tilde r_3 = \num{5.8030e-01},\quad
-    r_{cp} = \num{6.5148e-02},\\
-    \tilde v = \num{1.2496e+00},\quad
-    \tilde r_1(v) = \num{4.8750e-01},\quad
-    \tilde r_2(v) = \num{5.1653e-01},\quad
-    r_\rot = \num{3.3383e-02}.
-\end{gather*}
-
 We evaluate the aerodynamic forces with the following lift/drag coefficient~\cite{sane2002aerodynamic}
 \begin{align*}
     C_L & = 0.225 + 1.58 \sin( (2.13\alpha^\circ - 7.2) \frac{\pi}{180}),\\
@@ -1550,7 +1537,125 @@ For $x\in\Re$,
     \end{cases}
 \end{align}
 
-\newpage
+\subsubsection*{Monarch}
+
+\begin{figure}
+    \centerline{
+        \subfigure[Leading/Trailing edge $c_{LE}(r), c_{TE}(r)$]{
+            \includegraphics[width=0.45\textwidth]{MONARCH_c_LE_TE}
+        }
+        \hfill
+        \subfigure[Chord $c(r)$]{
+            \includegraphics[width=0.45\textwidth]{MONARCH_c}
+        }
+    }
+    \caption{Monarch wing shape and chord}\label{fig:Monarch_wing}
+\end{figure}
+
+The morphological parameters and the mass distribution of Monarch are determined by an actual butterfly [ref].
+The location of the leading edge and the trailing edge are measured along the span-wise direction, and they are fitted by sixth-order polynomials.  
+The resulting measurements and the fitted curve are illustrated in Figure \ref{fig:Monarch_wing}.
+From the fitted chord, we determine the morphological parameters as summarized in Table \ref{tab:Monarch}.
+\newcolumntype{m}{>{$}l<{$}} % math-mode version of "c" column type
+\begin{table}
+    \caption{Monarch parameters}\label{tab:Monarch}
+    \begin{center}
+        \begin{tabular}{|m|m|m|m|m|m|}
+            \hline
+            \multicolumn{2}{|c}{{Head/Thorax}} & \multicolumn{2}{|c|}{{Abdomen}} & \multicolumn{2}{c|}{{Right Wing}}\\\hline
+            m_B & \num{1.485e-4}\,\si{kg} &
+            m_A & \num{1.092e-4}\,\si{kg} &    
+            m_R & \num{2.5100 e-5}\,\si{kg} \\
+            h_B & \num{1.463e-2}\,\si{m} &
+            h_A & \num{1.738e-2}\,\si{m} & 
+            \bar c & \num{2.0905e-02}\,\si{m} \\
+            w_B & \num{5.680e-3}\,\si{m} &
+            w_A & \num{3.710e-3}\,\si{m} &
+            l & \num{6.0996e-2}\,\si{m}\\
+            J_{B_{xx}} & \num{5.9887e-10}\,\si{kgm^2} &
+            J_{A_{xx}} & \num{1.8788e-10}\,\si{kgm^2} &  
+            J_{R_{xx}} & \num{2.7568e-08}\,\si{kgm^2} \\
+            J_{B_{yy}} & \num{2.9481e-09}\,\si{kgm^2} &
+            J_{A_{yy}} & \num{1.1089e-08}\,\si{kgm^2} &
+            J_{R_{xy}} & \num{2.4957e-09}\,\si{kgm^2} \\
+            J_{B_{zz}} & \num{2.9481e-09}\,\si{kgm^2} &
+            J_{A_{zz}} & \num{1.1089e-08}\,\si{kgm^2} &
+            J_{R_{yy}} & \num{2.5799e-09}\,\si{kgm^2}\\
+                       &&&& J_{R_{zz}} & \num{3.0148e-08}\,\si{kgm^2}\\
+                       &&&& \nu_{R_x} & \num{-4.4378e-03}\,\si{m} \\
+                       &&&& \nu_{R_y} & \num{1.5176e-02}\,\si{m} \\
+                       &&&& S &  \num{1.2751e-03}\,\si{m^2} \\ 
+                       &&&& \AR & \num{2.9178e+00}\\
+                       &&&& \tilde r_1& \num{4.9761e-01}\\
+                       &&&& \tilde r_2 & \num{5.4332e-01}\\
+                       &&&& \tilde r_3 & \num{5.8030e-01}\\
+                       &&&& r_{cp} & \num{6.5148e-02}\,\si{m}\\
+                       &&&& \tilde v & \num{1.2496e+00}\\
+                       &&&& \tilde r_1(v) & \num{4.8750e-01}\\
+                       &&&& \tilde r_2(v) & \num{5.1653e-01}\\
+                       &&&& r_\rot & \num{3.3383e-02}\,\si{m}\\ \hline
+        \end{tabular}\\[0.1cm]
+        (The properties of the left wing are identical to the right wing,  except $\nu_{L_y}= -\nu_{R_y}$, $J_{L_{xy}} = - J_{R_{xy}}$.)
+    \end{center}
+\end{table}
+
+For the calculation of the inertia matrix, the head/thorax is considered as a cylinder with the height $h_B$ and the diameter $w_B$.
+The moment of inertia of the body about its center of gravity is 
+\begin{align*}
+    J_B & = m_B\, \mathrm{diag} [ \frac{1}{8} w_B^2 , \; \frac{1}{16}w_B^2 + \frac{1}{12}h_B^2, \; \frac{1}{16}w_B^2 + \frac{1}{12} h_B^2] .
+\end{align*}
+The abodomen is also considered as a cylinder. 
+Its moment of inertia about the joint is
+\begin{align*}
+    J_A & = m_A\, \mathrm{diag} [ \frac{1}{8} w_A^2 ,\;  \frac{1}{16}w_A^2 + \frac{1}{3}h_A^2, \; \frac{1}{16}w_B^2 + \frac{1}{3} h_A^2].
+\end{align*}
+Next, the right wing is considered as a thin plate with a uniform, negligible thickness. 
+The mass element is written as
+\[
+    dm = \frac{m_R}{S} dx dy,
+\]
+where $\frac{m_R}{S}$ corresponds to the area density in the unit of \si{kg/m^2}.
+Thus, the mass center of the right wing is located at
+\begin{align*}
+    \nu_{R_x} & = \frac{1}{m_R} \int_{\mathcal{B}_R} x  dm
+                = \frac{1}{S} \int_{0}^l \int_{c_{TE}(y)}^{c_{LE}(y)} x dx dy
+                = \frac{1}{S} \int_0^l \frac{1}{2}(c_{LE}^2(y)-c_{TE}^2(y)) dy,\\
+    \nu_{R_y} & = \frac{1}{m_R} \int_{\mathcal{B}_R} y  dm
+                = \frac{1}{S} \int_{0}^l \int_{c_{TE}(y)}^{c_{LE}(y)} y dx dy
+                = \frac{1}{S} \int_0^l (c_{LE}(y)-c_{TE}(y))y dy,\\
+\end{align*}
+Thus, the moment of inertia about the wing root is given by
+\begin{align*}
+    J_{R_{xx}} & = \int_{\mathcal{B}_R} y^2 dm 
+                = \frac{m_R}{S} \int_{0}^l \int_{c_{TE}(y)}^{c_{LE}(y)} y^2 dx dy
+                = \frac{m_R}{S} \int_0^l y^2(c_{LE}(y)-c_{TE}(y)) dy,\\
+    J_{R_{xy}} & = \int_{\mathcal{B}_R} -x y dm 
+                = \frac{m_R}{S} \int_{0}^l \int_{c_{TE}(y)}^{c_{LE}(y)} -xy dx  dy
+                = \frac{m_R}{S} \int_0^l -\frac{1}{2}(c_{LE}^2(y)-c_{TE}^2(y))y dy,\\
+    J_{R_{yy}} & = \int_{\mathcal{B}_R} x^2 dm 
+                = \frac{m_R}{S} \int_{0}^l \int_{c_{TE}(y)}^{c_{LE}(y)} x^2 dx  dy
+                = \frac{m_R}{S} \int_0^l \frac{1}{3}(c_{LE}^3(y)-c_{TE}^3(y)) dy,\\
+                J_{R_{zz}} & = J_{R_{xx}} + J_{R_{yy}}.
+\end{align*}
+For the left wing, 
+\begin{align*}
+    J_{L_{xx}} & = \frac{m_R}{S} \int_0^{-l} \int_{c_{TE}(-y)}^{c_{LE}(-y)} y^2 dx dy = J_{R_{xx}} \\
+    J_{L_{xy}} & = \frac{m_R}{S} \int_0^{-l} \int_{c_{TE}(-y)}^{c_{LE}(-y)} -xy dx dy = - J_{R_{xy}} \\
+    J_{L_{yy}} & = \frac{m_R}{S} \int_0^{-l} \int_{c_{TE}(-y)}^{c_{LE}(-y)} x^2 dx dy = J_{R_{xx}} \\
+    J_{L_{zz}} & = J_{R_{zz}}.
+\end{align*}
+
+Finally, it is assumed that the root of the wing and the joint of the abdomen are located at
+\begin{align*}
+    \mu_R = [0,\; \frac{w_B}{2},\; 0],\\
+    \mu_L = [0,\; -\frac{w_B}{2},\; 0],\\
+    \mu_A = [-\frac{h_B}{2},\; 0,\; 0].
+\end{align*}
+
+
+
+
+\clearpage\newpage
 \KOMAoptions{paper=landscape,pagesize}
 \recalctypearea
 
@@ -1577,6 +1682,7 @@ For $x\in\Re$,
         & \mathbf{K}_{A_{33}} - \frac{1}{2}\mathbf{K}_{A_{33}}^T 
 \end{bmatrix}.
 \end{align}
+
 
 \newpage
 \KOMAoptions{paper=portrait,pagesize}

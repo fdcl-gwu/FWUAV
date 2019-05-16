@@ -20,7 +20,13 @@ DATA=[0	0.172	0.0329	-0.1391
 5.8175	0.746	0.9614	0.2154
 6.0997	0.3319	0.7621	0.4302];
 
-m_R = 0.0000251;
+m_B = 1.485e-4;
+h_B = 1.463e-2;
+w_B = 5.680e-3;
+m_A = 1.092e-4;
+h_A = 1.738e-2;
+w_A = 3.710e-3;
+m_R = 2.510e-5;
 
 span_wholewing=DATA(:,1);
 chord_wholewing=DATA(:,2);
@@ -73,25 +79,43 @@ cr_TE_poly_pow3 = conv(cr_TE_poly_pow2,cr_TE_poly);
 J_R_yy = m_R/S * polyint_def( 1/3* (cr_LE_poly_pow3 - cr_TE_poly_pow3), [0 l])* 1e-4;
 J_R_zz = J_R_xx + J_R_yy;
 
+nu_R_x = 1/S * polyint_def( 0.5* (cr_LE_poly_pow2 - cr_TE_poly_pow2), [0 l])* 1e-2
+nu_R_y = 1/S * polyint_def( 0.5* conv(cr_LE_poly - cr_TE_poly, [1 0]), [0 l])* 1e-2
+nu_R = [nu_R_x nu_R_y 0]';
+nu_L = [nu_R_x -nu_R_y 0]';
+nu_A = [-h_A/2, 0, 0]';
+
 J_R = [J_R_xx J_R_xy 0;
     J_R_xy J_R_yy 0
     0 0 J_R_zz];
 
-N=5000;
-ys=linspace(0,l,N);
-Dy=ys(2)-ys(1);
-tmp=zeros(3,1);
-for k=1:N        
-    c_LE=polyval(cr_LE_poly,ys(k));
-    c_TE=polyval(cr_TE_poly,ys(k));
-    y=ys(k);
-    tmp(1)=tmp(1)+y^2*(c_LE-c_TE)*Dy;
-    tmp(2)=tmp(2)+-0.5*y*(c_LE^2-c_TE^2)*Dy;
-    tmp(3)=tmp(3)+1/3*(c_LE^3-c_TE^3)*Dy;
-end
-tmp*m_R*1e-4/S
-    
-    
+J_L = [J_R_xx -J_R_xy 0;
+    -J_R_xy J_R_yy 0
+    0 0 J_R_zz];
+
+J_B_xx = 1/8*m_B*w_B^2;
+J_B_yy = m_B*(1/16*w_B^2 + 1/12*h_B^2);
+J_B_zz = J_B_yy;
+J_B = diag([J_B_xx J_B_yy J_B_zz]);
+
+J_A_xx = 1/8*m_A*w_A^2;
+J_A_yy = m_A*(1/16*w_A^2 + 1/3*h_A^2);
+J_A_zz = J_A_yy;
+J_A = diag([J_A_xx J_A_yy J_A_zz]);
+
+% N=5000;
+% ys=linspace(0,l,N);
+% Dy=ys(2)-ys(1);
+% tmp=zeros(3,1);
+% for k=1:N        
+%     c_LE=polyval(cr_LE_poly,ys(k));
+%     c_TE=polyval(cr_TE_poly,ys(k));
+%     y=ys(k);
+%     tmp(1)=tmp(1)+y^2*(c_LE-c_TE)*Dy;
+%     tmp(2)=tmp(2)+-0.5*y*(c_LE^2-c_TE^2)*Dy;
+%     tmp(3)=tmp(3)+1/3*(c_LE^3-c_TE^3)*Dy;
+% end
+% tmp*m_R*1e-4/S  
 
 %% plot chord
 figure;
@@ -106,23 +130,53 @@ plot(r,cr,'r',span_wholewing,chord_wholewing,'r.');
 hold on;
 plot(r,cr_bar,'b:');
 xlabel('$r\;(\mathrm{cm})$','interpreter','latex');
-ylabel('$c(r)\;(\mathrm{cm})$','interpreter','latex');
+ylabel('$c\;(\mathrm{cm})$','interpreter','latex');
 
 figure;
 plot(r,c_LE,'r', span_wholewing,chord_LE,'r.');
 hold on;
 plot(r,c_TE,'b', span_wholewing,chord_TE,'b.');
 xlabel('$r\;(\mathrm{cm})$','interpreter','latex');
-ylabel('$c(r)\;(\mathrm{cm})$','interpreter','latex');
+ylabel('$c_{LE}, c_{TE}\;(\mathrm{cm})$','interpreter','latex');
 axis equal;
+
+bool_print=1;
+if bool_print
+    figure(1);print('MONARCH_c','-depsc');
+    figure(2);print('MONARCH_c_LE_TE','-depsc');
+    !cp *.eps ../doc/Figs
+end
 
 %% save the computed morphological parameters into a structure variable
 
 MONARCH.rho = 1.225; % air density (kg/m^3)
+MONARCH.g = 9.81; % air density (kg/m^3)
 MONARCH.l = l*1E-2; % span of the right wing (m)
 MONARCH.S = S*1E-4; % area of the right wing (m^2)
 MONARCH.c_bar = MONARCH.S / MONARCH.l; % mean chord (m)
 MONARCH.AR = AR;
+
+MONARCH.m_B = m_B; % mass of body/thorax
+MONARCH.h_B = h_B; % height of body/thorax
+MONARCH.w_B = w_B; % width of body/thorax
+MONARCH.m_A = m_A; % mass of abdomen
+MONARCH.h_A = h_A; % height of abdomen
+MONARCH.w_A = w_A; % width of abdomen
+MONARCH.m_R = m_R; % mass of right wing
+MONARCH.m_L = m_R; % mass of left wing
+
+MONARCH.J_B = J_B;
+MONARCH.J_R = J_R;
+MONARCH.J_A = J_A;
+MONARCH.J_L = J_L;
+
+MONARCH.nu_R = nu_R;
+MONARCH.nu_A = nu_A;
+MONARCH.nu_L = nu_L;
+
+MONARCH.mu_R = [0, w_B/2, 0]';
+MONARCH.mu_L = [0, -w_B/2, 0]';
+MONARCH.mu_A = [-h_B/2, 0, 0]';
 
 MONARCH.tilde_r_1 = tilde_r_1; % non-dimensional radius of the first moment of wing area
 MONARCH.tilde_r_2 = tilde_r_2; % non-dimensional radius of the second moment of wing area

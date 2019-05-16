@@ -3,43 +3,49 @@ evalin('base','clear all');
 close all;
 filename='QS_sim';
 
-INSECT.g=9.81;
-INSECT.m_B=rand;
-INSECT.J_B=rand_spd;
+% INSECT.g=9.81;
+% INSECT.m_B=rand;
+% INSECT.J_B=rand_spd;
+% 
+% INSECT.m_R=rand;
+% INSECT.mu_R=0.3*rand(3,1);
+% INSECT.nu_R=0.5*rand(3,1);
+% INSECT.J_R=rand_spd;
+% 
+% INSECT.m_L=rand;
+% INSECT.mu_L=0.3*rand(3,1);
+% INSECT.nu_L=0.5*rand(3,1);
+% INSECT.J_L=rand_spd;
+% 
+% INSECT.m_A=rand;
+% INSECT.mu_A=0.3*rand(3,1);
+% INSECT.nu_A=0.5*rand(3,1);
+% INSECT.J_A=rand_spd;
+% 
+% INSECT.rho= 1.2250;
+% INSECT.l = 0.0610;
+% INSECT.S = 0.0013;
+% INSECT.c_bar = 0.0209;
+% INSECT.AR = 2.9178;
+% INSECT.tilde_r_1 = 0.4976;
+% INSECT.tilde_r_2 = 0.5433;
+% INSECT.tilde_r_3 = 0.5803;
+% INSECT.r_cp = 0.0651;
+% INSECT.tilde_v = 1.2496;
+% INSECT.tilde_r_v_1 = 0.4875;
+% INSECT.tilde_r_v_2 = 0.5165;
+% INSECT.r_rot = 0.0334;
 
-INSECT.m_R=rand;
-INSECT.mu_R=0.3*rand(3,1);
-INSECT.nu_R=0.5*rand(3,1);
-INSECT.J_R=rand_spd;
+load('morp_MONARCH');
+INSECT=MONARCH;
+INSECT.J_R = eye(3);
+INSECT.J_L = eye(3);
+INSECT.J_A = eye(3);
 
-INSECT.m_L=rand;
-INSECT.mu_L=0.3*rand(3,1);
-INSECT.nu_L=0.5*rand(3,1);
-INSECT.J_L=rand_spd;
-
-INSECT.m_A=rand;
-INSECT.mu_A=0.3*rand(3,1);
-INSECT.nu_A=0.5*rand(3,1);
-INSECT.J_A=rand_spd;
-
-INSECT.rho= 1.2250;
-INSECT.l = 0.0610;
-INSECT.S = 0.0013;
-INSECT.c_bar = 0.0209;
-INSECT.AR = 2.9178;
-INSECT.tilde_r_1 = 0.4976;
-INSECT.tilde_r_2 = 0.5433;
-INSECT.tilde_r_3 = 0.5803;
-INSECT.r_cp = 0.0651;
-INSECT.tilde_v = 1.2496;
-INSECT.tilde_r_v_1 = 0.4875;
-INSECT.tilde_r_v_2 = 0.5165;
-INSECT.r_rot = 0.0334;
-          
 WK.f=10;
 WK.beta=0*pi/180;
 N=301;
-T=1/WK.f;
+T=5/WK.f;
 t=linspace(0,T,N);
 
 WK.type='BermanWang';
@@ -53,7 +59,7 @@ WK.theta_C=5;
 WK.theta_0=0;
 WK.theta_a=0.3;
 
-WK.psi_m=10*pi/180;
+WK.psi_m=0*pi/180;
 WK.psi_N=2;
 WK.psi_a=0;
 WK.psi_0=0;
@@ -79,7 +85,7 @@ for k=1:N
     R(:,:,k)=reshape(X(k,4:12),3,3);
 end
 
-plot(t,x);
+plot(t*WK.f,x);
 
 save(filename);
 evalin('base',['load ' filename]);
