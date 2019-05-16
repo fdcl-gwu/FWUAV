@@ -168,9 +168,7 @@ JJ_11 = JJ(1:6,1:6);
 JJ_12 = JJ(1:6,7:15);
 JJ_21 = JJ(7:15,1:6);
 JJ_22 = JJ(7:15,7:15);
-
 end
-
     
 function [JJ KK] = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A)
 [JJ_R KK_R] = inertia_wing_sub(INSECT.m_R, INSECT.mu_R, INSECT.nu_R, INSECT.J_R, R, Q_R, x_dot, W, W_R);
@@ -224,7 +222,6 @@ KK(13:15,13:15) = KK_A(7:9,7:9);
 end
 
 function [JJ KK] = inertia_wing_sub(m, mu, xi, J, R, Q, x_dot, W, W_i)
-
 R_dot=R*hat(W);
 Q_dot=Q*hat(W_i);
 
@@ -252,7 +249,6 @@ KK(4:6,7:9) = m*hat(R'*x_dot)*Q*hat(xi) - Q*hat(J*Q'*W) + Q*J*hat(Q'*W) ...
     -Q*hat(J*W_i) + m*hat(mu)*Q*hat(hat(xi)*W_i);
 KK(7:9,4:6) = m*hat(xi)*Q'*hat(R'*x_dot);
 KK(7:9,7:9) = m*hat(xi)*hat(Q'*R'*x_dot) + J*hat(Q'*W) - m*hat(xi)*hat(Q'*hat(mu)*W);
-
 end
 
 function J=rand_spd
@@ -284,7 +280,6 @@ dU = [-(INSECT.m_B + INSECT.m_R + INSECT.m_L + INSECT.m_A) * INSECT.g * e3;
     mg_R*hat(Q_R'*R'*e3)*INSECT.nu_R;
     mg_L*hat(Q_L'*R'*e3)*INSECT.nu_L;
     mg_A*hat(Q_A'*R'*e3)*INSECT.nu_A];
-
 end
 
 
