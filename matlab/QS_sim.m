@@ -35,45 +35,67 @@ filename='QS_sim';
 % INSECT.tilde_r_v_1 = 0.4875;
 % INSECT.tilde_r_v_2 = 0.5165;
 % INSECT.r_rot = 0.0334;
-
+% 
 load('morp_MONARCH');
 INSECT=MONARCH;
-INSECT.J_R = eye(3);
-INSECT.J_L = eye(3);
-INSECT.J_A = eye(3);
+INSECT.mu_A=zeros(3,1);
+INSECT.nu_A=zeros(3,1);
+INSECT.nu_R(1)=0;
+INSECT.nu_L(1)=0;
+INSECT.J_R(1,2)=0;
+INSECT.J_R(2,1)=0;
+INSECT.J_L(1,2)=0;
+INSECT.J_L(2,1)=0;
+INSECT.J_A=zeros(3,3);
 
 WK.f=10;
 WK.beta=0*pi/180;
-N=301;
+N=501;
 T=5/WK.f;
 t=linspace(0,T,N);
 
 WK.type='BermanWang';
 WK.beta=0;
-WK.phi_m=50*pi/180;
+WK.phi_m=00*pi/180;
 WK.phi_K=0.4;
-WK.phi_0=10*pi/180;
+WK.phi_0=0*pi/180;
 
-WK.theta_m=45*pi/180;
-WK.theta_C=5;
+WK.theta_m=40*pi/180;
+WK.theta_C=0.1;
 WK.theta_0=0;
-WK.theta_a=0.3;
+WK.theta_a=0;
 
 WK.psi_m=0*pi/180;
 WK.psi_N=2;
 WK.psi_a=0;
 WK.psi_0=0;
 
-x0=rand(3,1);
-R0=expmso3(rand(3,1));
+x0=[0 0 0]';
+R0=eye(3);
 x_dot0=zeros(3,1);
-W0=rand(3,1);
 
+
+func_HH_rot_total = @(W02) max(abs(momentum(INSECT, WK, WK, 0, x0, R0, [x_dot0; [0; W02; 0]])));
+
+tmpN=5001;
+W02=linspace(-50,50,tmpN);
+for k=1:tmpN
+    HH_total_max(k)=func_HH_rot_total(W02(k));
+end
+plot(W02,HH_total_max);
+[~, tmpI]=min(HH_total_max)
+W02=W02(tmpI);
+
+% options = optimoptions('fmincon');
+% options.OptimalityTolerance = 1e-10;
+% options.MaxFunctionEvaluations = 10000;
+% options.MaxIterations = 10000; 
+% fmincon(func_HH_rot_total, -20,[],[],[],[],[],[],[],options)
+
+W0=[0 W02 0]';
 X0=[x0; reshape(R0,9,1); x_dot0; W0];
 
-f=10;
-N=501;
-t=linspace(0,1/f*5,N);
+
 [t X]=ode45(@(t,X) eom(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
 x=X(:,1:3)';
@@ -83,6 +105,11 @@ W=X(:,16:18)';
 R=zeros(3,3,N);
 for k=1:N
     R(:,:,k)=reshape(X(k,4:12),3,3);
+    [~, Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) W_R(:,k) W_L(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k)]= eom(INSECT, WK, WK, t(k), X(k,:)');
+    F_B(:,k)=Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);
+    
+    [HH_rot_total(:,k) HH(:,k) ] = momentum(INSECT, WK, WK, t(k), x(:,k), R(:,:,k), [x_dot(:,k); W(:,k)]);
+    
 end
 
 plot(t*WK.f,x);
@@ -91,7 +118,27 @@ save(filename);
 evalin('base',['load ' filename]);
 end
 
-function X_dot = eom(INSECT, WK_R, WK_L, t, X)
+function [HH_rot_total HH] = momentum(INSECT, WK_R, WK_L, t, x, R, xi_1)
+x_dot=xi_1(1:3);
+W=xi_1(4:6);
+
+% wing/abdoment attitude and aerodynamic force/moment
+[Euler_R, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);
+[Euler_L, Euler_L_dot, Euler_L_ddot] = wing_kinematics(t,WK_L);
+[Q_R Q_L W_R W_L] = wing_attitude(WK_R.beta, Euler_R, Euler_L, Euler_R_dot, Euler_L_dot, Euler_R_ddot, Euler_L_ddot);
+[Q_A W_A] = abdomen_attitude(t,true);
+
+xi_2=[W_R; W_L; W_A];
+JJ = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
+
+HH = JJ*[xi_1; xi_2];
+HH_rot_total = HH(4:6) + Q_R*HH(7:9) + Q_L*HH(10:12) + Q_A*HH(13:15);
+
+end
+
+
+
+function [X_dot Q_R Q_L Q_A W_R W_L F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X)
 x=X(1:3);
 R=reshape(X(4:12),3,3);
 x_dot=X(13:15);
@@ -119,12 +166,14 @@ f_a=[R*Q_R*F_R + R*Q_L*F_L;
     M_A];
 f_a_1=f_a(1:6);
 f_a_2=f_a(7:15);
+f_a=zeros(15,1);
 
 % gravitational force and moment
 [~, dU]=potential(INSECT,x,R,Q_R,Q_L,Q_A);
 f_g=-dU;
 f_g_1=f_g(1:6);
 f_g_2=f_g(7:15);
+f_g=zeros(15,1);
 
 % Euler-Lagrange equation
 xi_1=[x_dot; W]; 
@@ -168,6 +217,8 @@ tau = blkdiag(Q_R, Q_L, Q_A)*f_tau_2;
 R_dot = R*hat(W);
 X_dot=[x_dot; reshape(R_dot,9,1); xi_1_dot];
 end
+
+
 
 function [JJ_11 JJ_12 JJ_21 JJ_22] = inertia_sub_decompose(JJ)
 JJ_11 = JJ(1:6,1:6);
