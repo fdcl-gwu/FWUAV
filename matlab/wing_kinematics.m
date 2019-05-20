@@ -16,28 +16,30 @@ function [Euler, Euler_dot, Euler_ddot] = wing_kinematics(t,WK)
 
 switch WK.type
     case 'Monarch'
+
+        F_phi.A0 = [ 0.8691];
+        F_phi.AN = [ 57.8139 5.9774 -1.9430 0.7033 -0.0070 0.2849 0.1503 0.1737 0.2031 0.1588 ];
+        F_phi.BN = [ -8.4931 12.5083 -0.4286 0.8218 1.0618 0.3111 0.8475 0.4781 0.5475 0.4647 ];
         
-        F_phi.A0 = [6.6842];
-        F_phi.AN = [64.5842; 9.4086; -4.3509; -2.2789; 1.8163; 0.7403; 0.0321; 0.0660; 0.2409; 0.2811;];
-        F_phi.BN = [-2.9875; 20.7364; 2.5818; -2.7271; 0.0964; 1.0625; 1.0663; 0.5153; 0.4839; 0.5237;];
+        [phi phi_dot phi_ddot]=Fourier_eval(t+WK.t_shift, WK.f, F_phi);
         
-        [phi phi_dot phi_ddot]=Fourier_eval(t, WK.f, F_phi);
+        F_theta.A0 = [11.8841 ];
+        F_theta.AN = [-28.1511 5.9864 -1.6381 -1.8261 1.1729 -0.7694 0.0003 0.0416 -0.0818 -0.0119 ];
+        F_theta.BN = [-32.2038 -10.1697 5.2429 -3.5196 0.8692 -0.3601 -0.5034 -0.2680 -0.3013 -0.2787 ];
         
-        F_theta.A0 = [13.7032];
-        F_theta.AN = [29.5026; -9.9156; 1.1941; 2.8979; -0.9117; 0.6347; 0.0604; 0.0986; 0.1897; 0.0793;];
-        F_theta.BN = [31.1984; 10.5117; -7.3804; 2.9382; -0.1440; 0.3463; 0.4723; 0.2309; 0.3287; 0.2771;];
+        [theta theta_dot theta_ddot]=Fourier_eval(t+WK.t_shift, WK.f, F_theta);
+        theta = - theta;
+        theta_dot = - theta_dot;
+        theta_ddot = - theta_ddot;
         
-        [theta theta_dot theta_ddot]=Fourier_eval(t, WK.f, F_theta);
-        
-        F_psi.A0 = [10.9516];
-        F_psi.AN = [34.8540; -3.0510; -3.9149; -1.9479; 1.1978; -0.0376; - 0.1545; -0.1020; 0.0494; 0.0893;];
-        F_psi.BN = [3.2831; 4.0611; 4.7746; -0.3536; -0.4101; 1.4448; 0.5952; 0.3598; 0.3204; 0.3519;];
-        
-        
-        [psi psi_dot psi_ddot]=Fourier_eval(t, WK.f, F_psi);
-%         psi=0;
-%         psi_dot=0;
-%         psi_ddot=0;
+        F_psi.A0 = [ 16.0238 ];
+        F_psi.AN = [ 17.5325 -6.2925 0.3741 -0.5870 0.2648 0.2025 0.2335 0.0750 0.0578 0.1054 ];
+        F_psi.BN = [ -5.4048 -1.3062 2.3158 0.9966 0.3479 0.4129 0.1933 0.3538 0.1872 0.2095 ];
+                
+        [psi psi_dot psi_ddot]=Fourier_eval(t+WK.t_shift, WK.f, F_psi);
+        psi=0;
+        psi_dot=0;
+        psi_ddot=0;
         
     %case 'BermanWang'
     otherwise

@@ -48,32 +48,34 @@ INSECT.J_L(1,2)=0;
 INSECT.J_L(2,1)=0;
 INSECT.J_A=zeros(3,3);
 
-WK.f=10;
-WK.beta=0*pi/180;
+% WK.type='BermanWang';
+% WK.beta=0;
+% WK.phi_m=00*pi/180;
+% WK.phi_K=0.4;
+% WK.phi_0=0*pi/180;
+% 
+% WK.theta_m=40*pi/180;
+% WK.theta_C=0.1;
+% WK.theta_0=0;
+% WK.theta_a=0;
+% 
+% WK.psi_m=0*pi/180;
+% WK.psi_N=2;
+% WK.psi_a=0;
+% WK.psi_0=0;
+
+WK.f=10.1;
+WK.beta=30*pi/180;
+WK.t_shift = 0.0408;
+WK.type='Monarch';
+
 N=501;
 T=5/WK.f;
 t=linspace(0,T,N);
 
-WK.type='BermanWang';
-WK.beta=0;
-WK.phi_m=00*pi/180;
-WK.phi_K=0.4;
-WK.phi_0=0*pi/180;
-
-WK.theta_m=40*pi/180;
-WK.theta_C=0.1;
-WK.theta_0=0;
-WK.theta_a=0;
-
-WK.psi_m=0*pi/180;
-WK.psi_N=2;
-WK.psi_a=0;
-WK.psi_0=0;
-
 x0=[0 0 0]';
 R0=eye(3);
 x_dot0=zeros(3,1);
-
 
 func_HH_rot_total = @(W02) max(abs(momentum(INSECT, WK, WK, 0, x0, R0, [x_dot0; [0; W02; 0]])));
 
@@ -156,6 +158,8 @@ F_R=L_R+D_R+F_rot_R;
 F_L=L_L+D_L+F_rot_L;
 M_R=M_R+M_rot_R;
 M_L=M_L+M_rot_L;
+M_R=zeros(3,1);
+M_L=zeros(3,1);
 F_A=zeros(3,1);
 M_A=zeros(3,1);
 
@@ -173,7 +177,7 @@ f_a=zeros(15,1);
 f_g=-dU;
 f_g_1=f_g(1:6);
 f_g_2=f_g(7:15);
-f_g=zeros(15,1);
+%f_g=zeros(15,1);
 
 % Euler-Lagrange equation
 xi_1=[x_dot; W]; 

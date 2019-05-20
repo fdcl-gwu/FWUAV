@@ -1,29 +1,32 @@
 clear all;
 close all;
 
-WK.f=10;
-WK.beta=0*pi/180;
-N=301;
-T=1/WK.f;
+WK.f=10.1;
+WK.t_shift = 0.0408;
+%WK.beta=0*pi/180;
+N=5001;
+T=5/WK.f;
 t=linspace(0,T,N);
 
-WK.phi_m=50*pi/180;
-WK.phi_K=0.4;
-WK.phi_0=10*pi/180;
+% WK.phi_m=50*pi/180;
+% WK.phi_K=0.4;
+% WK.phi_0=10*pi/180;
+% 
+% WK.theta_m=45*pi/180;
+% WK.theta_C=5;
+% WK.theta_0=0;
+% WK.theta_a=0.3;
+% 
+% WK.psi_m=10*pi/180;
+% WK.psi_N=2;
+% WK.psi_a=0;
+% WK.psi_0=0;
 
-WK.theta_m=45*pi/180;
-WK.theta_C=5;
-WK.theta_0=0;
-WK.theta_a=0.3;
 
-WK.psi_m=10*pi/180;
-WK.psi_N=2;
-WK.psi_a=0;
-WK.psi_0=0;
-
+WK.type='Monarch';
 
 for k=1:N
-    E=wing_kinematics(t(k),WK,'Monarch');
+    E=wing_kinematics(t(k),WK);
     phi(k)=E(1);
     theta(k)=E(2);
     psi(k)=E(3);

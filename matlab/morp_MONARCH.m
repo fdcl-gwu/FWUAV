@@ -187,6 +187,10 @@ MONARCH.tilde_v = tilde_v; % non-dimensional virtual mass
 MONARCH.tilde_r_v_1 = tilde_r_v_1; % non-dimensional radius of the first moment of wing volume 
 MONARCH.tilde_r_v_2 = tilde_r_v_2; % non-dimensional radius of the second moment of wing volume 
 MONARCH.r_rot = MONARCH.l * MONARCH.tilde_r_v_2^2 / MONARCH.tilde_r_v_1; % CP of the rotational force (m)
+
+MONARCH.cr_poly = cr_poly;
+MONARCH.cr_LE_poly = cr_LE_poly;
+MONARCH.cr_TE_poly = cr_TE_poly;
 disp(MONARCH);
 
 save('morp_MONARCH','MONARCH');
