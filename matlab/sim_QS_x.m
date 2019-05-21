@@ -3,7 +3,7 @@ function sim_QS_x
 % for given thorax attiude, wing kinematics, abdomen attitude
 evalin('base','clear all');
 close all;
-filename='QS_sim_x';
+filename='sim_QS_x';
 
 load('morp_MONARCH');
 INSECT=MONARCH;
@@ -34,6 +34,14 @@ for k=1:N
 end
 
 figure;
+h_x3=plot3(x(1,:),x(2,:),x(3,:));
+set(gca,'YDir','reverse','ZDir','reverse');
+xlabel('$x_1$','interpreter','latex');
+ylabel('$x_2$','interpreter','latex');
+zlabel('$x_3$','interpreter','latex');
+axis equal;
+
+figure;
 for ii=1:3 
     subplot(3,1,ii);
     plot(t*WK.f,x(ii,:));
@@ -60,7 +68,6 @@ xlabel('$t/T$','interpreter','latex');
 subplot(3,1,2);
 ylabel('$F_B$','interpreter','latex');
 
-
 save(filename);
 evalin('base',['load ' filename]);
 end
@@ -77,7 +84,7 @@ x_dot=X(4:6);
 [R W W_dot] = body_attitude(t,true);
 
 [L_R L_L D_R D_L M_R M_L ...
-    F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot);
+    F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);
 F_R=L_R+D_R+F_rot_R;
 F_L=L_L+D_L+F_rot_L;
 M_R=M_R+M_rot_R;

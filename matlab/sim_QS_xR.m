@@ -3,7 +3,7 @@ function sim_QS_xR
 % for given wing kinematics and abdomen attitude
 evalin('base','clear all');
 close all;
-filename='QS_sim_xR';
+filename='sim_QS_xR';
 
 % INSECT.g=9.81;
 % INSECT.m_B=rand;

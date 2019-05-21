@@ -2,7 +2,7 @@ function sim_QS_all
 % simulate the complete dynamics (x,R,Q_R,Q_L,Q_A) for given torque acting on the joint
 evalin('base','clear all');
 close all;
-filename='QS_sim_all';
+filename='sim_QS_all';
 
 INSECT.g=9.81;
 INSECT.m_B=rand;

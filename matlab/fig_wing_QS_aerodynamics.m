@@ -18,7 +18,6 @@ WK.psi_N=1;
 WK.psi_a=0;
 WK.psi_0=10*pi/180;
 
-
 bool_print=false;
 % WK.type='BermanWang';
 % myfig(WK,'QS_sym',bool_print);
@@ -42,7 +41,7 @@ t=linspace(0,T,N);
 load('morp_MONARCH');
 
 e2=[0 1 0]';
-x_dot=[1.2 0 0]';
+x_dot=[1.2 0 -0.38]';
 R=expm(10*pi/180*hat(e2));
 W=[0 0 0]';
 
