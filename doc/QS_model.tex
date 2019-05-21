@@ -1220,9 +1220,9 @@ Let $\mathbf{J}:\G\times \g\rightarrow \g^*$ be a symmetric, positive-definite i
 \end{gather*}
 for any $g\in\G$ and $\xi,\xi_1,\xi_2\in\g$. 
 Also, define $(\mathbf{K}_g(\xi))(\cdot):\G\times \g\rightarrow \g^*$ such that
-\[
-    \T_e^* \L_g \cdot \D_g \mathbf{J}_g(\xi) \cdot \chi = (\mathbf{K}_g(\xi)) (\chi) = \mathbf{K}_g(\xi)\chi. 
-\]
+\begin{equation}
+    \T_e^* \L_g \cdot \D_g \mathbf{J}_g(\xi) \cdot \chi = (\mathbf{K}_g(\xi)) (\chi) = \mathbf{K}_g(\xi)\chi. \label{eqn:KK}
+\end{equation}
 It is straightforward to $\mathbf{K}_g(\xi)$ is a linear operator.
 Therefore, by selecting a basis of $\g$, $\mathbf{K}_g(\xi)$ can be represented by a matrix.
 Intuitively, it is the left-trivialize derivative of $\mathbf{J}_g(\xi)$ with respect to $g$. 
@@ -1269,15 +1269,21 @@ The configuration of the given flapping wing UAV model is described by $g=(x,R,Q
 Consequently, the configuration space is a Lie group $\G=\Re^3\times \SO^4$. 
 As it is a product of $\Re^3$ and four copies of $\SO$, the Lie algebra is simply $\g = \Re^3 \times \so^4 \simeq \Re^3 \times (\Re^3)^4$.
 The kinematics equation is identical to \eqref{eqn:dot_g} with $\xi = (\dot x, \Omega, \Omega_R, \Omega_L, \Omega_A)\in\g$. 
+We derive the Euler--Lagrange equations for the flapping wing UAV using the preceding results. 
 
 \paragraph{Kinetic Energy} 
 The kinetic energy of the body is given by
 \begin{align}
     T_B = \frac{1}{2}m_B \|\dot x\|^2 + \frac{1}{2} \Omega^T J_B\Omega.
 \end{align}
+where $m_B\in\Re$ is the mass of the body, and $J_B\in\Re^{3\times 3}$ is the inertia matrix of the body about $\mathcal{F}_B$.
+\nomenclature{$m_B\in\Re$}{mass of the body, composed head and thorax}
+\nomenclature{$J_B\in\Re^{3\times 3}$}{inertia matrix of the body, about the origin of $\mathcal{F}_B$, resolved in $\mathcal{F}_B$}
+
 
 Next, we find the expression for the kinetic energy of the wings and the abdomen. 
-Since the contribution of the left wing is identical to the right wing and the abdomen, we use the subscript $i\in\{R,L,A\}$ to denote the variables related to a particular wing or the abdomen, which is referred to as $\mathcal{B}_i$.
+The contribution of the left wing is identical to the right wing and the abdomen, as all of them are essentially a rigid body connected to the thorax via a spherical joint. 
+Therefore, we use the subscript $i\in\{R,L,A\}$ to denote the variables related to a particular wing or the abdomen, which is referred to as $\mathcal{B}_i$.
 
 Consider a mass element $dm$ in $\mathcal{B}_i$, whose location is given by $\nu\in\Re^3$ in $\mathcal{F}_i$, i.e., $\nu$ is the vector from the joint to the mass element resolved in $\mathcal{F}_i$. 
 Thus, its location from the origin of the inertial frame, resolved in the inertial frame $\mathcal{F}_I$ is $x + R\mu_i + R Q_i \nu$, and its velocity is 
@@ -1300,20 +1306,22 @@ Thus $\nu_i\in\Re^3$ is the vector from the origin of $\mathcal{F}_i$ to the mas
 \nomenclature{$\mathcal{B}_i$}{right wing for $i=R$, left wing for $i=L$, abdomen for $i=A$}
 After rearranging, one can show
 \begin{align*}
-        T_i & = \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}^T
-    \begin{bmatrix}
-        m_i I_{3\times 3} & -m_i R(\hat \mu_i + \widehat{Q_i\nu_i}) & - m_i R Q_i \hat \nu_i \\
-        m_i (\hat \mu_i + \widehat{Q_i\nu_i}) R^T & m_i \hat\mu_i^T\hat\mu_i + Q_i J_i Q_i^T + m_i (\hat \mu_i^T \widehat{Q_i\nu_i} + \widehat{Q_i\nu_i}^T \hat\mu_i ) & Q_i J_i + m_i \hat\mu_i^T Q_i \hat\nu_i \\
-        m_i\hat\nu_i Q_i^T R^T & J_i Q_i^T + m_i \hat\nu_i^T Q_i^T \hat\mu_i & J_i 
-    \end{bmatrix}
-    \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}\\
-    & = 
+    T_i & = 
     \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}^T
     \mathbf{J}_i(R,Q_i)
     \begin{bmatrix} \dot x \\ \Omega \\ \Omega_i \end{bmatrix}.
 \end{align*}
-The derivative of the inertia is
-\begin{align*}
+where the configuration-dependent inertia for $\mathcal{B}_i$, namely $\mathbf{J}_i(R,Q_i)\in\Re^{9\times 9}$ is
+\begin{align}
+\mathbf{J}_i(R,Q_i) = 
+    \begin{bmatrix}
+        m_i I_{3\times 3} & -m_i R(\hat \mu_i + \widehat{Q_i\nu_i}) & - m_i R Q_i \hat \nu_i \\
+        m_i (\hat \mu_i + \widehat{Q_i\nu_i}) R^T & m_i \hat\mu_i^T\hat\mu_i + Q_i J_i Q_i^T + m_i (\hat \mu_i^T \widehat{Q_i\nu_i} + \widehat{Q_i\nu_i}^T \hat\mu_i ) & Q_i J_i + m_i \hat\mu_i^T Q_i \hat\nu_i \\
+        m_i\hat\nu_i Q_i^T R^T & J_i Q_i^T + m_i \hat\nu_i^T Q_i^T \hat\mu_i & J_i 
+    \end{bmatrix}.
+\end{align}
+From \eqref{eqn:KK}, the derivative of the inertia can be expressed with the following matrix $\mathbf{K}_i\in\Re^{9\times 9}$,
+\begin{align}
     \mathbf{K}_i(R,Q_i,\Omega,\Omega_i) = 
     \begin{bmatrix}
         0 & m_i R ((\hat\mu_i+\widehat{Q_i\nu_i})\Omega + Q_i\hat\nu_i\Omega_i)^\wedge 
@@ -1325,7 +1333,7 @@ The derivative of the inertia is
         0 & m_i \hat\nu_i Q_i^T \widehat{R^T\dot x}
         & m_i \hat\nu_i (Q_i^T R^T \dot x)^\wedge + J_i\widehat{Q_i^T\Omega} - m_i\hat\nu (Q^T\hat\mu_i \Omega)^\wedge
     \end{bmatrix}.
-\end{align*}
+\end{align}
 
 
 The total kinetic energy is the sum of the contributions of the body, the wings and the abdomen, as given by
@@ -1347,7 +1355,7 @@ The total potential energy is
 \[
     U = U_B + U_R + U_L + U_A.
 \]
-The negative derivatives of the potential energy corresponds to the gravitational force and moment given by
+The negative derivatives of the potential energy, namely $\mathbf{f}_g\in\Re^{15}$ corresponds to the gravitational force and moment given by
 \begin{align}
     \mathbf{f}_g \triangleq - \T^*_e\L_g U = \begin{bmatrix}
      (m_B+m_R+m_L+ m_A )g e_3\\
@@ -1355,8 +1363,13 @@ The negative derivatives of the potential energy corresponds to the gravitationa
     m_R g \hat\nu_R (Q_R^T R^T e_3) \\
     m_L g \hat\nu_L (Q_L^T R^T e_3) \\
     m_A g \hat\nu_A (Q_A^T R^T e_3) 
-\end{bmatrix}.
+\end{bmatrix},
 \end{align}
+where the total mass is denoted by $m\in\Re$,
+\begin{align}
+    m = m_B + m_R + m_L + m_A.
+\end{align}
+\nomenclature{$m\in\Re$}{total mass, i.e., $m = m_B + m_R + m_L + m_A.$}
 
 
 \paragraph{Virtual Work}
@@ -1366,13 +1379,13 @@ In the inertial frame, the location of the force is given by $x+ R\mu_i + R Q_i\
 Thus, the corresponding virtual work due to the aerodynamic force is
 \begin{align*}
     \int_{\mathcal{B}_i} \delta(x + R\mu_i + R Q_i\nu) \cdot R Q_i dF(\nu) d\nu
-                      & =  (\delta x + R\hat\eta \mu_i) \cdot R Q_i \int dF(\nu) + \eta_i \cdot \int \nu \times dF(\nu).
+                      & =  (\delta x + R\hat\eta \mu_i) \cdot R Q_i \int_{\mathcal{B}_i} dF(\nu) + \eta_i \cdot \int_{\mathcal{B}_i} \nu \times dF(\nu).
 \end{align*}
 Let the resultant aerodynamic force and the moment about the wing root or the joint connecting the abdomen be
 \[
-    F_i = \int dF_i(\nu) ,\quad M_i = \int \nu\times dF_i(\nu).
+    F_i = \int_{\mathcal{B}_i} dF_i(\nu) ,\quad M_i = \int_{\mathcal{B}_i} \nu\times dF_i(\nu).
 \]
-Also, let $\tau_i\in\Re^3$ be the control torque exerted at the wing root or at the joint connecting the abdomen, resolved in the body-fixed frame. 
+Also, let $\tau_i\in\Re^3$ be the control torque exerted to the wing root or at the joint connecting the abdomen, resolved in the body-fixed frame. 
 As it is an internal torque, there will be a reactive torque, namely $-\tau_i$ exerted to the body. 
 
 The total virtual work due to the aerodynamic force and the control torque can be written as
@@ -1403,7 +1416,7 @@ They are given by
 
 \paragraph{Euler--Lagrange Equations}
 
-The inertia tensor is written as
+The inertia tensor for the complete UAV, namely $\mathbf{J}_g(\xi)\in\Re^{15\times 15}$ is written as
 \begin{align}
     \mathbf{J}_g(\xi) = \begin{bmatrix}
         m_B I_{3\times 3} + \mathbf{J}_{R_{11}} + \mathbf{J}_{L_{11}} + \mathbf{J}_{A_{11}}
@@ -1422,8 +1435,8 @@ The inertia tensor is written as
         \cdot & \cdot & 0 & 0 & \mathbf{J}_{A_{33}}
     \end{bmatrix},
 \end{align}
-where the subscript $ij$ refers to the $i,j$-th block, and the unspecified blocks are chosen such that $\mathbf{J}_g$ becomes symmetric.
-The derivatives of the inertia are
+where the subscript $ij$ refers to the $3\times 3$, $i,j$-th block of the corresponding matrix, and the unspecified blocks are chosen such that $\mathbf{J}_g$ becomes symmetric.
+The derivatives of the inertia are expressed by the following matrix $\mathbf{K}_g\in\Re^{15\times 15}$ according to \eqref{eqn:KK}, 
 \begin{align}
     \mathbf{K}_g = \begin{bmatrix}
         0 & \mathbf{K}_{R_{12}} + \mathbf{K}_{L_{12}} + \mathbf{K}_{A_{12}} & \mathbf{K}_{R_{13}} & \mathbf{K}_{L_{13}} & \mathbf{K}_{A_{13}}\\
@@ -1445,24 +1458,28 @@ The matrix  $\mathbf{L}_g(\xi) = \mathbf{K}_g(\xi)  - \frac{1}{2}\mathbf{K}^T_g(
 and it is more explicitly given in the appendix. 
 
 The above Euler--Lagrange equations are driven by the control torque acting on the joint of the wings and the joint of the abdomen, 
-and they can be simulated by any ODE solver. 
+and they can be simulated by any ODE solver with the initial condition $(g(0),\xi(0))$ and the trajectory of $(\tau_R(t),\tau_L(t),\tau_A(t))$. 
 
-\subsubsection{Prescribed Wing Kinematics}
+\subsubsection{Prescribed Wing Kinematics and Abdomen Attitude}
 
 In case the flapping motion of the wings and the relative motion of the abdomen are prescribed, i.e., $Q_R(t), Q_L(t), Q_A(t)$ are given as a function of time, a reduced set of equations for $(x,R)$ can be constructed as follows. 
 
 Let the configuration variables be decomposed into two parts, $g=(g_1,g_2)$ and $\xi=(\xi_1,\xi_2)$ with
 \begin{gather}
-    g_1 = (x, R), \quad \xi_1 = [\dot x, \Omega], \\
-    g_2 = (Q_R, Q_L, Q_A), \quad \xi_2 = [\Omega_R, \Omega_L, \Omega_A].
+    g_1 = (x, R), \quad \xi_1 = [\dot x, \Omega], \label{eqn:g1xi1}\\
+    g_2 = (Q_R, Q_L, Q_A), \quad \xi_2 = [\Omega_R, \Omega_L, \Omega_A].\label{eqn:g2xi2}
 \end{gather}
 According to the assumption $(g_2,\xi_2,\dot\xi_2)$ are already known. 
 We construct differential equations for $\xi_1$ as follows. 
 The Euler--Lagrange equation~\eqref{eqn:EL} can be decomposed accordingly as
-\begin{align*}
-    \mathbf{J}_{11}\dot \xi_1 + \mathbf{J}_{12}\dot\xi_2 -\ad^*_{\xi_1}\cdot(\mathbf{J}_{11}\xi_1 + \mathbf{J}_{12}\xi_2) + \mathbf{L}_{11}\xi_1 + \mathbf{L}_{12}\xi_2 = \mathbf{f}_{a_1} + \mathbf{f}_{g_1} + \mathbf{f}_{\tau_1},\\
-    \mathbf{J}_{21}\dot \xi_1 + \mathbf{J}_{22}\dot\xi_2 -\ad^*_{\xi_2}\cdot(\mathbf{J}_{21}\xi_1 + \mathbf{J}_{22}\xi_2) + \mathbf{L}_{21}\xi_1 + \mathbf{L}_{22}\xi_2 = \mathbf{f}_{a_2} + \mathbf{f}_{g_2} + \mathbf{f}_{\tau_2}.
-\end{align*}
+\begin{align}
+    \mathbf{J}_{11}\dot \xi_1 + \mathbf{J}_{12}\dot\xi_2 -\ad^*_{\xi_1}\cdot(\mathbf{J}_{11}\xi_1 + \mathbf{J}_{12}\xi_2) + \mathbf{L}_{11}\xi_1 + \mathbf{L}_{12}\xi_2 = \mathbf{f}_{a_1} + \mathbf{f}_{g_1} + \mathbf{f}_{\tau_1},\label{eqn:J11dotxi_1}\\
+    \mathbf{J}_{21}\dot \xi_1 + \mathbf{J}_{22}\dot\xi_2 -\ad^*_{\xi_2}\cdot(\mathbf{J}_{21}\xi_1 + \mathbf{J}_{22}\xi_2) + \mathbf{L}_{21}\xi_1 + \mathbf{L}_{22}\xi_2 = \mathbf{f}_{a_2} + \mathbf{f}_{g_2} + \mathbf{f}_{\tau_2},\label{eqn:J22dotxi_2}
+\end{align}
+where the matrices $\mathbf{J}_g$, $\mathbf{L}\in\Re^{15\times 15}$ are decomposed after the first six rows and columns. 
+For example, $\mathbf{J}_11\in\Re^{6\times 6}$ is the first $6\times 6$ diagonal block of $\mathbf{J}_g$, and the remaining parts of the first 6 rows are defined as $\mathbf{J}_{12}\in\Re^{6\times 9}$. 
+We cannot integrate \eqref{eqn:J11dotxi_1} separately, as it is coupled with \eqref{eqn:J22dotxi_2} through the unknown $(\tau_R,\tau_L,\tau_A)$.
+
 From \eqref{eqn:f_tau},
 \begin{align*}
     \mathbf{f}_{\tau_1} = \begin{bmatrix} 0 & 0 & 0 \\
@@ -1470,13 +1487,31 @@ From \eqref{eqn:f_tau},
     \triangleq C \mathbf{f}_{\tau_2},
 \end{align*}
 for $C(Q_R,Q_L,Q_A)\in\Re^{6\times 9}$. 
-We combine these equations to obtain 
+Multiply $C$ to \eqref{eqn:J22dotxi_2}, and subtract it from \eqref{eqn:J11dotxi_1} to obtain
 \begin{gather}
     (\mathbf{J}_{11}-C\mathbf{J}_{21})\dot \xi_1 -(\ad^*_{\xi_1}\mathbf{J}_{11}-C\ad^*_{\xi_2} \mathbf{J}_{21} )\xi_1 + (\mathbf{L}_{11}-C\mathbf{L}_{21})\xi_1 \nonumber \\ 
 =   - (\mathbf{J}_{12}-C\mathbf{J}_{22})\dot \xi_2 +(\ad^*_{\xi_1}\mathbf{J}_{12}-C\ad^*_{\xi_2} \mathbf{J}_{22} )\xi_2 - (\mathbf{L}_{12}-C\mathbf{L}_{22})\xi_2 \nonumber \\ 
-+ \mathbf{f}_{a_1}+\mathbf{f}_{g_1}-C(\mathbf{f}_{a_2}+\mathbf{f}_{g_2}),
++ \mathbf{f}_{a_1}+\mathbf{f}_{g_1}-C(\mathbf{f}_{a_2}+\mathbf{f}_{g_2}).
 \end{gather}
-which can be simulated to construct $(g_1,\xi_1)$. 
+Now, the unknown $(\tau_R,\tau_L,\tau_A)$ is eliminated, and for given $(g_2,\xi_2,\dot\xi_2)$ the above can be simulated to construct $(g_1,\xi_1)$. 
+Once $(g_1,\xi_1)$ is obtained, it can be substituted into \eqref{eqn:J22dotxi_2} to compute $(\tau_R,\tau_L,\tau_A)$ that the torque at the thorax required to rotate the wings and the abdomen as described. 
+
+\subsubsection{Prescribed Wing Kinematics and Abdomen/Body Attitude}
+
+Next, we consider the case where the attitude of the thorax is prescribed additionally. 
+As such all of $(R(t),Q_R(t),Q_L(t),Q_A(t))$ are given as a function of time.
+We construct a equation of motion for the position $x$. 
+
+The first block of \eqref{eqn:EL} is written as
+\begin{align}
+    m\ddot x + 
+    \sum_{i\in\{R,L,A\}} \big\{ \mathbf{J}_{i_{12}} \dot\Omega + \mathbf{J}_{i_{13}}\dot\Omega_R 
+    + \ \mathbf{K}_{i_{12}}\Omega + \mathbf{K}_{i_{13}}\Omega_i \big\} = R\sum_{i\in\{R,L,A\}} Q_i F_i + mg e_3,
+\end{align}
+which can be numerically integrated to construct $(x,\dot x)$. 
+The control torque $(\tau_R,\tau_L,\tau_A)$ can be constructed by \eqref{eqn:J22dotxi_2}.
+
+
 
 
 %\ksubsubsection{Simplified Forms}
@@ -1604,7 +1639,7 @@ The moment of inertia of the body about its center of gravity is
 \begin{align*}
     J_B & = m_B\, \mathrm{diag} [ \frac{1}{8} w_B^2 , \; \frac{1}{16}w_B^2 + \frac{1}{12}h_B^2, \; \frac{1}{16}w_B^2 + \frac{1}{12} h_B^2] .
 \end{align*}
-The abodomen is also considered as a cylinder. 
+The abdomen is also considered as a cylinder. 
 Its moment of inertia about the joint is
 \begin{align*}
     J_A & = m_A\, \mathrm{diag} [ \frac{1}{8} w_A^2 ,\;  \frac{1}{16}w_A^2 + \frac{1}{3}h_A^2, \; \frac{1}{16}w_B^2 + \frac{1}{3} h_A^2].

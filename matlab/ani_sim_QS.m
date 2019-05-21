@@ -1,4 +1,4 @@
-function ani_monarch
+function ani_sim_QS
 clear all;
 close all;
 global e1 e2 e3

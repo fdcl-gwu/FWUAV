@@ -18,16 +18,19 @@ WK.psi_N=1;
 WK.psi_a=0;
 WK.psi_0=10*pi/180;
 
-WK.type='BermanWang';
-myfig(WK,'QS_sym',true);
-WK.theta_a=0.3;
-myfig(WK,'QS_adv',true);
-WK.theta_a=-0.3;
-myfig(WK,'QS_dly',true);
 
+bool_print=false;
+% WK.type='BermanWang';
+% myfig(WK,'QS_sym',bool_print);
+% WK.theta_a=0.3;
+% myfig(WK,'QS_adv',bool_print);
+% WK.theta_a=-0.3;
+% myfig(WK,'QS_dly',bool_print);
+
+bool_print=true;
 WK.type='Monarch';
-WK.t_shift = 0.0408;
-myfig(WK,'QS_Monarch',true);
+WK.t_shift=2.87128e-03;
+myfig(WK,'QS_Monarch',bool_print);
 
 end
 

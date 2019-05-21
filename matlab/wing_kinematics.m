@@ -37,9 +37,9 @@ switch WK.type
         F_psi.BN = [ -5.4048 -1.3062 2.3158 0.9966 0.3479 0.4129 0.1933 0.3538 0.1872 0.2095 ];
                 
         [psi psi_dot psi_ddot]=Fourier_eval(t+WK.t_shift, WK.f, F_psi);
-        psi=0;
-        psi_dot=0;
-        psi_ddot=0;
+%         psi=0;
+%         psi_dot=0;
+%         psi_ddot=0;
         
     %case 'BermanWang'
     otherwise
@@ -86,7 +86,7 @@ a=F.A0;
 a_dot=0;
 a_ddot=0;
 
-for q = 1:length(F.AN)
+for q = 1:length(F.AN)-4
     a = a + F.AN(q)*cos(2*pi*q*f*t) + F.BN(q)*sin(2*pi*q*f*t);
     a_dot = a_dot -(2*pi*q*f)*F.AN(q)*sin(2*pi*q*f*t) + ...
         (2*pi*q*f)*F.BN(q)*cos(2*pi*q*f*t);

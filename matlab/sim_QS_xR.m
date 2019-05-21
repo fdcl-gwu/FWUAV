@@ -1,7 +1,9 @@
-function QS_sim
+function sim_QS_xR
+% simulate the position and the attitude of thorax (x,R), 
+% for given wing kinematics and abdomen attitude
 evalin('base','clear all');
 close all;
-filename='QS_sim';
+filename='QS_sim_xR';
 
 % INSECT.g=9.81;
 % INSECT.m_B=rand;
@@ -186,12 +188,7 @@ xi_2_dot=[W_R_dot; W_L_dot; W_A_dot];
 
 [JJ KK] = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
 LL = KK - 0.5*KK';
-
-co_ad=zeros(15,15);
-co_ad(4:6,4:6) = -hat(W);
-co_ad(7:9,7:9) = -hat(W_R);
-co_ad(10:12,10:12) = -hat(W_L);
-co_ad(13:15,13:15) = -hat(W_A);
+co_ad=blkdiag(zeros(3,3), -hat(W), -hat(W_R), -hat(W_L), -hat(W_A));
 
 [JJ_11 JJ_12 JJ_21 JJ_22] = inertia_sub_decompose(JJ);
 [LL_11 LL_12 LL_21 LL_22] = inertia_sub_decompose(LL);

@@ -2,12 +2,10 @@
 clear all;
 close all;
 
+%%
+WK.type='BermanWang';
 WK.f=50;
 WK.beta=rand;
-N=5001;
-T=5/WK.f;
-t=linspace(0,T,N);
-
 WK.phi_m=rand;
 WK.phi_K=rand;
 WK.phi_0=rand;
@@ -21,6 +19,15 @@ WK.psi_m=rand;
 WK.psi_N=2;
 WK.psi_a=rand;
 WK.psi_0=rand;
+
+%%
+WK.f=10.1;
+WK.type='Monarch';
+WK.t_shift=2.87128e-03;
+
+N=10001;
+T=5/WK.f;
+t=linspace(0,T,N);
 
 for k=1:N
     [E_R(:,k) E_R_dot(:,k) E_R_ddot(:,k)]=wing_kinematics(t(k),WK);

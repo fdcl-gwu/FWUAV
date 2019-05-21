@@ -1,109 +1,137 @@
-function QS_sim
+function sim_QS_x
+% simulate the position of thorax (x), 
+% for given thorax attiude, wing kinematics, abdomen attitude
 evalin('base','clear all');
 close all;
-filename='QS_sim';
+filename='QS_sim_x';
 
-INSECT.g=9.81;
-INSECT.m_B=rand;
-INSECT.J_B=rand_spd;
+load('morp_MONARCH');
+INSECT=MONARCH;
 
-INSECT.m_R=rand;
-INSECT.mu_R=0.3*rand(3,1);
-INSECT.nu_R=0.5*rand(3,1);
-INSECT.J_R=rand_spd;
+WK.f=10.1;
+WK.beta=30*pi/180;
+WK.t_shift=2.87128e-03;
+WK.type='Monarch';
 
-INSECT.m_L=rand;
-INSECT.mu_L=0.3*rand(3,1);
-INSECT.nu_L=0.5*rand(3,1);
-INSECT.J_L=rand_spd;
+N=1001;
+T=5/WK.f;
+t=linspace(0,T,N);
 
-INSECT.m_A=rand;
-INSECT.mu_A=0.3*rand(3,1);
-INSECT.nu_A=0.5*rand(3,1);
-INSECT.J_A=rand_spd;
+x0=[0 0 0]';
+x_dot0=[1.2 0 -0.38]';
 
-R0=expmso3(rand(3,1));
-Q_R0=expmso3(rand(3,1));
-Q_L0=expmso3(rand(3,1));
-Q_A0=expmso3(rand(3,1));
-W0=rand(3,1);
-W_R0=rand(3,1);
-W_L0=rand(3,1);
-W_A0=rand(3,1);
-x_dot0=zeros(3,1);
-x0=rand(3,1);
+X0=[x0; x_dot0];
 
-X0=[x0; reshape(R0,9,1); reshape(Q_R0,9,1); reshape(Q_L0,9,1); reshape(Q_A0,9,1);...
-    x_dot0; W0; W_R0; W_L0; W_A0];
-
-f=10;
-N=501;
-t=linspace(0,1/f*5,N);
-[t X]=ode45(@(t,X) eom(INSECT,t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+[t X]=ode45(@(t,X) eom(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
 x=X(:,1:3)';
-x_dot=X(:,40:42)';
-W=X(:,43:45)';
-W_R=X(:,46:48)';
-W_L=X(:,49:51)';
-W_A=X(:,52:54)';
+x_dot=X(:,4:6)';
 
-R=zeros(3,3,N);Q_R=zeros(3,3,N);
-for k=1:N
-    R(:,:,k)=reshape(X(k,4:12),3,3);
-    Q_R(:,:,k)=reshape(X(k,13:21),3,3);
-    Q_L(:,:,k)=reshape(X(k,22:30),3,3);
-    Q_A(:,:,k)=reshape(X(k,31:39),3,3);
-end
-
-for k=1:N
-    xi=[x_dot(:,k); W(:,k); W_R(:,k); W_L(:,k); W_A(:,k)];    
-    JJ = inertia(INSECT, R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), x_dot(:,k), W(:,k), W_R(:,k), W_L(:,k), W_A(:,k));
-    U = potential(INSECT,x(:,k),R(:,:,k),Q_R(:,:,k),Q_L(:,:,k),Q_A(:,:,k));
-    E(k)=1/2* xi'*JJ* xi + U;
+R=zeros(3,3,N);
+for k=1:N    
+    [~, R(:,:,k) Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) W(:,k) W_R(:,k) W_L(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k)]= eom(INSECT, WK, WK, t(k), X(k,:)');
+    F_B(:,k)=Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);    
 end
 
 figure;
-plot(t,(E-E(1))./E);
-    
+for ii=1:3 
+    subplot(3,1,ii);
+    plot(t*WK.f,x(ii,:));
+end
+xlabel('$t/T$','interpreter','latex');
+subplot(3,1,2);
+ylabel('$x$','interpreter','latex');
+
+figure;
+for ii=1:3 
+    subplot(3,1,ii);
+    plot(t*WK.f,x_dot(ii,:));
+end
+xlabel('$t/T$','interpreter','latex');
+subplot(3,1,2);
+ylabel('$\dot x$','interpreter','latex');
+
+figure;
+for ii=1:3 
+    subplot(3,1,ii);
+    plot(t*WK.f,F_B(ii,:));
+end
+xlabel('$t/T$','interpreter','latex');
+subplot(3,1,2);
+ylabel('$F_B$','interpreter','latex');
 
 
 save(filename);
 evalin('base',['load ' filename]);
 end
 
-function X_dot = eom(INSECT, t, X)
+function [X_dot R Q_R Q_L Q_A W W_R W_L F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X)
 x=X(1:3);
-R=reshape(X(4:12),3,3);
-Q_R=reshape(X(13:21),3,3);
-Q_L=reshape(X(22:30),3,3);
-Q_A=reshape(X(31:39),3,3);
-x_dot=X(40:42);
-W=X(43:45);
-W_R=X(46:48);
-W_L=X(49:51);
-W_A=X(52:54);
+x_dot=X(4:6);
 
-xi=[x_dot; W; W_R; W_L; W_A];
-[JJ KK] = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
+% wing/abdoment attitude and aerodynamic force/moment
+[Euler_R, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);
+[Euler_L, Euler_L_dot, Euler_L_ddot] = wing_kinematics(t,WK_L);
+[Q_R Q_L W_R W_L W_R_dot W_L_dot] = wing_attitude(WK_R.beta, Euler_R, Euler_L, Euler_R_dot, Euler_L_dot, Euler_R_ddot, Euler_L_ddot);
+[Q_A W_A W_A_dot] = abdomen_attitude(t,true);
+[R W W_dot] = body_attitude(t,true);
+
+[L_R L_L D_R D_L M_R M_L ...
+    F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot);
+F_R=L_R+D_R+F_rot_R;
+F_L=L_L+D_L+F_rot_L;
+M_R=M_R+M_rot_R;
+M_L=M_L+M_rot_L;
+M_A=zeros(3,1);
+
+f_a=[R*Q_R*F_R + R*Q_L*F_L;
+    hat(INSECT.mu_R)*Q_R*F_R + hat(INSECT.mu_L)*Q_L*F_L;
+    M_R;
+    M_L;
+    M_A];
+f_a_1=f_a(1:3);
+f_a_2=f_a(4:15);
+
+% gravitational force and moment
 [~, dU]=potential(INSECT,x,R,Q_R,Q_L,Q_A);
+f_g=-dU;
+f_g_1=f_g(1:3);
+f_g_2=f_g(4:15);
 
-co_ad=zeros(15,15);
-co_ad(4:6,4:6) = -hat(W);
-co_ad(7:9,7:9) = -hat(W_R);
-co_ad(10:12,10:12) = -hat(W_L);
-co_ad(13:15,13:15) = -hat(W_A);
+% Euler-Lagrange equation
+xi_1=[x_dot]; 
+xi_2=[W; W_R; W_L; W_A];
+xi_2_dot=[W_dot; W_R_dot; W_L_dot; W_A_dot];
 
-xi_dot=JJ\(-KK*xi + co_ad*JJ*xi + 0.5*KK'*xi - dU);
+[JJ KK] = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
+LL = KK - 0.5*KK';
+co_ad=blkdiag(zeros(3,3), -hat(W), -hat(W_R), -hat(W_L), -hat(W_A));
 
-R_dot = R*hat(W);
-Q_R_dot = Q_R*hat(W_R);
-Q_L_dot = Q_L*hat(W_L);
-Q_A_dot = Q_A*hat(W_A);
+[JJ_11 JJ_12 JJ_21 JJ_22] = inertia_sub_decompose_3_12(JJ);
+[LL_11 LL_12 LL_21 LL_22] = inertia_sub_decompose_3_12(LL);
+[co_ad_11, ~, ~, co_ad_22] = inertia_sub_decompose_3_12(co_ad);
 
-X_dot=[x_dot; reshape(R_dot,9,1); reshape(Q_R_dot,9,1); reshape(Q_L_dot,9,1); reshape(Q_A_dot,9,1); xi_dot];
+xi_1_dot = JJ_11\( -JJ_12*xi_2_dot -LL_11*xi_1 - LL_12*xi_2 + f_a_1 + f_g_1);
+
+f_tau_2 = JJ_21*xi_1_dot + JJ_22*xi_2_dot - co_ad_22*(JJ_21*xi_1 + JJ_22*xi_2) ...
+    + LL_21*xi_1 + LL_22*xi_2 - f_a_2 - f_g_2;
+f_tau = [zeros(3,1); f_tau_2];
+tau = blkdiag(zeros(3), Q_R, Q_L, Q_A)*f_tau_2;
+
+% xi=[xi_1;xi_2];
+% xi_dot=JJ\( co_ad*JJ*xi - LL*xi + f_a + f_g + f_tau);
+% disp(norm(xi_dot - [xi_1_dot; xi_2_dot]));
+
+X_dot=[xi_1; xi_1_dot];
 end
 
+function [JJ_11 JJ_12 JJ_21 JJ_22] = inertia_sub_decompose_3_12(JJ)
+JJ_11 = JJ(1:3,1:3);
+JJ_12 = JJ(1:3,4:15);
+JJ_21 = JJ(4:15,1:3);
+JJ_22 = JJ(4:15,4:15);
+end
+    
 function [JJ KK] = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A)
 [JJ_R KK_R] = inertia_wing_sub(INSECT.m_R, INSECT.mu_R, INSECT.nu_R, INSECT.J_R, R, Q_R, x_dot, W, W_R);
 [JJ_L KK_L] = inertia_wing_sub(INSECT.m_L, INSECT.mu_L, INSECT.nu_L, INSECT.J_L, R, Q_L, x_dot, W, W_L);
@@ -156,7 +184,6 @@ KK(13:15,13:15) = KK_A(7:9,7:9);
 end
 
 function [JJ KK] = inertia_wing_sub(m, mu, xi, J, R, Q, x_dot, W, W_i)
-
 R_dot=R*hat(W);
 Q_dot=Q*hat(W_i);
 
@@ -184,13 +211,6 @@ KK(4:6,7:9) = m*hat(R'*x_dot)*Q*hat(xi) - Q*hat(J*Q'*W) + Q*J*hat(Q'*W) ...
     -Q*hat(J*W_i) + m*hat(mu)*Q*hat(hat(xi)*W_i);
 KK(7:9,4:6) = m*hat(xi)*Q'*hat(R'*x_dot);
 KK(7:9,7:9) = m*hat(xi)*hat(Q'*R'*x_dot) + J*hat(Q'*W) - m*hat(xi)*hat(Q'*hat(mu)*W);
-
-end
-
-function J=rand_spd
-
-Q=expmso3(rand(3,1));
-J=Q*diag(rand(3,1))*Q';
 end
 
 function [U dU]=potential(INSECT,x,R,Q_R,Q_L,Q_A)
@@ -216,7 +236,6 @@ dU = [-(INSECT.m_B + INSECT.m_R + INSECT.m_L + INSECT.m_A) * INSECT.g * e3;
     mg_R*hat(Q_R'*R'*e3)*INSECT.nu_R;
     mg_L*hat(Q_L'*R'*e3)*INSECT.nu_L;
     mg_A*hat(Q_A'*R'*e3)*INSECT.nu_A];
-
 end
 
 
