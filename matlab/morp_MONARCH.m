@@ -164,6 +164,7 @@ MONARCH.h_A = h_A; % height of abdomen
 MONARCH.w_A = w_A; % width of abdomen
 MONARCH.m_R = m_R; % mass of right wing
 MONARCH.m_L = m_R; % mass of left wing
+MONARCH.m = m_B + m_A + 2*m_R;
 
 MONARCH.J_B = J_B;
 MONARCH.J_R = J_R;

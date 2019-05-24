@@ -40,15 +40,15 @@ filename='sim_QS_xR';
 % 
 load('morp_MONARCH');
 INSECT=MONARCH;
-INSECT.mu_A=zeros(3,1);
-INSECT.nu_A=zeros(3,1);
-INSECT.nu_R(1)=0;
-INSECT.nu_L(1)=0;
-INSECT.J_R(1,2)=0;
-INSECT.J_R(2,1)=0;
-INSECT.J_L(1,2)=0;
-INSECT.J_L(2,1)=0;
-INSECT.J_A=zeros(3,3);
+% INSECT.mu_A=zeros(3,1);
+% INSECT.nu_A=zeros(3,1);
+% INSECT.nu_R(1)=0;
+% INSECT.nu_L(1)=0;
+% INSECT.J_R(1,2)=0;
+% INSECT.J_R(2,1)=0;
+% INSECT.J_L(1,2)=0;
+% INSECT.J_L(2,1)=0;
+% INSECT.J_A=zeros(3,3);
 
 % WK.type='BermanWang';
 % WK.beta=0;
@@ -66,9 +66,8 @@ INSECT.J_A=zeros(3,3);
 % WK.psi_a=0;
 % WK.psi_0=0;
 
-WK.f=10.1;
+WK.f=10.2;
 WK.beta=30*pi/180;
-WK.t_shift = 0.0408;
 WK.type='Monarch';
 
 N=501;
@@ -77,7 +76,7 @@ t=linspace(0,T,N);
 
 x0=[0 0 0]';
 R0=eye(3);
-x_dot0=zeros(3,1);
+x_dot0=[1.0 0 -0.5]';
 
 func_HH_rot_total = @(W02) max(abs(momentum(INSECT, WK, WK, 0, x0, R0, [x_dot0; [0; W02; 0]])));
 
@@ -96,6 +95,7 @@ W02=W02(tmpI);
 % options.MaxIterations = 10000; 
 % fmincon(func_HH_rot_total, -20,[],[],[],[],[],[],[],options)
 
+
 W0=[0 W02 0]';
 X0=[x0; reshape(R0,9,1); x_dot0; W0];
 
@@ -109,17 +109,86 @@ W=X(:,16:18)';
 R=zeros(3,3,N);
 for k=1:N
     R(:,:,k)=reshape(X(k,4:12),3,3);
-    [~, Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) W_R(:,k) W_L(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k)]= eom(INSECT, WK, WK, t(k), X(k,:)');
+    [~, R(:,:,k) Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) theta_A(k) W(:,k) W_R(:,k) W_L(:,k) W_A(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k)]= eom(INSECT, WK, WK, t(k), X(k,:)');
     F_B(:,k)=Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);
     
     [HH_rot_total(:,k) HH(:,k) ] = momentum(INSECT, WK, WK, t(k), x(:,k), R(:,:,k), [x_dot(:,k); W(:,k)]);
-    
+    [Euler_R(:,k), Euler_R_dot(:,k), Euler_R_ddot(:,k)] = wing_kinematics(t(k),WK);
 end
 
-plot(t*WK.f,x);
+figure;
+h_x3=plot3(x(1,:),x(2,:),x(3,:));
+set(gca,'YDir','reverse','ZDir','reverse');
+xlabel('$x_1$','interpreter','latex');
+ylabel('$x_2$','interpreter','latex');
+zlabel('$x_3$','interpreter','latex');
+axis equal;
 
-save(filename);
+h_x=figure;
+for ii=1:3 
+    subplot(3,1,ii);
+    plot(t*WK.f,x(ii,:));
+    patch_downstroke(h_x,t*WK.f,Euler_R_dot);
+end
+xlabel('$t/T$','interpreter','latex');
+subplot(3,1,2);
+ylabel('$x$','interpreter','latex');
+
+figure;
+for ii=1:3 
+    subplot(3,1,ii);
+    plot(t*WK.f,x_dot(ii,:));
+end
+xlabel('$t/T$','interpreter','latex');
+subplot(3,1,2);
+ylabel('$\dot x$','interpreter','latex');
+
+figure;
+for ii=1:3 
+    subplot(3,1,ii);
+    plot(t*WK.f,F_B(ii,:));
+end
+xlabel('$t/T$','interpreter','latex');
+subplot(3,1,2);
+ylabel('$F_B$','interpreter','latex');
+
+% figure;
+% subplot(3,1,1);
+% plot(t*WK.f, tau(4:6,:));
+% ylabel('$\tau_R$','interpreter','latex');
+% subplot(3,1,2);
+% plot(t*WK.f, tau(7:9,:));
+% ylabel('$\tau_L$','interpreter','latex');
+% subplot(3,1,3);
+% plot(t*WK.f, tau(10:12,:));
+% ylabel('$\tau_A$','interpreter','latex');
+
+figure;
+subplot(2,1,1);
+%plot(t*WK.f, theta_B*180/pi);
+ylabel('$\theta_B$','interpreter','latex');
+subplot(2,1,2);
+plot(t*WK.f, theta_A*180/pi);
+ylabel('$\theta_A$','interpreter','latex');
+
+figure;
+subplot(2,1,1);
+plot(t*WK.f,W);
+ylabel('$\Omega$','interpreter','latex');
+subplot(2,1,2);
+plot(t*WK.f,W_A);
+ylabel('$\Omega_A$','interpreter','latex');
+
+
+% Get a list of all variables
+allvars = whos;
+% Identify the variables that ARE NOT graphics handles. This uses a regular
+% expression on the class of each variable to check if it's a graphics object
+tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
+% Pass these variable names to save
+save(filename, allvars(tosave).name)
 evalin('base',['load ' filename]);
+
 end
 
 function [HH_rot_total HH] = momentum(INSECT, WK_R, WK_L, t, x, R, xi_1)
@@ -137,12 +206,9 @@ JJ = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
 
 HH = JJ*[xi_1; xi_2];
 HH_rot_total = HH(4:6) + Q_R*HH(7:9) + Q_L*HH(10:12) + Q_A*HH(13:15);
-
 end
 
-
-
-function [X_dot Q_R Q_L Q_A W_R W_L F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X)
+function [X_dot R Q_R Q_L Q_A theta_A W W_R W_L W_A F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X)
 x=X(1:3);
 R=reshape(X(4:12),3,3);
 x_dot=X(13:15);
@@ -152,10 +218,11 @@ W=X(16:18);
 [Euler_R, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);
 [Euler_L, Euler_L_dot, Euler_L_ddot] = wing_kinematics(t,WK_L);
 [Q_R Q_L W_R W_L W_R_dot W_L_dot] = wing_attitude(WK_R.beta, Euler_R, Euler_L, Euler_R_dot, Euler_L_dot, Euler_R_ddot, Euler_L_ddot);
-[Q_A W_A W_A_dot] = abdomen_attitude(t,true);
+[Q_A W_A W_A_dot theta_A] = abdomen_attitude(t,WK_R.f);
+%[Q_A W_A W_A_dot theta_A] = abdomen_attitude(30*pi/180);
 
 [L_R L_L D_R D_L M_R M_L ...
-    F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot);
+    F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);
 F_R=L_R+D_R+F_rot_R;
 F_L=L_L+D_L+F_rot_L;
 M_R=M_R+M_rot_R;

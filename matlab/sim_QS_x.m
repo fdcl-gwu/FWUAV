@@ -8,9 +8,9 @@ filename='sim_QS_x';
 load('morp_MONARCH');
 INSECT=MONARCH;
 
-WK.f=10.1;
+WK.f=10.2;
 WK.beta=30*pi/180;
-WK.t_shift=2.87128e-03;
+%WK.t_shift=2.87128e-03;
 WK.type='Monarch';
 
 N=1001;
@@ -18,7 +18,7 @@ T=5/WK.f;
 t=linspace(0,T,N);
 
 x0=[0 0 0]';
-x_dot0=[1.2 0 -0.38]';
+x_dot0=[1.0 0 -0.5]';
 
 X0=[x0; x_dot0];
 
@@ -29,8 +29,9 @@ x_dot=X(:,4:6)';
 
 R=zeros(3,3,N);
 for k=1:N    
-    [~, R(:,:,k) Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) W(:,k) W_R(:,k) W_L(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k)]= eom(INSECT, WK, WK, t(k), X(k,:)');
+    [~, R(:,:,k) Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) theta_B(k) theta_A(k) W(:,k) W_R(:,k) W_L(:,k) W_A(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k)]= eom(INSECT, WK, WK, t(k), X(k,:)');
     F_B(:,k)=Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);    
+    [Euler_R(:,k), Euler_R_dot(:,k), Euler_R_ddot(:,k)] = wing_kinematics(t(k),WK);
 end
 
 figure;
@@ -41,10 +42,11 @@ ylabel('$x_2$','interpreter','latex');
 zlabel('$x_3$','interpreter','latex');
 axis equal;
 
-figure;
+h_x=figure;
 for ii=1:3 
     subplot(3,1,ii);
     plot(t*WK.f,x(ii,:));
+    patch_downstroke(h_x,t*WK.f,Euler_R_dot);
 end
 xlabel('$t/T$','interpreter','latex');
 subplot(3,1,2);
@@ -68,11 +70,45 @@ xlabel('$t/T$','interpreter','latex');
 subplot(3,1,2);
 ylabel('$F_B$','interpreter','latex');
 
-save(filename);
+figure;
+subplot(3,1,1);
+plot(t*WK.f, tau(4:6,:));
+ylabel('$\tau_R$','interpreter','latex');
+subplot(3,1,2);
+plot(t*WK.f, tau(7:9,:));
+ylabel('$\tau_L$','interpreter','latex');
+subplot(3,1,3);
+plot(t*WK.f, tau(10:12,:));
+ylabel('$\tau_A$','interpreter','latex');
+
+figure;
+subplot(2,1,1);
+plot(t*WK.f, theta_B*180/pi);
+ylabel('$\theta_B$','interpreter','latex');
+subplot(2,1,2);
+plot(t*WK.f, theta_A*180/pi);
+ylabel('$\theta_A$','interpreter','latex');
+
+figure;
+subplot(2,1,1);
+plot(t*WK.f,W);
+ylabel('$\Omega$','interpreter','latex');
+subplot(2,1,2);
+plot(t*WK.f,W_A);
+ylabel('$\Omega_A$','interpreter','latex');
+
+
+% Get a list of all variables
+allvars = whos;
+% Identify the variables that ARE NOT graphics handles. This uses a regular
+% expression on the class of each variable to check if it's a graphics object
+tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
+% Pass these variable names to save
+save(filename, allvars(tosave).name)
 evalin('base',['load ' filename]);
 end
 
-function [X_dot R Q_R Q_L Q_A W W_R W_L F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X)
+function [X_dot R Q_R Q_L Q_A theta_B theta_A W W_R W_L W_A F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X)
 x=X(1:3);
 x_dot=X(4:6);
 
@@ -80,8 +116,12 @@ x_dot=X(4:6);
 [Euler_R, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);
 [Euler_L, Euler_L_dot, Euler_L_ddot] = wing_kinematics(t,WK_L);
 [Q_R Q_L W_R W_L W_R_dot W_L_dot] = wing_attitude(WK_R.beta, Euler_R, Euler_L, Euler_R_dot, Euler_L_dot, Euler_R_ddot, Euler_L_ddot);
-[Q_A W_A W_A_dot] = abdomen_attitude(t,true);
-[R W W_dot] = body_attitude(t,true);
+
+[R W W_dot theta_B] = body_attitude(t,WK_R.f);
+[Q_A W_A W_A_dot theta_A] = abdomen_attitude(t,WK_R.f);
+
+%[Q_A W_A W_A_dot theta_A] = abdomen_attitude(10*pi/180); fixed abdomen
+
 
 [L_R L_L D_R D_L M_R M_L ...
     F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);

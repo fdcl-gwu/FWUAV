@@ -1506,12 +1506,37 @@ The first block of \eqref{eqn:EL} is written as
 \begin{align}
     m\ddot x + 
     \sum_{i\in\{R,L,A\}} \big\{ \mathbf{J}_{i_{12}} \dot\Omega + \mathbf{J}_{i_{13}}\dot\Omega_R 
-    + \ \mathbf{K}_{i_{12}}\Omega + \mathbf{K}_{i_{13}}\Omega_i \big\} = R\sum_{i\in\{R,L,A\}} Q_i F_i + mg e_3,
+    + \ \mathbf{K}_{i_{12}}\Omega + \mathbf{K}_{i_{13}}\Omega_i \big\} = R\sum_{i\in\{R,L,A\}} Q_i F_i + mg e_3,\label{eqn:mx_ddot}
 \end{align}
 which can be numerically integrated to construct $(x,\dot x)$. 
 The control torque $(\tau_R,\tau_L,\tau_A)$ can be constructed by \eqref{eqn:J22dotxi_2}.
 
+\subsubsection{Comparison with Experimental Data}
 
+The above equation \eqref{eqn:mx_ddot} is numerically integrated, and the corresponding results are compared against the experimental data. 
+
+\begin{figure}[p]
+    \centerline{
+        \subfigure[Position trajectory]{
+            \includegraphics[width=0.5\textwidth]{exp_comp_x}
+        }
+        \hfill
+        \subfigure[Velocity]{
+            \includegraphics[width=0.5\textwidth]{exp_comp_v}
+        }
+    }
+    \centerline{
+        \subfigure[Wing kinematics angles]{
+            \includegraphics[width=0.5\textwidth]{exp_comp_E}
+        }
+        \hfill
+        \subfigure[Resultant force in the body-fixed frame]{
+            \includegraphics[width=0.5\textwidth]{exp_comp_FB}
+        }
+    }
+    \caption{Comparison between the QS model (blue) and the experimental data (red); shaded area corresponds to downstroke; the resultant force of the experiment is constructed by the acceleration of the thorax, multiplied by the total mass and subtracted by the gravity}
+\end{figure}
+g
 
 
 %\ksubsubsection{Simplified Forms}

@@ -12,7 +12,7 @@ load STLRead/fv_monarch;
 load('morp_MONARCH');
 bool_video=0;
 
-load('QS_sim','x','R','Q_R','Q_L','N','F_R','F_L');
+load('sim_QS_x','x','R','Q_R','Q_L','N','F_R','F_L');
 
 %% generate the initial object when k=1
 k=1;
@@ -162,7 +162,7 @@ alpha([h_body, h_wr, h_wl],0.8);
 axis('image');
 
 view(180+10,30);
-%view(90,20);
+%view(-90,80);
 %view(270,80);
 
 set(gca,'Zdir','reverse','YDir','reverse');

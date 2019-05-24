@@ -42,8 +42,10 @@ else
     dr=rs(2)-rs(1);
     L_R = zeros(3,1);
     D_R = zeros(3,1);
+    M_R = zeros(3,1);
     L_L = zeros(3,1);
     D_L = zeros(3,1);
+    M_L = zeros(3,1);
     
     for i=1:N_r-1
         r=rs(i);
@@ -52,20 +54,20 @@ else
         [L D M]=compute_LD(INSECT, U_R);
         L_R = L_R + L/INSECT.S*c*dr;
         D_R = D_R + D/INSECT.S*c*dr;
+        M_R = M_R + cross(r*e2,(L+D))/INSECT.S*c*dr;
         
         U_L = (eye(3)-e2*e2')*Q_L'*(R'*x_dot+hat(W)*INSECT.mu_L) - r*hat(Q_L*W+W_L)*e2;
         [L D M]=compute_LD(INSECT, U_L);
         L_L = L_L + L/INSECT.S*c*dr;
         D_L = D_L + D/INSECT.S*c*dr;
+        M_L = M_L + cross(-r*e2,(L+D))/INSECT.S*c*dr;
     end
     
-    M_R=zeros(3,1);
     F_rot_R=zeros(3,1);
     M_rot_R=zeros(3,1);
     alpha_R=0;
     U_alpha_R_dot=0;
     
-    M_L=zeros(3,1);
     F_rot_L=zeros(3,1);
     M_rot_L=zeros(3,1);
     alpha_L=0;
