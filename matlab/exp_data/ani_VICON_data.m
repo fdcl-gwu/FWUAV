@@ -4,6 +4,7 @@ close all;
 global FV_sph;
 
 load VICON_data;
+load fit_VICON_data;
 
 FV_sph = FV_sphere(0.005);
 bool_moving_camera=true;
@@ -19,6 +20,10 @@ else
     h_RW=patch_chain(T1(:,k)-T1(:,k), RW1(:,k)-T1(:,k), RW2(:,k)-T1(:,k), RW3(:,k)-T1(:,k), T2(:,k)-T1(:,k), [0 0 1]);
     h_LW=patch_chain(T1(:,k)-T1(:,k), LW1(:,k)-T1(:,k), LW2(:,k)-T1(:,k), LW3(:,k)-T1(:,k), T2(:,k)-T1(:,k), [0 1 0]);
     h_thorax=patch_chain(T1(:,k)-T1(:,k), T2(:,k)-T1(:,k), A1(:,k)-T1(:,k), A2(:,k)-T1(:,k), [1 0 0]);
+    %h_QR=patch_frame(T1(:,k)-T1(:,k),0.05*R(:,:,k)*Q_R(:,:,k),[0 0 1]);
+    %h_QL=patch_frame(T1(:,k)-T1(:,k),0.05*R(:,:,k)*Q_L(:,:,k),[0 1 0]);
+    %h_R=patch_frame(T1(:,k)-T1(:,k),0.05*R(:,:,k),[1 0 0]);
+    %h_QA=patch_frame(T1(:,k)-T1(:,k),0.05*R(:,:,k)*Q_A(:,:,k),[1 0 0]);
     axis equal;
     axis([-0.1 0.1 -0.1 0.1 -0.1 0.1]);
 end
@@ -43,7 +48,12 @@ else
         update_chain(h_RW, T1(:,k)-T1(:,k), RW1(:,k)-T1(:,k), RW2(:,k)-T1(:,k), RW3(:,k)-T1(:,k), T2(:,k)-T1(:,k));
         update_chain(h_LW, T1(:,k)-T1(:,k), LW1(:,k)-T1(:,k), LW2(:,k)-T1(:,k), LW3(:,k)-T1(:,k), T2(:,k)-T1(:,k));
         update_chain(h_thorax, T1(:,k)-T1(:,k), T2(:,k)-T1(:,k), A1(:,k)-T1(:,k), A2(:,k)-T1(:,k));
+        %update_frame(h_QR,T1(:,k)-T1(:,k),0.05*R(:,:,k)*Q_R(:,:,k));
+        %update_frame(h_QL,T1(:,k)-T1(:,k),0.05*R(:,:,k)*Q_L(:,:,k));
+        %update_frame(h_R,T1(:,k)-T1(:,k),0.05*R(:,:,k));
+        %update_frame(h_QA,T1(:,k)-T1(:,k),0.05*R(:,:,k)*Q_A(:,:,k));
         axis([-0.1 0.1 -0.1 0.1 -0.1 0.1]);
+        view(-90,60);
         drawnow;
     end
 end
@@ -119,9 +129,30 @@ set(h,'Vertices', vertices);
 
 end
 
-function patch_frame(x,R,color)
+function h = patch_frame(x,R,acolor)
+
+lwidth=2;
+alength=0.01;
+awidth=alength*tand(12);
+
+for i=1:3    
+    h(:,i)=patch_arrow(x,x+R(:,i),acolor,lwidth,alength,awidth);
+end
 
 end
+
+function update_frame(h,x,R)
+
+lwidth=2;
+alength=0.01;
+awidth=alength*tand(12);
+
+for i=1:3    
+    update_arrow(h(:,i), x,x+R(:,i) ,alength,awidth);
+end
+
+end
+
 
 function h=patch_arrow(p1,p2,acolor,lwidth,alength,awidth)
 % acolor=[0 0 1];

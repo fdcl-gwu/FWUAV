@@ -49,7 +49,7 @@ if bool_video
 end
 
 %% save
-filename='ani_QS_sim';
+filename='ani_sim_QS';
 varData = whos;
 saveIndex = cellfun(@isempty, regexp({varData.class}, 'matlab.(graphics|ui)'));
 saveVars = {varData(saveIndex).name};
@@ -64,7 +64,7 @@ e2=[0 1 0]';
 lwidth=1;
 alength=12;
 awidth=alength*tand(10);
-scale_Force=1e4;
+scale_Force=2e4;
 
 x_cp = x + R*Q_R*50*e2;
 acolor=[1 0 0]';

@@ -36,12 +36,20 @@ else
 end
 
 if ~bool_fixed
-    % compute attitude as a function of time here    
-    F_theta_th.f=10.2468;
-    F_theta_th.A0=19.7703;
-    F_theta_th.AN=[0.7632 2.1236 -0.1915 -0.3702 -0.1729];
-    F_theta_th.BN=[9.3219 0.4207 -0.9178 -0.7781 0.3443];
-    
+
+%     Data constructed by ./exp_data/fit_exp_data.m    
+%     F_theta_th.f=10.2468;
+%     F_theta_th.A0=19.7703;
+%     F_theta_th.AN=[0.7632 2.1236 -0.1915 -0.3702 -0.1729];
+%     F_theta_th.BN=[9.3219 0.4207 -0.9178 -0.7781 0.3443];
+%     
+%     [theta theta_dot theta_ddot]= eval_Fourier(t, f, F_theta_th);
+
+    % Data constructed by ./exp_data/fit_VICON_data.m    
+    F_theta_th.f = 10.2213;
+    F_theta_th.A0 = 18.6094-3;
+    F_theta_th.AN = 1.1952126587572*1.3;
+    F_theta_th.BN = 8.21314837914776*1.3;
     [theta theta_dot theta_ddot]= eval_Fourier(t, f, F_theta_th);
     
     R=expm(theta*hat(e2));
@@ -61,7 +69,7 @@ a=F.A0;
 a_dot=0;
 a_ddot=0;
 
-for q = 1:length(F.AN)-1
+for q = 1:length(F.AN)
     a = a + F.AN(q)*cos(2*pi*q*f*t) + F.BN(q)*sin(2*pi*q*f*t);
     a_dot = a_dot -(2*pi*q*f)*F.AN(q)*sin(2*pi*q*f*t) + ...
         (2*pi*q*f)*F.BN(q)*cos(2*pi*q*f*t);

@@ -8,17 +8,16 @@ filename='sim_QS_x';
 load('morp_MONARCH');
 INSECT=MONARCH;
 
-WK.f=10.2;
-WK.beta=30*pi/180;
-%WK.t_shift=2.87128e-03;
+WK.f=10.2247;
+WK.beta=25.4292*pi/180;
 WK.type='Monarch';
 
 N=1001;
-T=5/WK.f;
+T=20/WK.f;
 t=linspace(0,T,N);
 
 x0=[0 0 0]';
-x_dot0=[1.0 0 -0.5]';
+x_dot0=[1.0 0 -0.3]';
 
 X0=[x0; x_dot0];
 
@@ -34,69 +33,70 @@ for k=1:N
     [Euler_R(:,k), Euler_R_dot(:,k), Euler_R_ddot(:,k)] = wing_kinematics(t(k),WK);
 end
 
-figure;
-h_x3=plot3(x(1,:),x(2,:),x(3,:));
-set(gca,'YDir','reverse','ZDir','reverse');
-xlabel('$x_1$','interpreter','latex');
-ylabel('$x_2$','interpreter','latex');
-zlabel('$x_3$','interpreter','latex');
-axis equal;
 
-h_x=figure;
-for ii=1:3 
-    subplot(3,1,ii);
-    plot(t*WK.f,x(ii,:));
-    patch_downstroke(h_x,t*WK.f,Euler_R_dot);
-end
-xlabel('$t/T$','interpreter','latex');
-subplot(3,1,2);
-ylabel('$x$','interpreter','latex');
-
-figure;
-for ii=1:3 
-    subplot(3,1,ii);
-    plot(t*WK.f,x_dot(ii,:));
-end
-xlabel('$t/T$','interpreter','latex');
-subplot(3,1,2);
-ylabel('$\dot x$','interpreter','latex');
-
-figure;
-for ii=1:3 
-    subplot(3,1,ii);
-    plot(t*WK.f,F_B(ii,:));
-end
-xlabel('$t/T$','interpreter','latex');
-subplot(3,1,2);
-ylabel('$F_B$','interpreter','latex');
-
-figure;
-subplot(3,1,1);
-plot(t*WK.f, tau(4:6,:));
-ylabel('$\tau_R$','interpreter','latex');
-subplot(3,1,2);
-plot(t*WK.f, tau(7:9,:));
-ylabel('$\tau_L$','interpreter','latex');
-subplot(3,1,3);
-plot(t*WK.f, tau(10:12,:));
-ylabel('$\tau_A$','interpreter','latex');
-
-figure;
-subplot(2,1,1);
-plot(t*WK.f, theta_B*180/pi);
-ylabel('$\theta_B$','interpreter','latex');
-subplot(2,1,2);
-plot(t*WK.f, theta_A*180/pi);
-ylabel('$\theta_A$','interpreter','latex');
-
-figure;
-subplot(2,1,1);
-plot(t*WK.f,W);
-ylabel('$\Omega$','interpreter','latex');
-subplot(2,1,2);
-plot(t*WK.f,W_A);
-ylabel('$\Omega_A$','interpreter','latex');
-
+% figure;
+% h_x3=plot3(x(1,:),x(2,:),x(3,:));
+% set(gca,'YDir','reverse','ZDir','reverse');
+% xlabel('$x_1$','interpreter','latex');
+% ylabel('$x_2$','interpreter','latex');
+% zlabel('$x_3$','interpreter','latex');
+% axis equal;
+% 
+% h_x=figure;
+% for ii=1:3 
+%     subplot(3,1,ii);
+%     plot(t*WK.f,x(ii,:));
+%     patch_downstroke(h_x,t*WK.f,Euler_R_dot);
+% end
+% xlabel('$t/T$','interpreter','latex');
+% subplot(3,1,2);
+% ylabel('$x$','interpreter','latex');
+% 
+% figure;
+% for ii=1:3 
+%     subplot(3,1,ii);
+%     plot(t*WK.f,x_dot(ii,:));
+% end
+% xlabel('$t/T$','interpreter','latex');
+% subplot(3,1,2);
+% ylabel('$\dot x$','interpreter','latex');
+% 
+% figure;
+% for ii=1:3 
+%     subplot(3,1,ii);
+%     plot(t*WK.f,F_B(ii,:));
+% end
+% xlabel('$t/T$','interpreter','latex');
+% subplot(3,1,2);
+% ylabel('$F_B$','interpreter','latex');
+% 
+% figure;
+% subplot(3,1,1);
+% plot(t*WK.f, tau(4:6,:));
+% ylabel('$\tau_R$','interpreter','latex');
+% subplot(3,1,2);
+% plot(t*WK.f, tau(7:9,:));
+% ylabel('$\tau_L$','interpreter','latex');
+% subplot(3,1,3);
+% plot(t*WK.f, tau(10:12,:));
+% ylabel('$\tau_A$','interpreter','latex');
+% 
+% figure;
+% subplot(2,1,1);
+% plot(t*WK.f, theta_B*180/pi);
+% ylabel('$\theta_B$','interpreter','latex');
+% subplot(2,1,2);
+% plot(t*WK.f, theta_A*180/pi);
+% ylabel('$\theta_A$','interpreter','latex');
+% 
+% figure;
+% subplot(2,1,1);
+% plot(t*WK.f,W);
+% ylabel('$\Omega$','interpreter','latex');
+% subplot(2,1,2);
+% plot(t*WK.f,W_A);
+% ylabel('$\Omega_A$','interpreter','latex');
+% 
 
 % Get a list of all variables
 allvars = whos;
@@ -106,6 +106,8 @@ tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
 % Pass these variable names to save
 save(filename, allvars(tosave).name)
 evalin('base',['load ' filename]);
+
+fig_comp_VICON;
 end
 
 function [X_dot R Q_R Q_L Q_A theta_B theta_A W W_R W_L W_A F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X)
@@ -120,7 +122,8 @@ x_dot=X(4:6);
 [R W W_dot theta_B] = body_attitude(t,WK_R.f);
 [Q_A W_A W_A_dot theta_A] = abdomen_attitude(t,WK_R.f);
 
-%[Q_A W_A W_A_dot theta_A] = abdomen_attitude(10*pi/180); fixed abdomen
+%[R W W_dot theta_B] = body_attitude(15.65*pi/180); % fixed body
+%[Q_A W_A W_A_dot theta_A] = abdomen_attitude(17.32*pi/180); % fixed abdomen
 
 
 [L_R L_L D_R D_L M_R M_L ...

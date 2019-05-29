@@ -17,25 +17,38 @@ function [Euler, Euler_dot, Euler_ddot] = wing_kinematics(t,WK)
 switch WK.type
     case 'Monarch'
         
-        % Data constructed by ./exp_data/fit_exp_data.m
-        F_phi.A0=-1.0753;
-        F_phi.AN=[57.7197 4.1946 -1.2126 0.7185 -0.1899];
-        F_phi.BN=[-8.0267 9.8466 -3.3232 -0.7831 0.2093];
-        F_theta.A0=-12.4021;
-        F_theta.AN=[22.1344 -5.9493 1.7797 1.9392 -0.8983];
-        F_theta.BN=[29.7924 7.9076 -8.2981 2.3268 -0.2061];
-        F_psi.A0=11.7597;
-        F_psi.AN=[16.4326 -3.2083 -1.2771 0.1997 -0.1899];
-        F_psi.BN=[-2.1653 -2.0058 -0.7918 0.0527 0.1601];
+%         % Data constructed by ./exp_data/fit_exp_data.m
+%         F_phi.A0=-1.0753;
+%         F_phi.AN=[57.7197 4.1946 -1.2126 0.7185 -0.1899];
+%         F_phi.BN=[-8.0267 9.8466 -3.3232 -0.7831 0.2093];
+%         F_theta.A0=-12.4021;
+%         F_theta.AN=[22.1344 -5.9493 1.7797 1.9392 -0.8983];
+%         F_theta.BN=[29.7924 7.9076 -8.2981 2.3268 -0.2061];
+%         F_psi.A0=11.7597;
+%         F_psi.AN=[16.4326 -3.2083 -1.2771 0.1997 -0.1899];
+%         F_psi.BN=[-2.1653 -2.0058 -0.7918 0.0527 0.1601];
+% 
+%         [phi phi_dot phi_ddot]=eval_Fourier(t, WK.f, F_phi);
+%         [theta theta_dot theta_ddot]=eval_Fourier(t, WK.f, F_theta);
+%         [psi psi_dot psi_ddot]=eval_Fourier(t, WK.f, F_psi);
         
+        % Data constructed by ./exp_data/fit_VICON_data.m
+        F_phi.f = 10.2247;
+        F_phi.A0 = -0.83724;
+        F_phi.AN = [59.7558745992612 -0.137466978762473 0.137978226025185 0.433746159939459 -0.074830919096204];
+        F_phi.BN = [-6.55441083419535 6.435543953825 -2.05072909120033 0.221239708063663 0.0575790280561444];
+        F_theta.f = 10.1838;
+        F_theta.A0 = -5.9583;
+        F_theta.AN = [24.0863053541935 -4.46860932682531 8.04218451917262 -0.601926108817941 -0.642171907559121];
+        F_theta.BN = [30.5848624271628 4.64142325712464 -3.83504323967398 2.01570854870463 -1.70930433046515];
+        F_psi.f = 20.2767;
+        F_psi.A0 = -1.9753;
+        F_psi.AN = -2.063160749463;
+        F_psi.BN = -2.60158935092774;
         [phi phi_dot phi_ddot]=eval_Fourier(t, WK.f, F_phi);
         [theta theta_dot theta_ddot]=eval_Fourier(t, WK.f, F_theta);
-        [psi psi_dot psi_ddot]=eval_Fourier(t, WK.f, F_psi);
-        %         psi=0;
-        %         psi_dot=0;
-        %         psi_ddot=0;
-        
-        
+        [psi psi_dot psi_ddot]=eval_Fourier(t, 2*WK.f, F_psi);
+
         %case 'BermanWang'
     otherwise
         % phi / flapping
