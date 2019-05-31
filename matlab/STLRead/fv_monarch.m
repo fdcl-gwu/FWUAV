@@ -21,21 +21,27 @@ N2=7890;
 N3=11450;
 N4=17148;
 N5=22600;
-
-% patch_selected_faces(fv,1:N1);
+N_abdomen=[11971, 13016];
+%patch_selected_faces(fv,1:N1);
 % patch_selected_faces(fv,N1+1:N2);
 % patch_selected_faces(fv,N2+1:N3);
-% patch_selected_faces(fv,N3+1:N4);
+%patch_selected_faces(fv,N3+1:15000);
+%patch_selected_faces(fv,11971:13016);
 % patch_selected_faces(fv,N4+1:N5);
 % patch_selected_faces(fv,N5+1:N);
 
-N_body=[1:N1 N3+1:N4];
+
+
+N_body=[1:N1 N3+1:11970 13017:N4];
 N_wing=[N1+1:N2 N4+1:N5];
+N_abdomen=11971:13016;
 
 % patch_selected_faces(fv,[N_body N_wing]);
 % xlabel('x');
 % ylabel('y');
 % zlabel('z');
+
+scale_factor=0.06/146;
 
 %% extract vertices/faces for body
 tmp=fv.faces(N_body,:);
@@ -48,9 +54,9 @@ for i=1:length(fv_body.faces)
     end
 end
 R=[-e2 -e1 -e3];
-x_shift=40;
+x_shift=60;
 for i=1:length(fv_body.vertices)    
-    fv_body.vertices(i,:)=(R*fv_body.vertices(i,:)')'+[x_shift 0 0];
+    fv_body.vertices(i,:)=scale_factor*((R*fv_body.vertices(i,:)')'+[20 0 0]);
 end
 
 figure;
@@ -60,7 +66,34 @@ xlabel('x');
 ylabel('y');
 zlabel('z');
 set(gca,'Ydir','reverse');
+grid on;
 
+
+
+%% extract vertices/faces for abdomen
+tmp=fv.faces(N_abdomen,:);
+vert_index=unique(tmp(:));
+fv_abdomen.vertices=fv.vertices(vert_index,:);
+fv_abdomen.faces=zeros(length(N_abdomen),3);
+for i=1:length(fv_abdomen.faces)
+    for j=1:3
+        fv_abdomen.faces(i,j)=find(vert_index==fv.faces(N_abdomen(i),j));
+    end
+end
+R=[-e2 -e1 -e3];
+x_shift=40;
+for i=1:length(fv_abdomen.vertices)    
+    fv_abdomen.vertices(i,:)=scale_factor*((R*fv_abdomen.vertices(i,:)')'+[20 0 0]);
+end
+
+fv_abdomen.x_shift=-0.01179;
+
+patch_selected_faces(fv_abdomen,1:length(fv_abdomen.faces));
+hold on;
+xlabel('x');
+ylabel('y');
+zlabel('z');
+set(gca,'Ydir','reverse');
 
 %% extract vertices/faces for right wing
 tmp=fv.faces(N_wing,:);
@@ -70,18 +103,18 @@ fv_wr.faces=zeros(length(N_wing),3);
 for i=1:length(fv_wr.faces)
     for j=1:3
         fv_wr.faces(i,j)=find(vert_index==fv.faces(N_wing(i),j));
-    end
+    end 
 end
 R=[-e2 -e1 -e3];
 x_shift=20;
 Q=expmso3(5*pi/180*e1);
 for i=1:length(fv_wr.vertices)    
-    fv_wr.vertices(i,:)=(Q*R*fv_wr.vertices(i,:)')'+[x_shift 0 0];
+    fv_wr.vertices(i,:)=scale_factor*((Q*R*fv_wr.vertices(i,:)')'+[20 0 0]);
 end
 
 patch_selected_faces(fv_wr,1:length(fv_wr.faces));
 
-%% creat left wing
+%% create left wing
 fv_wl=fv_wr;
 O_rl=[e1 -e2 e3];
 for i=1:length(fv_wl.vertices)    
@@ -90,6 +123,8 @@ end
 
 patch_selected_faces(fv_wl,1:length(fv_wl.faces));
 
+
+view(-90,90);
 camlight(0,45);
 
 filename='fv_monarch';

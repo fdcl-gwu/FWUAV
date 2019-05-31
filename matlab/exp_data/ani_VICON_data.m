@@ -6,8 +6,9 @@ global FV_sph;
 load VICON_data;
 load fit_VICON_data;
 
-FV_sph = FV_sphere(0.005);
+FV_sph = FV_sphere(0.003);
 bool_moving_camera=true;
+bool_video=true;
 
 k=1;
 if ~bool_moving_camera
@@ -27,13 +28,17 @@ else
     axis equal;
     axis([-0.1 0.1 -0.1 0.1 -0.1 0.1]);
 end
-
 set(gca,'ZDir','reverse','YDir','reverse');
 view(3);
-
 camlight;
 material dull;
 grid on;
+
+if bool_video
+    vidObj = VideoWriter('ani_VICON_data.avi');
+    open(vidObj);
+end
+
 
 if ~bool_moving_camera
     for k=floor(linspace(1,length(t),101))      
@@ -42,6 +47,9 @@ if ~bool_moving_camera
         update_chain(h_LW, T1(:,k), LW1(:,k), LW2(:,k), LW3(:,k), T2(:,k));
         axis([-0.1 0.7 -0.1 0.1 -0.2 0.1]);
         drawnow;
+        if bool_video
+            writeVideo(vidObj,getframe(gcf));
+        end
     end
 else
     for k=floor(linspace(1,length(t),101))        
@@ -52,12 +60,20 @@ else
         %update_frame(h_QL,T1(:,k)-T1(:,k),0.05*R(:,:,k)*Q_L(:,:,k));
         %update_frame(h_R,T1(:,k)-T1(:,k),0.05*R(:,:,k));
         %update_frame(h_QA,T1(:,k)-T1(:,k),0.05*R(:,:,k)*Q_A(:,:,k));
-        axis([-0.1 0.1 -0.1 0.1 -0.1 0.1]);
-        view(-90,60);
+        axis(0.7*[-0.1 0.1 -0.1 0.1 -0.1 0.1]);
+        view(20,20);
         drawnow;
+        
+        if bool_video
+            writeVideo(vidObj,getframe(gcf));
+        end
     end
 end
 
+
+if bool_video
+    close(vidObj);
+end
 
 end
 

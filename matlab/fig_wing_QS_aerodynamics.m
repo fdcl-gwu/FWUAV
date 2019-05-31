@@ -18,18 +18,18 @@ WK.psi_N=1;
 WK.psi_a=0;
 WK.psi_0=10*pi/180;
 
-bool_print=false;
-% WK.type='BermanWang';
-% myfig(WK,'QS_sym',bool_print);
-% WK.theta_a=0.3;
-% myfig(WK,'QS_adv',bool_print);
-% WK.theta_a=-0.3;
-% myfig(WK,'QS_dly',bool_print);
-
 bool_print=true;
-WK.type='Monarch';
-WK.t_shift=2.87128e-03;
-myfig(WK,'QS_Monarch',bool_print);
+WK.type='BermanWang';
+myfig(WK,'QS_sym',bool_print);
+WK.theta_a=0.3;
+myfig(WK,'QS_adv',bool_print);
+WK.theta_a=-0.3;
+myfig(WK,'QS_dly',bool_print);
+
+% bool_print=true;
+% WK.type='Monarch';
+% WK.t_shift=2.87128e-03;
+% myfig(WK,'QS_Monarch',bool_print);
 
 end
 
@@ -53,7 +53,7 @@ for k=1:N
     [L_R(:,k) L_L(:,k) D_R(:,k) D_L(:,k) M_R(:,k) M_L(:,k) ...
         F_rot_R(:,k) F_rot_L(:,k) M_rot_R(:,k) M_rot_L(:,k) ...
         alpha_R(k) alpha_L(:,k) U_alpha_dot_R(:,k) U_alpha_dot_L(:,k) U_R(:,k) U_L(:,k)]...
-        =wing_QS_aerodynamics(MONARCH, W_R(:,k), W_L(:,k), W_R_dot(:,k), W_L_dot(:,k), x_dot, R, W, Q_R(:,:,k), Q_L(:,:,k));
+        =wing_QS_aerodynamics(MONARCH, W_R(:,k), W_L(:,k), W_R_dot(:,k), W_L_dot(:,k));%, x_dot, R, W, Q_R(:,:,k), Q_L(:,:,k));
     norm_U(k)=norm(U_R(:,k));
     alpha_R_dot(k)=U_alpha_dot_R(k)/norm(U_R(:,k));
     alpha_L_dot(k)=U_alpha_dot_L(k)/norm(U_L(:,k));

@@ -12,18 +12,18 @@ load STLRead/fv_monarch;
 load('morp_MONARCH');
 bool_video=0;
 
-load('sim_QS_x','x','R','Q_R','Q_L','N','F_R','F_L');
+load('sim_QS_x','x','R','Q_R','Q_L','Q_A', 'N','F_R','F_L');
 
 %% generate the initial object when k=1
 k=1;
 
 h_fig=figure('color','w');
-[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k),[0 0 0]);
+[h_body, h_wr, h_wl, h_ab]=patch_monarch(fv_body, fv_wr, fv_wl, fv_abdomen, x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), expm(pi/2*hat(e2)), [0 0 0]);
 D_R=zeros(3,1);
 D_L=zeros(3,1);
 M_R=zeros(3,1);
 M_L=zeros(3,1);
-F_rot_R=zeros(3,1);
+F_rot_R=zeros(3,1); 
 F_rot_L=zeros(3,1);
 M_rot_R=zeros(3,1);
 M_rot_L=zeros(3,1);
@@ -37,8 +37,8 @@ if bool_video
 end
     
 for k=floor(linspace(1,N,301))
-    update_monarch(h_fig,[h_body, h_wr, h_wl], fv_body, fv_wr, fv_wl, x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k));
-   update_force(h_F_R,h_F_L,  x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k),F_R(:,k),F_L(:,k),D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L);
+    update_monarch(h_fig,[h_body, h_wr, h_wl, h_ab], fv_body, fv_wr, fv_wl, fv_abdomen, x(:,1), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k));
+    update_force(h_F_R,h_F_L,  x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k),F_R(:,k),F_L(:,k),D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L);
     if bool_video
         writeVideo(vidObj,getframe(gcf));
     end
@@ -116,10 +116,11 @@ update_arrow(h_F_L(:,5), x_cp, x_cp + scale_Force*R*Q_L*(D_L+L_L+F_rot_L), aleng
 end
 
 
-function [v_body, v_wr, v_wl]=compute_vertices(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L)
+function [v_body, v_wr, v_wl, v_ab]=compute_vertices(fv_body, fv_wr, fv_wl, fv_ab, x, R, Q_R, Q_L, Q_A)
 v_body=zeros(size(fv_body.vertices));
 v_wr=zeros(size(fv_wr.vertices));
 v_wl=zeros(size(fv_wl.vertices));
+v_ab=zeros(size(fv_ab.vertices));
 
 for i=1:length(v_body)
     v_body(i,:)=(R*fv_body.vertices(i,:)'+x)';
@@ -130,11 +131,16 @@ end
 for i=1:length(v_wl)
     v_wl(i,:)=(R*Q_L*(fv_wl.vertices(i,:)')+x)';
 end
+ab_x_shift=-0.01179;
+e1=[1 0 0]';
+for i=1:length(v_ab)
+    v_wl(i,:)=(R*(Q_A*(fv_ab.vertices(i,:)'-ab_x_shift*e1)+ab_x_shift*e1)+x)';
+end
 
 end
 
-function [h_body, h_wr, h_wl, h_FB, h_FR, f_FL]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, varargin)
-if nargin < 8
+function [h_body, h_wr, h_wl, h_ab, h_FB, h_FR, f_FL]=patch_monarch(fv_body, fv_wr, fv_wl, fv_ab, x, R, Q_R, Q_L, Q_A, varargin)
+if nargin < 10
     bool_FB=true; % show the body-fixed frame
     bool_FR=false; % show the right wing frame
     bool_FL=false % show the left wing frame
@@ -146,14 +152,15 @@ end
 
 II=eye(3);
 
-[v_body, v_wr, v_wl]=compute_vertices(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L);
+[v_body, v_wr, v_wl, v_ab]=compute_vertices(fv_body, fv_wr, fv_wl, fv_ab, x, R, Q_R, Q_L, Q_A);
 
 my_face_color=[0.8 0.8 1.0];
 h_body=patch('faces', fv_body.faces, 'vertices', v_body);
 hold on;
 h_wr=patch('faces', fv_wr.faces, 'vertices', v_wr);
 h_wl=patch('faces', fv_wl.faces, 'vertices', v_wl);
-set([h_body, h_wr, h_wl], ...
+h_ab=patch('faces', fv_ab.faces, 'vertices', v_ab);
+set([h_body, h_wr, h_wl, h_ab], ...
     'FaceColor', my_face_color, ...
     'EdgeColor',       'none',        ...
     'FaceLighting',    'gouraud',     ...
@@ -161,12 +168,12 @@ set([h_body, h_wr, h_wl], ...
 alpha([h_body, h_wr, h_wl],0.8);
 axis('image');
 
-view(180+10,30);
+%view(180+10,30);
 %view(-90,80);
-%view(270,80);
+view(270,80);
 
 set(gca,'Zdir','reverse','YDir','reverse');
-axis(180*[-1 1 -1 1 -1 1]);
+axis(0.1*[-1 1 -1 1 -1 1]);
 camlight headlight;
 material dull;
 set(gca,'visible','off');
@@ -203,15 +210,17 @@ end
 
 end
 
-function update_monarch(h_fig,h_objects,fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L)
+function update_monarch(h_fig, h_objects, fv_body, fv_wr, fv_wl, fv_ab, x, R, Q_R, Q_L, Q_A)
 h_body=h_objects(1);
 h_wr=h_objects(2);
 h_wl=h_objects(3);
-[v_body, v_wr, v_wl]=compute_vertices(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L);
+h_ab=h_objects(4);
+[v_body, v_wr, v_wl, v_ab]=compute_vertices(fv_body, fv_wr, fv_wl, fv_ab, x, R, Q_R, Q_L, Q_A);
 
 set(h_body,'faces',fv_body.faces,'vertices',v_body);
 set(h_wr,'faces',fv_wr.faces,'vertices',v_wr);
 set(h_wl,'faces',fv_wl.faces,'vertices',v_wl);
+set(h_ab,'faces',fv_ab.faces,'vertices',v_ab);
 figure(h_fig);
 
 drawnow;

@@ -3,7 +3,7 @@ function sim_QS_x
 % for given thorax attiude, wing kinematics, abdomen attitude
 evalin('base','clear all');
 close all;
-filename='sim_QS_x';
+filename='sim_QS_x_wo_ab';
 
 load('morp_MONARCH');
 INSECT=MONARCH;
@@ -12,8 +12,8 @@ WK.f=10.2247;
 WK.beta=25.4292*pi/180;
 WK.type='Monarch';
 
-N=1001;
-T=20/WK.f;
+N=5001;
+T=50/WK.f;
 t=linspace(0,T,N);
 
 x0=[0 0 0]';
@@ -107,7 +107,7 @@ tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
 save(filename, allvars(tosave).name)
 evalin('base',['load ' filename]);
 
-fig_comp_VICON;
+%fig_comp_VICON;
 end
 
 function [X_dot R Q_R Q_L Q_A theta_B theta_A W W_R W_L W_A F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X)
@@ -123,7 +123,7 @@ x_dot=X(4:6);
 [Q_A W_A W_A_dot theta_A] = abdomen_attitude(t,WK_R.f);
 
 %[R W W_dot theta_B] = body_attitude(15.65*pi/180); % fixed body
-%[Q_A W_A W_A_dot theta_A] = abdomen_attitude(17.32*pi/180); % fixed abdomen
+[Q_A W_A W_A_dot theta_A] = abdomen_attitude(17.32*pi/180); % fixed abdomen
 
 
 [L_R L_L D_R D_L M_R M_L ...

@@ -83,16 +83,15 @@ end
 %% find the stroke plane angle
 
 wing_tip=[squeeze(Q_R(:,2,:)) squeeze(-Q_L(:,2,:))];
-figure;
+h_wing_tip = figure;
 plot3(wing_tip(1,:),wing_tip(2,:), wing_tip(3,:),'b.');
 set(gca,'YDir','reverse','ZDir','reverse');
-xlabel('x');
-ylabel('y');
-zlabel('z');
+xlabel('$\mathbf{b}_x$','interpreter','latex');
+ylabel('$\mathbf{b}_y$','interpreter','latex');
+zlabel('$\mathbf{b}_z$','interpreter','latex');
 axis equal;
 grid on;
-title('wing tip');
-view(15,15);
+view(-90,90);
 
 % fit a plane to the points of wing tip
 [V D]=eig(wing_tip*wing_tip');
@@ -101,6 +100,7 @@ s=V(:,I_min);
 if s(1) < 0
     s=-s;
 end
+disp(s);
 hold on;
 plot3([0 s(1)],[0 s(2)],[0 s(3)]);
 
@@ -124,18 +124,17 @@ wing_tip=[squeeze(Qs_R(:,2,:)) squeeze(-Qs_L(:,2,:))];
 figure;
 plot3(wing_tip(1,:),wing_tip(2,:), wing_tip(3,:),'b.');
 set(gca,'YDir','reverse','ZDir','reverse');
-xlabel('x');
-ylabel('y');
-zlabel('z');
+xlabel('$\mathbf{b}_x$','interpreter','latex');
+ylabel('$\mathbf{b}_y$','interpreter','latex');
+zlabel('$\mathbf{b}_z$','interpreter','latex');
 axis equal;
 grid on;
-title('wing tip');
-view(15,15);
+view(-90,90);
 
 % fit a plane to the points of wing tip
 [V D]=eig(wing_tip*wing_tip');
 [~, I_min]=min(diag(D));
-s=V(:,I_min);
+s=V(:,I_min)
 if s(1) < 0
     s=-s;
 end
@@ -149,7 +148,7 @@ stroke_plane_yaw = atan2(s(2),s(1));
 disp(['stroke_plane_yaw_offset = ' num2str(stroke_plane_yaw*180/pi)]);
 
 
-figure;
+h_E = figure;
 my_ylabel={'$\phi$','$\theta$','$\psi$'};
 for ii=1:3
     subplot(3,1,ii);
@@ -180,8 +179,20 @@ disp('copy to ../abdomen_attitude.m');
 F_theta_ab=save_fit(fit_theta_ab,1);
 
 filename='fit_VICON_data';
-save(filename);
+varData = whos;
+saveIndex = cellfun(@isempty, regexp({varData.class}, 'matlab.(graphics|ui)'));
+saveVars = {varData(saveIndex).name};
+save(filename,saveVars{:});
 evalin('base',['load ' filename]);
+
+bool_print = true;
+if bool_print
+    figure(h_wing_tip);pause(1);
+    print('fit_VICON_wing_tip','-depsc');
+    figure(h_E);
+    print('fit_VICON_E','-depsc');    
+    !mv fit_VICON*.eps ../../doc/Figs/
+end
 
 end
 

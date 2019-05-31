@@ -10,6 +10,8 @@
 \usepackage[paper=portrait,pagesize,DIV=13]{typearea}
 \usepackage{array} % for math mode in table
 \usepackage{multicol}
+\usepackage{hyperref}
+\usepackage{movie15}
 
 \newcommand{\norm}[1]{\ensuremath{\left\| #1 \right\|}}
 \newcommand{\bracket}[1]{\ensuremath{\left[ #1 \right]}}
@@ -75,8 +77,10 @@
 \makenomenclature
 
 \begin{document}
-\section*{Quasi-Steady Dynamics of Flapping Wing UAV}
-\vspace{-0.4cm} \noindent{\today}\\
+\section*{Geometric Formulation for the Quasi-Steady Dynamics of a Flapping Wing UAV with Applications to Monarch Butterfly}
+\vspace{-0.2cm} 
+\noindent Taeyoung Lee\\
+\noindent{\today}\\
 
 
 \tableofcontents
@@ -239,7 +243,7 @@ It is positive when $\mathbf{s}_x\cdot \mathbf{b}_z <0$.  (see Figure \ref{fig:F
 The motion of the right wing relative to $\mathcal{F}_S$ is described by 1--3--2 Euler angles $(\phi_R,\psi_R,\theta_R)$. 
 Consequently, the orientation of the right wing relative to $\mathcal{F}_B$, namely $Q_R\in\SO$ is described by
 \begin{align}
-    Q_R(t) = \exp(\beta \hat e_2)\exp(\phi_R(t) \hat e_1) \exp(-\psi_R(t) \hat e_3) \exp(\theta_R(t) \hat e_2),
+    Q_R(t) = \exp(\beta \hat e_2)\exp(\phi_R(t) \hat e_1) \exp(-\psi_R(t) \hat e_3) \exp(\theta_R(t) \hat e_2),\label{eqn:Q_R}
 \end{align}
 which is the linear transformation of a representation of a vector from $\mathcal{F}_R$ to $\mathcal{F}_B$. 
 The Euler-angles are defined as
@@ -305,7 +309,7 @@ Consequently, the third axis is normal to the wing plane, and it points toward t
 
 Similar as the right wing, the motion of the left wing relative to the thorax is described by $Q_L\in\SO$, which is described by successive rotations as
 \begin{align}
-    Q_L(t) = \exp(\beta \hat e_2)\exp(-\phi_L(t) \hat e_1) \exp(\psi_L(t) \hat e_3) \exp(\theta_L(t) \hat e_2),
+    Q_L(t) = \exp(\beta \hat e_2)\exp(-\phi_L(t) \hat e_1) \exp(\psi_L(t) \hat e_3) \exp(\theta_L(t) \hat e_2),\label{eqn:Q_L}
 \end{align}
 where the definition of the Euler-angles $(\phi_L,\theta_L,\psi_L)$ are consistent with those of the right wing.
 The wing kinematics become symmetric when $(\phi_R,\theta_R,\psi_R)=(\phi_L,\theta_L,\psi_L)$. 
@@ -1011,14 +1015,6 @@ For the left wing,
 
 \subsubsection{Numerical Example}
 
-The shape of the wing of an actual Monarch butterfly has been captured in~$[\mathrm{ref}]$. 
-The wing span of the right wing is $l=\num{6.0996e-2}\si{m}$, and
-the chord length is fitted by a $6$-th order polynomial as
-\[
-    c(r) = \num{-5.7601e-03} r^6 + \num{9.8017e-02} r^5 -\num{5.8232e-01} r^4 + \num{1.3617e+00} r^3  - \num{1.1626e+00} r^2  + \num{1.5571e+00} r + \num{1.6491e-01}.
-\]
-where the unit of both of $c(r)$ and $r$ is centimeters. 
-From the above, we compute wing morphological parameters to obtain
 We evaluate the aerodynamic forces with the following lift/drag coefficient~\cite{sane2002aerodynamic}
 \begin{align*}
     C_L & = 0.225 + 1.58 \sin( (2.13\alpha^\circ - 7.2) \frac{\pi}{180}),\\
@@ -1026,8 +1022,6 @@ We evaluate the aerodynamic forces with the following lift/drag coefficient~\cit
     C_\rot &  = \pi(0.75 - \hat x_0),
 \end{align*}
 where $\alpha^\circ = \alpha \frac{180}{\pi}$ is the angle of attack in degrees and $\hat x_0$ is chosen as $\hat x_0=0.5$. 
-
-\paragraph{Kinematics Model~\cite{berman2007energy}}
 
 For both of the left wing and the right wing, parameters for the wing kinematics are chosen as
 \begin{gather*}
@@ -1138,64 +1132,6 @@ Since $\beta=0$, the first component is the resultant lift normal to the stroke 
         }
     }
     \caption{Wing Kinematics in~\cite{berman2007energy}: Delayed rotation}\label{fig:QS_dly}
-\end{figure}
-
-\paragraph{Monarch Experiments} 
-
-Next, we use the wing kinematics capture by Monarch flights. 
-The results are illustrated in Figure~\ref{fig:QS_Monarch}.
-
-\begin{figure}[p]
-    \centerline{
-        \subfigure[$\phi,\theta,\psi$]{
-            \includegraphics[width=0.45\textwidth]{QS_Monarch_E}
-        }
-        \hfill
-        \subfigure[$\alpha$]{
-            \includegraphics[width=0.45\textwidth]{QS_Monarch_alpha}
-        }
-    }
-    \centerline{
-        \subfigure[$U$]{
-            \includegraphics[width=0.45\textwidth]{QS_Monarch_U}
-        }
-        \hfill
-        \subfigure[$\dot\alpha \|U\|$]{
-            \includegraphics[width=0.45\textwidth]{QS_Monarch_U_alpha_dot}
-        }
-    }
-    \centerline{
-        \subfigure[Aerodynamic forces in the wing-fixed frame]{
-            \includegraphics[width=0.45\textwidth]{QS_Monarch_F_W}
-        }
-        \hfill
-        \subfigure[Aerodynamic forces in the body-fixed frame]{
-            \includegraphics[width=0.45\textwidth]{QS_Monarch_F_B}
-        }
-    }
-    \caption{Wing kinematics captured by Monarch flights}\label{fig:QS_Monarch}
-\end{figure}
-
-\begin{figure}[p]
-    \centerline{
-        \subfigure[$\phi,\theta,\psi$]{
-            \includegraphics[width=0.45\textwidth]{exp_E}
-        }
-        \hfill
-        \subfigure[$v$]{
-            \includegraphics[width=0.45\textwidth]{exp_v}
-        }
-    }
-    \centerline{
-        \subfigure[$a$]{
-            \includegraphics[width=0.45\textwidth]{exp_a}
-        }
-        \hfill
-        \subfigure[Aerodynamic forces in the body-fixed frame ($ma_B/2$)]{
-            \includegraphics[width=0.45\textwidth]{exp_F_B}
-        }
-    }
-    \caption{Monarch experiment data for five consecutive cycle}\label{fig:exp}
 \end{figure}
 
 \clearpage\newpage
@@ -1511,93 +1447,9 @@ The first block of \eqref{eqn:EL} is written as
 which can be numerically integrated to construct $(x,\dot x)$. 
 The control torque $(\tau_R,\tau_L,\tau_A)$ can be constructed by \eqref{eqn:J22dotxi_2}.
 
-\subsubsection{Comparison with Experimental Data}
+\subsection{Dynamic Simulation for Monarch Butterfly}
 
-The above equation \eqref{eqn:mx_ddot} is numerically integrated, and the corresponding results are compared against the experimental data. 
-
-\begin{figure}[p]
-    \centerline{
-        \subfigure[Position trajectory]{
-            \includegraphics[width=0.5\textwidth]{exp_comp_x}
-        }
-        \hfill
-        \subfigure[Velocity]{
-            \includegraphics[width=0.5\textwidth]{exp_comp_v}
-        }
-    }
-    \centerline{
-        \subfigure[Wing kinematics angles]{
-            \includegraphics[width=0.5\textwidth]{exp_comp_E}
-        }
-        \hfill
-        \subfigure[Resultant force in the body-fixed frame]{
-            \includegraphics[width=0.5\textwidth]{exp_comp_FB}
-        }
-    }
-    \caption{Comparison between the QS model (blue) and the experimental data (red); shaded area corresponds to downstroke; the resultant force of the experiment is constructed by the acceleration of the thorax, multiplied by the total mass and subtracted by the gravity}
-\end{figure}
-g
-
-
-%\ksubsubsection{Simplified Forms}
-
-%The above Euler--Lagrange equations are driven by the control torque acting on the joint of the wings and the joint of the abdomen.
-
-%Therefore, 
-
-
-%, and to compute the acceleration $\dot\xi$, the inertia $\mathbf{J}_g(\xi)$ should be inverted. 
-
-%Here, we consider several cases for simplification.
-
-%\paragraph{Negligible Wing Mass}
-
-%First, assume $m_R,m_L\ll 1$. 
-%\begin{gather}
-%(m_B+m_A) \ddot x - m_A R(\hat\mu_A + \widehat{Q_A\nu_A}) \dot \Omega  -m_A R Q_A\hat\nu_A\dot\Omega_A \nonumber \\
-%+ m_A R((\hat\mu_A+\widehat{Q_A\nu_A})\Omega + Q_A\hat\nu_A\Omega_A)^\wedge \Omega + m_A R( - \hat\Omega Q_A\hat\nu_A  + Q_A\widehat{\hat\nu_A \Omega_A} )\Omega_A \nonumber \\
-    %= (m_B+m_A)ge_3 + RQ_RF_R + R Q_L F_L + R Q_A F_A,\\
-    %\{ J_B + m_A\hat\mu_A^T\hat\mu_A + Q_A J_A Q_A^T + m_A(\hat\mu_A^T \widehat{Q_A\nu_A} + \widehat{Q_A\nu_A}^T\hat\mu_A) \} \dot\Omega \nonumber \\
-%+ m_A(\hat\mu_A+\widehat{Q_A\nu_A})R^T \dot x  +  (Q_AJ_A + m_A\hat\mu_A^T Q_A\hat\nu_A) \dot\Omega_A \nonumber \\
-%+\hat\Omega 
-%\end{gather}
-
-
-
-
-
-\bibliographystyle{IEEEtran}
-\bibliography{FWUAV}
-
-\appendix
-
-\subsection*{Appendix}
-
-\subsubsection*{Hat Map}
-
-For $x=(x_1,x_2,x_3)\in\Re^3$, 
-\begin{align}
-    \hat x = \begin{bmatrix}
-        0 & -x_3 & x_2 \\
-        x_3 & 0 & -x_1 \\
-        -x_2 & x_1 & 0 
-    \end{bmatrix},
-\end{align}
-
-
-\subsubsection*{Sign Function}
-
-For $x\in\Re$, 
-\begin{align}
-    \mathrm{sgn}(x) =
-    \begin{cases}
-        1 &  x>0,\\
-        0 &  x=0,\\
-        -1 & x<0.
-    \end{cases}
-\end{align}
-
-\subsubsection*{Monarch}
+\subsubsection{Monarch Morphological Parameters}
 
 \begin{figure}
     \centerline{
@@ -1682,7 +1534,7 @@ Thus, the mass center of the right wing is located at
                 = \frac{1}{S} \int_0^l \frac{1}{2}(c_{LE}^2(y)-c_{TE}^2(y)) dy,\\
     \nu_{R_y} & = \frac{1}{m_R} \int_{\mathcal{B}_R} y  dm
                 = \frac{1}{S} \int_{0}^l \int_{c_{TE}(y)}^{c_{LE}(y)} y dx dy
-                = \frac{1}{S} \int_0^l (c_{LE}(y)-c_{TE}(y))y dy,\\
+                = \frac{1}{S} \int_0^l (c_{LE}(y)-c_{TE}(y))y dy.
 \end{align*}
 Thus, the moment of inertia about the wing root is given by
 \begin{align*}
@@ -1697,14 +1549,13 @@ Thus, the moment of inertia about the wing root is given by
                 = \frac{m_R}{S} \int_0^l \frac{1}{3}(c_{LE}^3(y)-c_{TE}^3(y)) dy,\\
                 J_{R_{zz}} & = J_{R_{xx}} + J_{R_{yy}}.
 \end{align*}
-For the left wing, 
+Similarly, for the left wing, we have
 \begin{align*}
     J_{L_{xx}} & = \frac{m_R}{S} \int_0^{-l} \int_{c_{TE}(-y)}^{c_{LE}(-y)} y^2 dx dy = J_{R_{xx}} \\
     J_{L_{xy}} & = \frac{m_R}{S} \int_0^{-l} \int_{c_{TE}(-y)}^{c_{LE}(-y)} -xy dx dy = - J_{R_{xy}} \\
     J_{L_{yy}} & = \frac{m_R}{S} \int_0^{-l} \int_{c_{TE}(-y)}^{c_{LE}(-y)} x^2 dx dy = J_{R_{xx}} \\
     J_{L_{zz}} & = J_{R_{zz}}.
 \end{align*}
-
 Finally, it is assumed that the root of the wing and the joint of the abdomen are located at
 \begin{align*}
     \mu_R = [0,\; \frac{w_B}{2},\; 0],\\
@@ -1712,8 +1563,190 @@ Finally, it is assumed that the root of the wing and the joint of the abdomen ar
     \mu_A = [-\frac{h_B}{2},\; 0,\; 0].
 \end{align*}
 
+\subsubsection{Flight Characteristics of Monarch}
+
+The flight of an actual Monarch butterfly is studied by a motion capture system. 
+The twelve markers are attached to a Monarch as illustrated in Figure \ref{fig:Monarch_marker},
+and the position of each marker is measured by a VICON motion capture system at 200\si{Hz}.
+
+\begin{figure}
+    \centerline{
+        \subfigure[Marker location]{
+            \includegraphics[width=0.5\textwidth]{Monarch_marker}
+        }
+        \hfill
+        \subfigure[Monarch object reconostructed by markers]{
+            \includegraphics[width=0.5\textwidth]{Monarch_frame}
+        }
+}
+\caption{Monarch motion capture}\label{fig:Monarch_marker}
+\end{figure}
 
 
+These are converted into $(x,R,Q_R,Q_L,Q_A)$ as follows. 
+It is considered that the origin of the body, namely $x$ is located at the center of $T_1$ and $T_2$. 
+For the body attitude $R$, it is assumed that the first axis is along $T_1-T_2$ and the second axis is parallel to the ground, i.e., there is no body roll. 
+This is reasonable as the measured flight trajectory is almost straight. 
+For the attitude of the abdomen, the first axis points from the center of $A_1$ and $A_2$ toward $T_2$, and the second axis is parallel to the ground. 
+The resulting rotation matrix is left multiplied by $R^T$ to obtain the relative attitude $Q_A$. 
+
+For the right wing attitude, it is assumed that the wing root it located at the center of $T_1$ and $T_2$.
+The wing plane always passes through the wing root exactly, and it is spanned by the three markers on the right wing. 
+However, due to the measurement errors and the flexibility of the wing, those points do not exactly lie on a single plane. 
+Instead, we find the normal vector of the plane such that the sum of the squared distance between each marker and the plane is minimized. 
+The normal vector yields the third axis of $\mathcal{F}_R$. 
+For the second axis, the vector from the wing root to $RW_3$ is projected on to the fitted plane. 
+The first axis is determined by the cross product of the second axis and the third axis. 
+These yield the rotation matrix of the right wing from the inertial frame, and by left multiplying $R^T$, we obtain $Q_R$. 
+The attitude of the left wing, namely $Q_L$ is constructed similarly. 
+
+Next, the computed $(Q_R(t),Q_L(t))$ are converted into wing kinematics angles as follows. 
+First, we determine the wing stroke plane. 
+In the absences of the deviation angle $\psi$, the second column of $Q_R(t)$ and $Q_L(t)$ over multiple time instances span the stroke plane. 
+We find the stroke plane such that the sum of the squared distance for $Q_R(t) e_2$ and $Q_L(t) e_2$ for varying $t$ over the experiment period is minimized. 
+It turns out that the normal vector to the stroke plane is not in the $\mathbf{b}_x$--$\mathbf{b}_z$ plane. 
+More explicitly, it is given by $[   -0.8948, -0.1222, 0.4294]$, i.e., it is rotated by $-7.77\si{deg}$ when observed the dorsal side,
+or the right wing tip is ahead of the left wing tip.
+This might have been caused by the asymmetry of the particular Monarch butterfly used in the experiment, or the bias in the marker attachment.
+Instead dealing with the asymmetry in the left wing and the right wing, we multiply $\exp(7.77\hat e_3)$ to $Q_R$ and $Q_L$ such that they become symmetric in the least square sense. 
+The resulting normal vector of the stroke plane lies in the $\mathbf{b}_x$--$\mathbf{b}_z$ plane, ans the stroke plane angle is $\beta = 25.42\si{deg}$.
+From the given $\beta$, and rotated $Q_R(t),Q_L(t)$, we can determine the wing kinematics angles $(\phi_R(t),\theta_R(t),\psi_R(t)$, and $(\phi_L(t),\theta_L(t),\psi_L(t))$ according to \eqref{eqn:Q_R} and \eqref{eqn:Q_L}, respectively. 
+These are illustrated in Figure \ref{fig:Monarch_WK}.
+The wing kinematics angles for the right wing are mostly consistent withe the left wing, except the small deviation angle. 
+Assuming the symmetric wing kinematics, we take the average between the right wing and the left wing, 
+and they are fitted with Fourier series to be used in the subsequent dynamic simulation. 
+
+
+\begin{figure}
+    \centerline{
+        \subfigure[wing tip locations]{
+            \includegraphics[width= 0.45\textwidth]{fit_VICON_wing_tip}
+        }
+        \hfill
+        \subfigure[wing kinematics angles]{
+            \includegraphics[width= 0.45\textwidth]{fit_VICON_E}
+        }
+    }
+    \caption{Monarch wing kinematics}\label{fig:Monarch_WK}
+\end{figure}
+
+\subsubsection{Dynamic Simulation}
+
+From the above wing kinematics angles and the body/abdomen attitude obtained by the actual Monarch butterfly,
+we numerically integrate the quasi-steady position dynamics, namely \eqref{eqn:mx_ddot}.
+The corresponding results are compared against the experimental data. 
+These are illustrated at Figure \ref{fig:comp_VICON}.
+In general, the downstrokes generate the lift upward, and the upstrokes generate thrust forward,
+while yielding a climbing trajectory with oscillation.
+
+The QS model generates greater lift and thrust, and consequently causing higher climb rate and forward velocity. 
+However, it is consistent with the experimental data in a qualitative sense. 
+
+
+\begin{figure}[p]
+    \centerline{
+        \subfigure[Position trajectory]{
+            \includegraphics[width=0.5\textwidth]{comp_VICON_x3}
+        }
+        \hfill
+        \subfigure[Position $x$]{
+            \includegraphics[width=0.5\textwidth]{comp_VICON_x}
+        }
+    }
+    \centerline{
+        \subfigure[Velocity $\dot x$]{
+            \includegraphics[width=0.5\textwidth]{comp_VICON_v}
+        }
+        \hfill
+        \subfigure[Resultant force in the body-fixed frame]{
+            \includegraphics[width=0.5\textwidth]{comp_VICON_FB}
+        }
+    }
+    \centerline{
+        \subfigure[Wing kinematics angles]{
+            \includegraphics[width=0.5\textwidth]{comp_VICON_E}
+        }
+        \hfill
+        \subfigure[Body pitch / Abdomen relative pitch]{
+            \includegraphics[width=0.5\textwidth]{comp_VICON_theta}
+        }
+    }
+    \caption{Comparison between the QS model (blue) and the experimental data (red); shaded area corresponds to downstroke; the resultant force of the experiment is constructed by the acceleration of the thorax, multiplied by the total mass and subtracted by the gravity}\label{fig:comp_VICON}
+\end{figure}
+
+\subsubsection{Effects of Abdomen}
+
+In Monarch butterfly flights, the abdomen oscillate at the same frequency of the wing flapping angle with the opposite phase,
+i.e., the abdomen rotates downward during the wing upstrokes. 
+
+
+To test the effects of abdomen undulation with the proposed QS model, we simulate the above Monarch model for 50 strokes while fixing the abdomen pitching angle to the averaged value. 
+These results are illustrated at Figure \ref{fig:comp_ab}.
+While the discrepancy is not substantial, it is shown that the abdomen undulation slightly increases the climb rate and the forward velocity.  
+
+\subsubsection{Asymptotic Stability}
+
+Another interesting results of Figure \ref{fig:comp_ab}.(c) is that the trajectory of the velocity asymptotically converges to a periodic orbit.  
+This suggests that the flapping motion captured by the Monarch butterfly yields an asymptotically stable periodic solution. 
+This should be further investigated by dynamic system theory such as Floquet's theorem. 
+
+\subsubsection{Open-Source Software Package}
+
+A software package for the proposed quasi-state dynamic model of a flapping wing UAV has been developed in Matlab, and it is shared as an open-source library at \href{https://github.com/fdcl-gwu/FWUAV}{\texttt{https://github.com/fdcl-gwu/FWUAV}}.
+
+\begin{figure}[p]
+    \centerline{
+        \subfigure[Position trajectory]{
+            \includegraphics[width=0.5\textwidth]{comp_ab_x3}
+        }
+        \hfill
+        \subfigure[Position $x$]{
+            \includegraphics[width=0.5\textwidth]{comp_ab_x}
+        }
+    }
+    \centerline{
+        \subfigure[Velocity trajectory]{
+            \includegraphics[width=0.5\textwidth]{comp_ab_v3}
+        }
+        \hfill
+        \subfigure[Velocity $\dot x$]{
+            \includegraphics[width=0.5\textwidth]{comp_ab_v}
+        }
+    }
+    \caption{Comparison between flight with abdomen undulation (blue) and without abdomen undulation (green)}\label{fig:comp_ab}
+\end{figure}
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{FWUAV}
+
+\appendix
+
+\subsection*{Appendix}
+
+\subsubsection*{Hat Map}
+
+For $x=(x_1,x_2,x_3)\in\Re^3$, 
+\begin{align}
+    \hat x = \begin{bmatrix}
+        0 & -x_3 & x_2 \\
+        x_3 & 0 & -x_1 \\
+        -x_2 & x_1 & 0 
+    \end{bmatrix},
+\end{align}
+
+
+\subsubsection*{Sign Function}
+
+For $x\in\Re$, 
+\begin{align}
+    \mathrm{sgn}(x) =
+    \begin{cases}
+        1 &  x>0,\\
+        0 &  x=0,\\
+        -1 & x<0.
+    \end{cases}
+\end{align}
 
 \clearpage\newpage
 \KOMAoptions{paper=landscape,pagesize}
@@ -1748,28 +1781,6 @@ Finally, it is assumed that the root of the wing and the joint of the abdomen ar
 \KOMAoptions{paper=portrait,pagesize}
 \recalctypearea
 
-
 \end{document}
-
-\subsubsection{Equations of Motion}
-
-We present the equations of motion assuming that the mass and the inertia of both wings are negligible. 
-Let $J\in\Re^{3\times 3}$ be the inertia matrix of the body in $\mathcal{F}_B$, and let $m\in\Re$ be the mass of the body. 
-\nomenclature{$m\in\Re$}{mass of the body}
-\nomenclature{$J\in\Re^{3\times 3}$}{inertia matrix of the body about its mass center resolved in $\mathcal{F}_B$}
-
-From Netwon's second law, 
-\begin{align}
-    m \ddot x & =  RQ_R (L_R+D_R+F_{\rot _R}) + R Q_L (L_L+D_L + F_{\rot_L}) + mg e_3,\\
-    J\dot\Omega + \Omega\times J\Omega & =  (\mu_R + r_{cp} Q_R e_2) \times Q_R (L_R+D_R) + (\mu_R + r_{\rot} Q_R e_2)\times Q_R F_{\rot_R}\nonumber\\
-                                       & \quad + (\mu_L - r_{cp} Q_L e_2) \times Q_L (L_L+D_L) + (\mu_L + r_{\rot} Q_L e_2)\times Q_L F_{\rot_L},
-\end{align}
-with the kinematics equations copied below
-\begin{align}
-    \dot R & = R\hat\Omega,\\
-    \dot Q_R & = Q_R \hat\Omega_R,\\
-    \dot Q_L & = Q_L \hat\Omega_L.
-\end{align}
-These are driven by the wing kinematics that describe the attitude of the wings relative to the body, namely $Q_R(t), Q_L(t)$.
 
 
