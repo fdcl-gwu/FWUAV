@@ -1,4 +1,5 @@
 function ani_monarch
+% generate Monarch animation for a given wing kinematics
 clear all;
 close all;
 global e1 e2 e3
@@ -9,46 +10,9 @@ II=eye(3);
 
 load STLRead/fv_monarch;
 
-%% Wing kinematics
-
-%WK.f=10;
-%WK.beta=20*pi/180;
-
-% WK.phi_m=50*pi/180;
-% WK.phi_K=0.4;
-% WK.phi_0=10*pi/180;
-%
-% WK.theta_m=45*pi/180;
-% WK.theta_C=2;
-% WK.theta_0=0;
-% WK.theta_a=0.3;
-%
-% WK.psi_m=1*pi/180;
-% WK.psi_N=2;
-% WK.psi_a=0;
-% WK.psi_0=0;
-
-% WK.f=50;
-% WK.beta=5*pi/180;
-%
-% WK.phi_m=50*pi/180;
-% WK.phi_K=0.4;
-% WK.phi_0=10*pi/180;
-%
-% WK.theta_m=45*pi/180;
-% WK.theta_C=5;
-% WK.theta_0=0;
-% WK.theta_a=0.3;
-%
-% WK.psi_m=10*pi/180;
-% WK.psi_N=2;
-% WK.psi_a=0;
-% WK.psi_0=0;
-
+WK.f=10.2247;
+WK.beta=25.4292*pi/180;
 WK.type='Monarch';
-WK.beta=30*pi/180;
-WK.f=10.1;
-WK.t_shift = 0.0408;
 
 N=1001;
 T=5/WK.f;
@@ -56,7 +20,6 @@ t=linspace(0,T,N);
 
 load('morp_MONARCH');
 bool_video=0;
-
 %% generate figures for the note
 %fig_note(fv_body, fv_wr, fv_wl, true);
 %return;
@@ -68,17 +31,18 @@ x=[0 0 0]';
 x_dot=[1.2 0 0]';
 R=expmso3(10*pi/180*e2);
 W=[0 0 0]';
+Q_A=expmso3(10*pi/180*e2);
 
-WK.type='Monarch';
 [Euler Euler_dot Euler_ddot]=wing_kinematics(t(k),WK);
 [Q_R Q_L W_R W_L W_R_dot W_L_dot]=wing_attitude(WK.beta, Euler, Euler, Euler_dot, Euler_dot, Euler_ddot, Euler_ddot);
 h_fig=figure('color','w');
-[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[0 0 0]);
+[h_body, h_wr, h_wl, h_ab]=patch_monarch(fv_body, fv_wr, fv_wl, fv_abdomen, x, R, Q_R, Q_L, Q_A, [0 0 0]);
+
 [L_R L_L D_R D_L M_R M_L F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(MONARCH, W_R, W_L, W_R_dot, W_L_dot, x_dot, W, R, Q_R, Q_L);
 [h_F_R h_F_L]=patch_force(x,R,Q_R,Q_L,L_R,L_L,D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L,[0 0 0 0 1]);
 
 x_wing_tip = [];
-[x_wing_tip h_wing_tip h_wing_chord]= patch_wingtip_chord(x_wing_tip, x, R, Q_R, Q_L);
+[x_wing_tip h_wing_tip]= patch_wingtip_chord(x_wing_tip, x, R, Q_R, Q_L);
 
 %% animation
 
@@ -91,9 +55,9 @@ for k=floor(linspace(1,N,301))
     [Euler Euler_dot Euler_ddot]=wing_kinematics(t(k),WK);
     [Q_R Q_L W_R W_L W_R_dot W_L_dot]=wing_attitude(WK.beta, Euler, Euler, Euler_dot, Euler_dot, Euler_ddot, Euler_ddot);
     [L_R L_L D_R D_L M_R M_L F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(MONARCH, W_R, W_L, W_R_dot, W_L_dot, x_dot, W, R, Q_R, Q_L);
-    update_monarch(h_fig,[h_body, h_wr, h_wl], fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L);
+    update_monarch(h_fig, [h_body, h_wr, h_wl, h_ab], fv_body, fv_wr, fv_wl, fv_abdomen, x, R, Q_R, Q_L, Q_A);
     update_force(h_F_R,h_F_L,  x,R,Q_R,Q_L,  L_R,L_L,D_R,D_L,M_R,M_L,  F_rot_R,F_rot_L,M_rot_R,M_rot_L,[0 0 0 0 1]);
-    x_wing_tip = update_wing_tip_chord(h_wing_tip, h_wing_chord, x_wing_tip, x, R, Q_R, Q_L);    
+    x_wing_tip = update_wing_tip_chord(h_wing_tip, 0, x_wing_tip, x, R, Q_R, Q_L);    
     
     if bool_video
         writeVideo(vidObj,getframe(gcf));
@@ -117,41 +81,41 @@ end
 function [x_wing_tip h_wing_tip h_wing_chord]= patch_wingtip_chord(x_wing_tip, x, R, Q_R, Q_L)
 e1=[1 0 0]';
 e2=[0 1 0]';
-wing_span=120;
+wing_span=0.0610;
 
-x_wing_tip_R = x + 0.7*wing_span*R*Q_R*e2;
-x_wing_tip_L = x - 0.7*wing_span*R*Q_L*e2;
+x_wing_tip_R = x + 0.6*wing_span*R*Q_R*e2;
+x_wing_tip_L = x - 0.6*wing_span*R*Q_L*e2;
 
-x_wing_chord_R = x + wing_span*R*Q_R*[0.7*e2+0.6*e1, 0.7*e2-0.6*e1];
-x_wing_chord_L = x + wing_span*R*Q_L*[-0.7*e2+0.6*e1, -0.7*e2-0.6*e1];
+x_wing_chord_R = x + wing_span*R*Q_R*[0.6*e2+0.6*e1, 0.6*e2-0.6*e1];
+x_wing_chord_L = x + wing_span*R*Q_L*[-0.6*e2+0.6*e1, -0.6*e2-0.6*e1];
 
 x_wing_tip = [x_wing_tip, [x_wing_tip_R; x_wing_tip_L]];
 x_wing_chord = [x_wing_chord_R, x_wing_chord_L];
 
 h_wing_tip = line([1;1]*x_wing_tip([1 4],:)',[1;1]*x_wing_tip([2 5],:)',[1;1]*x_wing_tip([3 6],:)');
 
-h_wing_chord(1) = line(x_wing_chord(1,1:2),x_wing_chord(2,1:2),x_wing_chord(3,1:2),'color','b', 'LineWidth', 2);
-h_wing_chord(2) = line(x_wing_chord(1,3:4),x_wing_chord(2,3:4),x_wing_chord(3,3:4),'color','r', 'LineWidth', 2);
+%h_wing_chord(1) = line(x_wing_chord(1,1:2),x_wing_chord(2,1:2),x_wing_chord(3,1:2),'color','b', 'LineWidth', 2);
+%h_wing_chord(2) = line(x_wing_chord(1,3:4),x_wing_chord(2,3:4),x_wing_chord(3,3:4),'color','r', 'LineWidth', 2);
 end
 
 function x_wing_tip = update_wing_tip_chord(h_wing_tip, h_wing_chord, x_wing_tip, x, R, Q_R, Q_L)
 e1=[1 0 0]';
 e2=[0 1 0]';
-wing_span=120;
+wing_span=0.06;
 
 x_wing_tip_R = x + 0.7*wing_span*R*Q_R*e2;
 x_wing_tip_L = x - 0.7*wing_span*R*Q_L*e2;
 
-x_wing_chord_R = x + wing_span*R*Q_R*[0.7*e2+0.6*e1, 0.7*e2-0.6*e1];
-x_wing_chord_L = x + wing_span*R*Q_L*[-0.7*e2+0.6*e1, -0.7*e2-0.6*e1];
+x_wing_chord_R = x + wing_span*R*Q_R*[0.7*e2+0.5*e1, 0.7*e2-0.5*e1];
+x_wing_chord_L = x + wing_span*R*Q_L*[-0.7*e2+0.5*e1, -0.7*e2-0.5*e1];
 
 x_wing_tip = [x_wing_tip, [x_wing_tip_R; x_wing_tip_L]];
 x_wing_chord = [x_wing_chord_R, x_wing_chord_L];
 
 set(h_wing_tip(1),'XData',x_wing_tip(1,:)','YData',x_wing_tip(2,:)','ZData',x_wing_tip(3,:)');
 set(h_wing_tip(2),'XData',x_wing_tip(4,:)','YData',x_wing_tip(5,:)','ZData',x_wing_tip(6,:)');
-set(h_wing_chord(1),'XData',x_wing_chord(1,1:2),'YData',x_wing_chord(2,1:2),'ZData',x_wing_chord(3,1:2));
-set(h_wing_chord(2),'XData',x_wing_chord(1,3:4),'YData',x_wing_chord(2,3:4),'ZData',x_wing_chord(3,3:4));
+%set(h_wing_chord(1),'XData',x_wing_chord(1,1:2),'YData',x_wing_chord(2,1:2),'ZData',x_wing_chord(3,1:2));
+%set(h_wing_chord(2),'XData',x_wing_chord(1,3:4),'YData',x_wing_chord(2,3:4),'ZData',x_wing_chord(3,3:4));
 end
 
 
@@ -159,10 +123,10 @@ function [h_F_R h_F_L]=patch_force(x,R,Q_R,Q_L, L_R,L_L,D_R,D_L,M_R,M_L,F_rot_R,
 global scale_Force
 e2=[0 1 0]';
 lwidth=1;
-alength=12;
+alength=0.005;
 awidth=alength*tand(10);
-scale_Force=0.7e4;
-wingspan=120;
+scale_Force=0.3e1;
+wingspan=0.06;
 
 if nargin < 15
     bool=ones(5,1);
@@ -238,9 +202,9 @@ end
 function update_force(h_F_R,h_F_L, x,R,Q_R,Q_L, L_R,L_L,D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L,varargin)
 global scale_Force
 e2=[0 1 0]';
-alength=12;
+alength=0.005;
 awidth=alength*tand(10);
-wingspan=120;
+wingspan=0.06;
 
 if nargin < 17
     bool=ones(5,1);
@@ -282,10 +246,11 @@ end
 end
 
 
-function [v_body, v_wr, v_wl]=compute_vertices(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L)
+function [v_body, v_wr, v_wl, v_ab]=compute_vertices(fv_body, fv_wr, fv_wl, fv_ab, x, R, Q_R, Q_L, Q_A)
 v_body=zeros(size(fv_body.vertices));
 v_wr=zeros(size(fv_wr.vertices));
 v_wl=zeros(size(fv_wl.vertices));
+v_ab=zeros(size(fv_ab.vertices));
 
 for i=1:length(v_body)
     v_body(i,:)=(R*fv_body.vertices(i,:)'+x)';
@@ -296,11 +261,16 @@ end
 for i=1:length(v_wl)
     v_wl(i,:)=(R*Q_L*(fv_wl.vertices(i,:)')+x)';
 end
+ab_x_shift=-0.01179;
+e1=[1 0 0]';
+for i=1:length(v_ab)
+    v_wl(i,:)=(R*(Q_A*(fv_ab.vertices(i,:)'-ab_x_shift*e1)+ab_x_shift*e1)+x)';
+end
 
 end
 
-function [h_body, h_wr, h_wl, h_FB, h_FR, f_FL]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, varargin)
-if nargin < 8
+function [h_body, h_wr, h_wl, h_ab, h_FB, h_FR, f_FL]=patch_monarch(fv_body, fv_wr, fv_wl, fv_ab, x, R, Q_R, Q_L, Q_A, varargin)
+if nargin < 10
     bool_FB=true; % show the body-fixed frame
     bool_FR=false; % show the right wing frame
     bool_FL=false % show the left wing frame
@@ -312,14 +282,15 @@ end
 
 II=eye(3);
 
-[v_body, v_wr, v_wl]=compute_vertices(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L);
+[v_body, v_wr, v_wl, v_ab]=compute_vertices(fv_body, fv_wr, fv_wl, fv_ab, x, R, Q_R, Q_L, Q_A);
 
 my_face_color=[0.8 0.8 1.0];
 h_body=patch('faces', fv_body.faces, 'vertices', v_body);
 hold on;
 h_wr=patch('faces', fv_wr.faces, 'vertices', v_wr);
 h_wl=patch('faces', fv_wl.faces, 'vertices', v_wl);
-set([h_body, h_wr, h_wl], ...
+h_ab=patch('faces', fv_ab.faces, 'vertices', v_ab);
+set([h_body, h_wr, h_wl, h_ab], ...
     'FaceColor', my_face_color, ...
     'EdgeColor',       'none',        ...
     'FaceLighting',    'gouraud',     ...
@@ -327,17 +298,13 @@ set([h_body, h_wr, h_wl], ...
 alpha([h_body, h_wr, h_wl],0.8);
 axis('image');
 
-view(90,0); % front view
-view(0,0); % from right side
-view(-90,0); % from back
-view(180,0); % from left side
-view(-90,90); % from top
-view(180+10,30);
-%view(90,20);
+%view(180+10,30);
+%view(-90,80);
 %view(270,80);
+view(370,10);
 
 set(gca,'Zdir','reverse','YDir','reverse');
-axis(180*[-1 1 -1 1 -1 1]);
+axis(0.1*[-1 1 -1 1 -1 1]);
 camlight headlight;
 material dull;
 set(gca,'visible','off');
@@ -368,22 +335,23 @@ if bool_FL
     end
 end
 
-
 % xlabel('$x$','interpreter','latex');
 % ylabel('$y$','interpreter','latex');
 % zlabel('$z$','interpreter','latex');
 
 end
 
-function update_monarch(h_fig,h_objects,fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L)
+function update_monarch(h_fig, h_objects, fv_body, fv_wr, fv_wl, fv_ab, x, R, Q_R, Q_L, Q_A)
 h_body=h_objects(1);
 h_wr=h_objects(2);
 h_wl=h_objects(3);
-[v_body, v_wr, v_wl]=compute_vertices(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L);
+h_ab=h_objects(4);
+[v_body, v_wr, v_wl, v_ab]=compute_vertices(fv_body, fv_wr, fv_wl, fv_ab, x, R, Q_R, Q_L, Q_A);
 
 set(h_body,'faces',fv_body.faces,'vertices',v_body);
 set(h_wr,'faces',fv_wr.faces,'vertices',v_wr);
 set(h_wl,'faces',fv_wl.faces,'vertices',v_wl);
+set(h_ab,'faces',fv_ab.faces,'vertices',v_ab);
 figure(h_fig);
 
 drawnow;

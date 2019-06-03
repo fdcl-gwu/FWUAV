@@ -3,7 +3,8 @@ function sim_QS_x
 % for given thorax attiude, wing kinematics, abdomen attitude
 evalin('base','clear all');
 close all;
-filename='sim_QS_x_wo_ab';
+%filename='sim_QS_x_with_opposite_ab';
+filename='sim_QS_x';
 
 load('morp_MONARCH');
 INSECT=MONARCH;
@@ -13,7 +14,7 @@ WK.beta=25.4292*pi/180;
 WK.type='Monarch';
 
 N=5001;
-T=50/WK.f;
+T=5/WK.f;
 t=linspace(0,T,N);
 
 x0=[0 0 0]';
@@ -119,12 +120,11 @@ x_dot=X(4:6);
 [Euler_L, Euler_L_dot, Euler_L_ddot] = wing_kinematics(t,WK_L);
 [Q_R Q_L W_R W_L W_R_dot W_L_dot] = wing_attitude(WK_R.beta, Euler_R, Euler_L, Euler_R_dot, Euler_L_dot, Euler_R_ddot, Euler_L_ddot);
 
-[R W W_dot theta_B] = body_attitude(t,WK_R.f);
-[Q_A W_A W_A_dot theta_A] = abdomen_attitude(t,WK_R.f);
+[R W W_dot theta_B] = body_attitude(t,WK_R.f); %time-varying thorax
+[Q_A W_A W_A_dot theta_A] = abdomen_attitude(t,WK_R.f); %time-varying abdomen
 
 %[R W W_dot theta_B] = body_attitude(15.65*pi/180); % fixed body
-[Q_A W_A W_A_dot theta_A] = abdomen_attitude(17.32*pi/180); % fixed abdomen
-
+%[Q_A W_A W_A_dot theta_A] = abdomen_attitude(17.32*pi/180); % fixed abdomen
 
 [L_R L_L D_R D_L M_R M_L ...
     F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);

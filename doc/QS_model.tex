@@ -1683,6 +1683,7 @@ i.e., the abdomen rotates downward during the wing upstrokes.
 To test the effects of abdomen undulation with the proposed QS model, we simulate the above Monarch model for 50 strokes while fixing the abdomen pitching angle to the averaged value. 
 These results are illustrated at Figure \ref{fig:comp_ab}.
 While the discrepancy is not substantial, it is shown that the abdomen undulation slightly increases the climb rate and the forward velocity.  
+Furthermore, an abdomen undulation in the opposite phase reduces those. 
 
 \subsubsection{Asymptotic Stability}
 
@@ -1709,11 +1710,16 @@ A software package for the proposed quasi-state dynamic model of a flapping wing
             \includegraphics[width=0.5\textwidth]{comp_ab_v3}
         }
         \hfill
-        \subfigure[Velocity $\dot x$]{
+        \subfigure[Velocity $\dot x$ (for the first 5 strokes)]{
             \includegraphics[width=0.5\textwidth]{comp_ab_v}
         }
     }
-    \caption{Comparison between flight with abdomen undulation (blue) and without abdomen undulation (green)}\label{fig:comp_ab}
+    \centerline{
+        \subfigure[thorax pitch / abdomen pitch (for the first 5 strokes)]{
+            \includegraphics[width=0.5\textwidth]{comp_ab_theta}
+        }
+    }
+    \caption{Comparison between flight with abdomen undulation (blue), without abdomen undulation (green), with abdomen undulation in the opposite phase (purple); the simulation is for 50 strokes, and the results of the first 5 strokes are illustrated for the subfigure (d) and (e)}\label{fig:comp_ab}
 \end{figure}
 
 

@@ -1,14 +1,21 @@
 function [Euler, Euler_dot, Euler_ddot] = wing_kinematics(t,WK)
-%wing_kinematics: compute wing Euler angles and their time-derivaties
+%wing_kinematics: compute wing kinematics angles and their time-derivaties
 %
-% [Euler, Euler_dot, Euler_ddot] = wing_kinematics(t,WK) computes
+% [Euler, Euler_dot, Euler_ddot] = wing_kinematics(t,WK) computes the wing
+% kinematics angles defined by
 %
 %       Euler = [phi theta psi]' (flapping, pitch, deviation)
 %
-%for a given time and a struct variables with the following members
-%describing wing kinematics
+% and their derivatives for a given time t, and the struct variables WK
+% with the following members 
 %
-%         WK.f, Wk.beta
+%         WK.f     flapping frequency
+%         Wk.beta  stroke plane angle
+%         WK.type  wing kinematics type
+%                   "Monarch"       wing kinematics from Monarch experiments
+%                   "BermanWang"    a min energy model proposed by Berman
+%                   and Wang with the following variables (see Section 1.3)
+%
 %         WK.phi_m, WK.phi_K, WK.phi_0
 %         WK.theta_m, WK.theta_C, WK.theta_0, WK.theta_a
 %         WK.psi_m, WK.psi_N, WK.psi_a, WK.psi_0
@@ -16,22 +23,7 @@ function [Euler, Euler_dot, Euler_ddot] = wing_kinematics(t,WK)
 
 switch WK.type
     case 'Monarch'
-        
-%         % Data constructed by ./exp_data/fit_exp_data.m
-%         F_phi.A0=-1.0753;
-%         F_phi.AN=[57.7197 4.1946 -1.2126 0.7185 -0.1899];
-%         F_phi.BN=[-8.0267 9.8466 -3.3232 -0.7831 0.2093];
-%         F_theta.A0=-12.4021;
-%         F_theta.AN=[22.1344 -5.9493 1.7797 1.9392 -0.8983];
-%         F_theta.BN=[29.7924 7.9076 -8.2981 2.3268 -0.2061];
-%         F_psi.A0=11.7597;
-%         F_psi.AN=[16.4326 -3.2083 -1.2771 0.1997 -0.1899];
-%         F_psi.BN=[-2.1653 -2.0058 -0.7918 0.0527 0.1601];
-% 
-%         [phi phi_dot phi_ddot]=eval_Fourier(t, WK.f, F_phi);
-%         [theta theta_dot theta_ddot]=eval_Fourier(t, WK.f, F_theta);
-%         [psi psi_dot psi_ddot]=eval_Fourier(t, WK.f, F_psi);
-        
+               
         % Data constructed by ./exp_data/fit_VICON_data.m
         F_phi.f = 10.2247;
         F_phi.A0 = -0.83724;
@@ -77,9 +69,7 @@ switch WK.type
         
         psi = A * cos( a*t + b ) + WK.psi_0;
         psi_dot  = A * -a * sin(a*t+b);
-        psi_ddot = A * -a^2 * cos(a*t+b);
-        
-        
+        psi_ddot = A * -a^2 * cos(a*t+b);               
 end
 
 %% return values

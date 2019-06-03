@@ -63,6 +63,7 @@ else
         M_L = M_L + cross(-r*e2,(L+D))/INSECT.S*c*dr;
     end
     
+    % rotational force and moment are set to zero
     F_rot_R=zeros(3,1);
     M_rot_R=zeros(3,1);
     alpha_R=0;

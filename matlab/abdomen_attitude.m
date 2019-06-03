@@ -37,14 +37,6 @@ end
 
 if ~bool_fixed 
     
-%     %     Data constructed by ./exp_data/fit_exp_data.m
-%     F_theta_ab.f=10.3241;
-%     F_theta_ab.A0=34.6367;
-%     F_theta_ab.AN=-17.5158;
-%     F_theta_ab.BN=-11.8311;
-%     
-%     [theta_A theta_A_dot theta_A_ddot]= eval_Fourier(t, f, F_theta_ab);
-
     % Data constructed by ./exp_data/fit_VICON_data.m
     F_theta_ab.f = 10.1756;
     F_theta_ab.A0 = 17.3417;
@@ -52,6 +44,11 @@ if ~bool_fixed
     F_theta_ab.BN = -3.91351009294982;
     
     [theta_A theta_A_dot theta_A_ddot]= eval_Fourier(t, f, F_theta_ab);
+    
+%     % abdomen with the opposite phase
+%     theta_A = 0.6053 - theta_A;
+%     theta_A_dot = -theta_A_dot;
+%     theta_A_ddot = -theta_A_ddot;
     
     Q_A=expm(theta_A*hat(e2));
     W_A=theta_A_dot*e2;
