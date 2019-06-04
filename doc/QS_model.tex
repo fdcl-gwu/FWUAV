@@ -11,7 +11,8 @@
 \usepackage{array} % for math mode in table
 \usepackage{multicol}
 \usepackage{hyperref}
-\usepackage{movie15}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
 
 \newcommand{\norm}[1]{\ensuremath{\left\| #1 \right\|}}
 \newcommand{\bracket}[1]{\ensuremath{\left[ #1 \right]}}
@@ -1427,7 +1428,7 @@ Multiply $C$ to \eqref{eqn:J22dotxi_2}, and subtract it from \eqref{eqn:J11dotxi
 \begin{gather}
     (\mathbf{J}_{11}-C\mathbf{J}_{21})\dot \xi_1 -(\ad^*_{\xi_1}\mathbf{J}_{11}-C\ad^*_{\xi_2} \mathbf{J}_{21} )\xi_1 + (\mathbf{L}_{11}-C\mathbf{L}_{21})\xi_1 \nonumber \\ 
 =   - (\mathbf{J}_{12}-C\mathbf{J}_{22})\dot \xi_2 +(\ad^*_{\xi_1}\mathbf{J}_{12}-C\ad^*_{\xi_2} \mathbf{J}_{22} )\xi_2 - (\mathbf{L}_{12}-C\mathbf{L}_{22})\xi_2 \nonumber \\ 
-+ \mathbf{f}_{a_1}+\mathbf{f}_{g_1}-C(\mathbf{f}_{a_2}+\mathbf{f}_{g_2}).
++ \mathbf{f}_{a_1}+\mathbf{f}_{g_1}-C(\mathbf{f}_{a_2}+\mathbf{f}_{g_2}).\label{eqn:EL_xR}
 \end{gather}
 Now, the unknown $(\tau_R,\tau_L,\tau_A)$ is eliminated, and for given $(g_2,\xi_2,\dot\xi_2)$ the above can be simulated to construct $(g_1,\xi_1)$. 
 Once $(g_1,\xi_1)$ is obtained, it can be substituted into \eqref{eqn:J22dotxi_2} to compute $(\tau_R,\tau_L,\tau_A)$ that the torque at the thorax required to rotate the wings and the abdomen as described. 
@@ -1685,16 +1686,6 @@ These results are illustrated at Figure \ref{fig:comp_ab}.
 While the discrepancy is not substantial, it is shown that the abdomen undulation slightly increases the climb rate and the forward velocity.  
 Furthermore, an abdomen undulation in the opposite phase reduces those. 
 
-\subsubsection{Asymptotic Stability}
-
-Another interesting results of Figure \ref{fig:comp_ab}.(c) is that the trajectory of the velocity asymptotically converges to a periodic orbit.  
-This suggests that the flapping motion captured by the Monarch butterfly yields an asymptotically stable periodic solution. 
-This should be further investigated by dynamic system theory such as Floquet's theorem. 
-
-\subsubsection{Open-Source Software Package}
-
-A software package for the proposed quasi-state dynamic model of a flapping wing UAV has been developed in Matlab, and it is shared as an open-source library at \href{https://github.com/fdcl-gwu/FWUAV}{\texttt{https://github.com/fdcl-gwu/FWUAV}}.
-
 \begin{figure}[p]
     \centerline{
         \subfigure[Position trajectory]{
@@ -1721,6 +1712,117 @@ A software package for the proposed quasi-state dynamic model of a flapping wing
     }
     \caption{Comparison between flight with abdomen undulation (blue), without abdomen undulation (green), with abdomen undulation in the opposite phase (purple); the simulation is for 50 strokes, and the results of the first 5 strokes are illustrated for the subfigure (d) and (e)}\label{fig:comp_ab}
 \end{figure}
+
+\subsubsection{Asymptotic Stability}
+
+Another interesting results of Figure \ref{fig:comp_ab}.(c) is that the trajectory of the velocity asymptotically converges to a periodic orbit.  
+This suggests that the flapping motion captured by the Monarch butterfly yields an asymptotically stable periodic solution. 
+This should be further investigated by dynamic system theory such as Floquet's theorem. 
+
+\subsubsection{Open-Source Software Package}
+
+A software package for the proposed quasi-state dynamic model of a flapping wing UAV has been developed in Matlab, and it is shared as an open-source library at \href{https://github.com/fdcl-gwu/FWUAV}{\texttt{https://github.com/fdcl-gwu/FWUAV}}.
+
+\begin{itemize}
+    \item Morphological parameters of Monarch butterfly are defied at \texttt{morp\_MONARCH.m}
+    \item The raw data from VICON are processed by the following three files under \texttt{/exp\_data}.
+
+\begin{tikzpicture}[auto]
+    \tikzstyle{block} = [text width=7em, draw, rectangle, text centered, rounded corners=1mm, minimum height=1.5em, inner sep= 4pt, style={font=\scriptsize}];
+    \tikzstyle{line} = [draw, -latex'];
+    \matrix[column sep=10mm, row sep=4mm]
+    {
+        \node[block] (VICON) {\texttt{VICON DATA.xls}}; & 
+            \node[block] (load) {\texttt{load\_VICON\_data.m}}; & 
+                \node[block] (fit) {\texttt{fit\_VICON\_data.m}}; & 
+                    \node[block] (ani) {\texttt{ani\_VICON\_data.m}}; \\
+    };
+    \tikzstyle{every path}=[line]
+    \path (VICON) -- (load);
+    \path (load) -- (fit);
+    \path (fit) -- (ani);
+\end{tikzpicture}
+
+    \item For given torque at the wing and the abdomen, the complete dynamics \eqref{eqn:EL} are simulated as follows. 
+
+\begin{tikzpicture}[auto]
+    \tikzstyle{block} = [text width=6em, draw, rectangle, text centered, rounded corners=1mm, minimum height=1.5em, inner sep= 4pt, style={font=\scriptsize}];
+    \tikzstyle{line} = [draw, -latex'];
+    \matrix[column sep=14mm, row sep=4mm]
+    {
+            \node[block,text width=1em] (t) {$t$}; &
+        \node[block] (tau) {control torque}; & 
+            \node[block] (sim) {\texttt{sim\_QS\_all.m}}; &
+        \node[block, text width=6.5em] (output) {$(x,R,Q_R,Q_L,Q_A)$}; \\
+            & & \node[block] (QS) {\texttt{wing\_QS\_ aerodynamics.m}}; \\
+            %& & \node[block] (QS) {\texttt{wing\_QS\_ aerodynamics.m}};\\
+    };
+    \tikzstyle{every path}=[line]
+    \path (t) -- (tau);
+    \path (tau) -- node {\scriptsize $\tau_R,\tau_L,\tau_A$} (sim);
+    \path (sim) -- (output);
+    \path (output) |- (QS);
+    \path (QS) -- node {\scriptsize $F_B$} (sim);
+\end{tikzpicture}
+
+    \item For given wing Euler angles and the abdomen attitude, the position and the attitude dynamics of the thorax, namely \eqref{eqn:EL_xR} are simulated as follows.
+
+\begin{tikzpicture}[auto]
+    \tikzstyle{block} = [text width=6em, draw, rectangle, text centered, rounded corners=1mm, minimum height=1.5em, inner sep= 4pt, style={font=\scriptsize}];
+    \tikzstyle{line} = [draw, -latex'];
+    \matrix[column sep=12mm, row sep=3mm]
+    {
+        & & & & 
+        \node[block, text width=6.5em] (output) {$(x,R),(\tau_R,\tau_L,\tau_A)$}; \\
+        \node[block,text width=1em] (t) at (0,0) {$t$}; &
+        \node[block] (wk) {\texttt{wing\_ kinematics.m}}; & 
+        \node[block] (wa) {\texttt{wing\_ attitude.m}}; &
+            \node[block] (QS) {\texttt{wing\_QS\_ aerodynamics.m}}; &
+        \node[block] (sim_x) {\texttt{sim\_QS\_xR.m}}; \\
+            & &
+        \node[block] (aa) {\texttt{abdomen\_ attitude.m}}; \\
+    };
+    \tikzstyle{every path}=[line]
+    \path (t) -- (wk);
+    \path (t) |- (aa);
+    \path (wk) -- node {\scriptsize $\phi,\theta,\psi$} (wa);
+    \path (wa) -- node {\scriptsize$Q_R,Q_L$} (QS);
+    \path (QS) -- node {\scriptsize$F_B$} (sim_x);
+    \path (aa) -| node[near start] {\scriptsize $Q_A$} (sim_x);
+    \path (sim_x) -- (output);
+\end{tikzpicture}
+
+    \item For given wing Euler angles, the thorax attitude, and the abdomen attitude, the position dynamics \eqref{eqn:mx_ddot} are simulated as follows.
+
+\begin{tikzpicture}[auto]
+    \tikzstyle{block} = [text width=6em, draw, rectangle, text centered, rounded corners=1mm, minimum height=1.5em, inner sep= 4pt, style={font=\scriptsize}];
+    \tikzstyle{line} = [draw, -latex'];
+    \matrix[column sep=12mm, row sep=3mm]
+    {
+        & & & & 
+        \node[block, text width=6.5em] (output) {$x,(\tau_R,\tau_L,\tau_A)$}; \\
+        \node[block,text width=1em] (t) at (0,0) {$t$}; &
+        \node[block] (wk) {\texttt{wing\_ kinematics.m}}; & 
+        \node[block] (wa) {\texttt{wing\_ attitude.m}}; &
+            \node[block] (QS) {\texttt{wing\_QS\_ aerodynamics.m}}; &
+        \node[block] (sim_x) {\texttt{sim\_QS\_x.m}}; \\
+            & &
+        \node[block] (ba) {\texttt{body\_ attitude.m}}; \\
+            & &
+        \node[block] (aa) {\texttt{abdomen\_ attitude.m}}; \\
+    };
+    \tikzstyle{every path}=[line]
+    \path (t) -- (wk);
+    \path (t) |- (ba);
+    \path (t) |- (aa);
+    \path (wk) -- node {\scriptsize $\phi,\theta,\psi$} (wa);
+    \path (wa) -- node {\scriptsize$Q_R,Q_L$} (QS);
+    \path (QS) -- node {\scriptsize$F_B$} (sim_x);
+    \path (ba) -| node[near start] {\scriptsize$R$} (sim_x);
+    \path (aa) -| node[near start] {\scriptsize $Q_A$} (sim_x);
+    \path (sim_x) -- (output);
+\end{tikzpicture}
+\end{itemize}
 
 
 \bibliographystyle{IEEEtran}
