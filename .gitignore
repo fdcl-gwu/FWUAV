@@ -17,3 +17,9 @@
 *.toc
 *~
 .DS_Store
+
+# Matlab data files
+*.mat
+
+# Generated figures
+*.eps
