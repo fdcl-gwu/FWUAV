@@ -1257,7 +1257,21 @@ where the configuration-dependent inertia for $\mathcal{B}_i$, namely $\mathbf{J
         m_i\hat\nu_i Q_i^T R^T & J_i Q_i^T + m_i \hat\nu_i^T Q_i^T \hat\mu_i & J_i 
     \end{bmatrix}.
 \end{align}
-From \eqref{eqn:KK}, the derivative of the inertia can be expressed with the following matrix $\mathbf{K}_i\in\Re^{9\times 9}$,
+
+From \eqref{eqn:KK}, the first three element of $(\mathbf{K}_i(\xi)) (\chi)$ are given by
+\begin{align*}
+    [ (\mathbf{K}_i(\xi)) (\chi) ]_{1:3} & = 
+     - m_i R\hat\eta (\hat\mu_i + \widehat{Q_i\nu_i}) \Omega 
+     - m_i R( \widehat{Q_i\hat\eta_i\nu_i}) \Omega
+     - m_i R\hat\eta Q_i \hat\nu_i\Omega_i
+     - m_i R Q_i\hat\eta_i \hat\nu_i\Omega_i\\
+                                         & = 0 \delta x +  [m_i R ((\hat\mu_i + \widehat{Q_i\nu_i}) \Omega)^\wedge + m_i R (Q_i\hat\nu_i\Omega_i)^\wedge ] \eta \\
+                                         & \quad +
+                                         [   - m_i R\hat\Omega Q_i\hat\nu_i
+                                        + m_i R Q_i \widehat{\hat\nu_i \Omega_i} ] \eta_i.
+\end{align*}
+Similarly, repeat this for the remaining rows to construct 
+$\mathbf{K}_i\in\Re^{9\times 9}$,
 \begin{align}
     \mathbf{K}_i(R,Q_i,\Omega,\Omega_i) = 
     \begin{bmatrix}
