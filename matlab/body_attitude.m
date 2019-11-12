@@ -26,9 +26,15 @@ function [R W W_dot theta]=body_attitude(varargin)
 
 e2=[0 1 0]';
 
-if nargin < 2
+bool_period=false;
+if nargin ~= 2
     bool_fixed=true;
     theta=varargin{1};
+    if nargin == 3
+        bool_period=true;
+        t=varargin{1};
+        WK=varargin{2};
+    end
 else
     bool_fixed=false;
     t=varargin{1};
@@ -56,10 +62,22 @@ if ~bool_fixed
     W=theta_dot*e2;
     W_dot=theta_ddot*e2;
 else
-    % fixed body attidue
-    R=expm(theta*hat(e2));
-    W=zeros(3,1);
-    W_dot=zeros(3,1);    
+    if ~bool_period
+        % fixed body attidue
+        R=expm(theta*hat(e2));
+        W=zeros(3,1);
+        W_dot=zeros(3,1);    
+    else
+        A=WK.theta_B_m;
+        a=2*pi*WK.f;
+        b=WK.theta_B_a;
+        theta = A * cos( a*t + b ) + WK.theta_B_0;
+        theta_dot  = A * -a * sin(a*t+b);
+        theta_ddot = A * -a^2 * cos(a*t+b);  
+        R=expm(theta*hat(e2));
+        W=theta_dot*e2;
+        W_dot=theta_ddot*e2;
+    end
 end
 
 end
