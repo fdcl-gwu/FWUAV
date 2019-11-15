@@ -31,13 +31,13 @@ A = [];
 b = [];
 Aeq = [];
 beq = [];
-% Initial value of WK_arr = [beta, phi_m, phi_K, phi_0, theta_m, theta_C, theta_0, theta_a, psi_m, psi_a, psi_0, x_dot1, x_dot2, x_dot3, theta_B_m, theta_A, theta_B_0, theta_B_a, freq]
+% Initial value of WK_arr = [beta, phi_m, phi_K, phi_0, theta_m, theta_C, theta_0, theta_a, psi_m, psi_a, psi_0, x_dot1, x_dot2, x_dot3, theta_B, theta_A_m, theta_A_0, theta_A_a, freq]
 % Intermediate constraints (relax : phi_0, theta_m, theta_0, psi_m, psi_0)
 % phi_0, theta_m, psi_m are the MAIN parameters
 WK_arr0 = [-0.2400   0.7806    0.4012    0.7901    0.6981    2.9999    0.2680    0.1050    8*pi/180    0.9757    5*pi/180   -0.1000   -0.0000 -0.1000 0 0.0937 0 0 WK.f];
-lb = [-pi/2, 0, 0, -pi/2, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -0.1, -0.1, -0.1, 0, -pi/9, -pi/4, -pi/2, WK.f-3];
+lb = [-pi/2, 0, 0, -pi/2, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -0.1, -0.1, -0.1, -pi/9, 0, -pi/4, -pi/2, WK.f*(1-0.15)];
 % ub = [pi/2, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 30*pi/180, pi, 10*pi/180, 0.1, 0.1, 0.1, pi/3, pi/9];
-ub = [pi/2, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 8*pi/180, pi, 5*pi/180, 0.1, 0.1, 0.1, pi/8, pi/9, pi/4, pi/2, WK.f+3];
+ub = [pi/2, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 8*pi/180, pi, 5*pi/180, 0.1, 0.1, 0.1, pi/3, pi/9, pi/4, pi/2, WK.f*(1+0.15)];
 % CHANGE psi_m to 5 degrees?
 
 nonlcon = @(WK_arr) hover_condition(WK_arr, WK, INSECT, N, x0);
@@ -65,13 +65,13 @@ rng default; % For reproducibility
 ptmatrix = zeros(9, 19);
 ptmatrix(1, :) = [-0.4324    1.4397-0.6658    0.3889    0.6658    0.1137    1.7289   -0.5236    1.5708    8*pi/180   -1.0691    5*pi/180   -0.0441    0.0137 -0.0783 15*pi/180 10*pi/180  0 0 WK.f];
 ptmatrix(2, :) = [-0.9166    0.2074    0.5098    0.9767    0.6109    3.0000   -0.3933   -0.0105    8*pi/180    2.2236   -5*pi/180   -0.1000   -0.0000 0.1000    0.0000 0.0005  0 0 WK.f];
-ptmatrix(3, :) = [0.2641    pi/2-1.2217    0.1576    1.2217   0.5227    1.9579   -0.0186    0.0893    8*pi/180    0.7783    5*pi/180, 0, 0, 0, 15*pi/180 10*pi/180  0 0 WK.f];
-ptmatrix(4, :) = [0.2641    pi/2    0.1576    -1.2217   0.5227    1.9579   -0.0186    0.0893    8*pi/180    0.7783    5*pi/180, 0, 0, 0, 15*pi/180 10*pi/180  0 0 WK.f];
-ptmatrix(5, :) = [0.0577    pi/2-1.2217    0.3587    1.2217  0.5233    2.7760    0.2207    0.0059    8*pi/180    0.9429    0.0291, 0, 0, 0, 15*pi/180 10*pi/180  0 0 WK.f];
-ptmatrix(6, :) = [-1.1117    0.8052    0.9530    0.3491    0.0039    1.5236    0.5158    0.8012    0.1344   -1.5344    0.0771    0.0981    0.0000   -0.0814    0.3919 -0.2869   -0.3374    1.5438   11.8923];
+ptmatrix(3, :) = [0.2641    pi/2-1.2217    0.1576    1.2217   0.5227    1.9579   -0.0186    0.0893    8*pi/180    0.7783    5*pi/180 0 0 0 15*pi/180 10*pi/180  0 0 WK.f];
+ptmatrix(4, :) = [0.2641    pi/2    0.1576    -1.2217   0.5227    1.9579   -0.0186    0.0893    8*pi/180    0.7783    5*pi/180 0 0 0 15*pi/180 10*pi/180  0 0 WK.f];
+ptmatrix(5, :) = [0.0577    pi/2-1.2217    0.3587    1.2217  0.5233    2.7760    0.2207    0.0059    8*pi/180    0.9429    0.0291 0 0 0 15*pi/180 10*pi/180  0 0 WK.f];
+ptmatrix(6, :) = [-1.1117    0.8052    0.9530    0.3491    0.0039    1.5236    0.5158    0.8012    0.1344   -1.5344    0.0771    0.0981    0.0000   -0.0814    0.3219 0.2869   -0.3374    1.5438   11.8923];
 ptmatrix(7, :) = [-0.2400    1.5708-0.7901    0.4012    0.7901    0.6981    2.9999    0.2680    0.1050   8*pi/180    0.9757    5*pi/180   -0.1000   -0.0000 -0.1000    0.0937    0.0937  0 0 WK.f];
-ptmatrix(8, :) = [0.1815    pi/2-1.2217   0.3218    -1.2217    0.5196    2.9411    0.1942    0.0157    8*pi/180    0.9508   -0.0505, 0, 0, 0, 15*pi/180 10*pi/180  0 0 WK.f];
-ptmatrix(9, :) = [1.2919    0.2766    0.4487    1.2690    0.6421    1.6676    0.0440    0.0482    0.0964    0.3490    0.0351    0.0015   -0.0000    0.0214    0.3067 -0.0093    0.3284    0.0577   12.9930];
+ptmatrix(8, :) = [0.1815    pi/2-1.2217   0.3218    -1.2217    0.5196    2.9411    0.1942    0.0157    8*pi/180    0.9508   -0.0505 0 0 0 15*pi/180 10*pi/180  0 0 WK.f];
+ptmatrix(9, :) = [1.2919    0.2766    0.4487    1.2690    0.6421    1.6676    0.0440    0.0482    0.0964    0.3490    0.0351    0.0015   -0.0000    0.0214    0.3067 0.0093    0.3284    0.0577   12.9930];
 tpoints = CustomStartPointSet(ptmatrix);
 ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf);
 options = optimoptions(@fmincon,'Algorithm','interior-point',...
@@ -79,6 +79,21 @@ options = optimoptions(@fmincon,'Algorithm','interior-point',...
 problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0),...
     'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
 [WK_arr, fval, exitflag, output, solutions] = run(ms, problem, tpoints);
+
+%     Run       Local       Local      Local    Local   First-order
+%    Index     exitflag      f(x)     # iter   F-count   optimality
+% Warning: MATLAB has disabled some advanced graphics rendering features by switching to software OpenGL. For more information, click here. 
+%        1         2       0.0446        25       559         26.34
+%        3         2       0.0277        66      1506        0.4205
+%        4         2      0.01745        70      1593        0.3328
+%        8         2      0.07329        36       925        0.9252
+
+%     Run       Local       Local      Local    Local   First-order
+%    Index     exitflag      f(x)     # iter   F-count   optimality
+%        1         2      0.05641        51      1142        0.3492
+%        6         2      0.05767        57      1332        0.5324
+%        8         2      0.02298        85      1872        0.2957 good(+)
+%        9         2      0.03582        62      1515        0.2931 wrong
 
 filename=append('sim_QS_x_hover_','surrogate_temp');
 
@@ -104,10 +119,10 @@ WK.psi_0=WK_arr(11);
 x_dot0=[WK_arr(12), WK_arr(13), WK_arr(14)]';
 X0=[x0; x_dot0];
 
-WK.theta_B_m = WK_arr(15);
-WK.theta_A = WK_arr(16);
-WK.theta_B_0 = WK_arr(17);
-WK.theta_B_a = WK_arr(18);
+WK.theta_B = WK_arr(15);
+WK.theta_A_m = WK_arr(16);
+WK.theta_A_0 = WK_arr(17);
+WK.theta_A_a = WK_arr(18);
 WK.f = WK_arr(19);
 
 N=1001; % 3001
@@ -158,10 +173,10 @@ WK.psi_0=WK_arr(11);
 x_dot0=[WK_arr(12), WK_arr(13), WK_arr(14)]';
 X0=[x0; x_dot0];
 
-WK.theta_B_m = WK_arr(15);
-WK.theta_A = WK_arr(16);
-WK.theta_B_0 = WK_arr(17);
-WK.theta_B_a = WK_arr(18);
+WK.theta_B = WK_arr(15);
+WK.theta_A_m = WK_arr(16);
+WK.theta_A_0 = WK_arr(17);
+WK.theta_A_a = WK_arr(18);
 WK.f = WK_arr(19);
 
 T=1/WK.f;
@@ -190,10 +205,10 @@ WK.psi_0=WK_arr(11);
 x_dot0=[WK_arr(12), WK_arr(13), WK_arr(14)]';
 X0=[x0; x_dot0];
 
-WK.theta_B_m = WK_arr(15);
-WK.theta_A = WK_arr(16);
-WK.theta_B_0 = WK_arr(17);
-WK.theta_B_a = WK_arr(18);
+WK.theta_B = WK_arr(15);
+WK.theta_A_m = WK_arr(16);
+WK.theta_A_0 = WK_arr(17);
+WK.theta_A_a = WK_arr(18);
 WK.f = WK_arr(19);
 
 T=1/WK.f;
@@ -250,8 +265,11 @@ x_dot=X(4:6);
 % [R W W_dot theta_B] = body_attitude(15.65*pi/180); % fixed body
 % [Q_A W_A W_A_dot theta_A] = abdomen_attitude(17.32*pi/180); % fixed abdomen
 
-[R W W_dot theta_B] = body_attitude(t, WK_R, 'designed'); % body
-[Q_A W_A W_A_dot theta_A] = abdomen_attitude(WK_R.theta_A); %time-varying abdomen
+% [R W W_dot theta_B] = body_attitude(t, WK_R, 'designed'); % body
+% [Q_A W_A W_A_dot theta_A] = abdomen_attitude(WK_R.theta_A); % abdomen
+
+[R W W_dot theta_B] = body_attitude(WK_R.theta_B); % body
+[Q_A W_A W_A_dot theta_A] = abdomen_attitude(t, WK_R, 'designed'); % abdomen
 
 [L_R L_L D_R D_L M_R M_L ...
     F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);

@@ -19,7 +19,7 @@
 .DS_Store
 
 # Matlab data files
-*.mat
+# *.mat
 
 # Generated figures
 *.eps

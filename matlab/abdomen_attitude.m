@@ -26,9 +26,15 @@ function [Q_A W_A W_A_dot theta_A]=abdomen_attitude(varargin)
 
 e2=[0 1 0]';
 
-if nargin < 2
+bool_period=false;
+if nargin ~= 2
     bool_fixed=true;
     theta_A=varargin{1};
+    if nargin == 3
+        bool_period=true;
+        t=varargin{1};
+        WK=varargin{2};
+    end
 else
     bool_fixed=false;
     t=varargin{1};
@@ -54,12 +60,23 @@ if ~bool_fixed
     W_A=theta_A_dot*e2;
     W_A_dot=theta_A_ddot*e2;
 else
-    % fixed abdomen attidue
-    Q_A=expm(theta_A*hat(e2));
-    W_A=zeros(3,1);
-    W_A_dot=zeros(3,1);    
+    if ~bool_period
+        % fixed body attidue
+        Q_A=expm(theta_A*hat(e2));
+        W_A=zeros(3,1);
+        W_A_dot=zeros(3,1);
+    else
+        A=WK.theta_A_m;
+        a=2*pi*WK.f;
+        b=WK.theta_A_a;
+        theta_A = A * cos( a*t + b ) + WK.theta_A_0;
+        theta_A_dot  = A * -a * sin(a*t+b);
+        theta_A_ddot = A * -a^2 * cos(a*t+b);  
+        Q_A=expm(theta_A*hat(e2));
+        W_A=theta_A_dot*e2;
+        W_A_dot=theta_A_ddot*e2;
+    end
 end
-
 end
 
 function [a a_dot a_ddot]= eval_Fourier(t, f, F)

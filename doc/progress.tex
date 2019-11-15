@@ -345,6 +345,8 @@ where,
 \end{align}}
 \end{itemize}
 
+\textbf{NOTE:} We have not linearized the aerodynamic forces $ F_R, F_L, F_A $ themselves, which if we had done, might help to obtain a better approximation.
+
 \subsection*{Linearized form}
 \begin{align*}
 	\delta \dot{g} &= \ad^*_{\xi} \cdot \delta g + \mathbf{I}_g(\xi) (\delta \xi) \\
@@ -374,5 +376,36 @@ Thus obtaining,
 	\delta \xi
 	\end{bmatrix}
 \end{align}
+
+\section{Linearization of dynamics with prescribed wing kinematics and abdomen/body attitude}
+
+\begin{align*}
+m\ddot x + 
+\sum_{i\in\{R,L,A\}} \big\{ \mathbf{J}_{i_{12}} \dot\Omega + \mathbf{J}_{i_{13}}\dot\Omega_R 
++ \ \mathbf{K}_{i_{12}}\Omega + \mathbf{K}_{i_{13}}\Omega_i \big\} = R\sum_{i\in\{R,L,A\}} Q_i F_i + mg e_3,\label{eqn:mx_ddot}
+\end{align*}
+whose perturbation of body position and velocity will yield,
+\begin{equation}
+	m \frac{d (\delta \dot{x} )}{dt} = R \sum_{i\in\{R,L,A\}} Q_i \delta F_i
+\end{equation}
+where,
+\begin{align*}
+	F_R &= L_R + D_R \\
+	L_R &= \int_{0}^{l} \frac{1}{2}\rho  C_L(\alpha(r)) \mathrm{sgn} (e_1^T U_R(r) e_3^T U_R(r)) (e_2\times U_R(r))\|U_R(r)\| c(r) dr \\
+	D_R &= \int_{0}^{l} - \frac{1}{2}\rho  C_D(\alpha(r)) \|U_R(r)\|U_R(r) c(r) dr \\
+	C_L(\alpha) & = 0.225 + 1.58 \sin( (2.13\alpha^\circ - 7.2) \frac{\pi}{180}) \\
+	C_D(\alpha) & = 1.92 - 1.55 \cos( (2.04 \alpha^\circ - 9.82 ) \frac{\pi}{180}) \\
+	\alpha_R (r) & = \cos^{-1} ( \frac{|e_1^T U_R(r)|}{\|U_R(r)\|} ) \\
+	U_R(r) &= (I_{3\times 3}- e_2 e_2^T) Q_R^T( R^T (\dot x-v_{\mathrm{wind}}) + \Omega\times \mu_R ) + r  (Q_R\Omega + \Omega_R )\times e_2
+\end{align*}
+Hence,
+\begin{align*}
+	\delta U_R(r) &= (I_{3\times 3}- e_2 e_2^T) Q_R^T R^T \delta\dot x \\
+	\delta \alpha_R(r) &= \frac{-1}{\sin(\alpha_R(r))} \mathrm{sgn}(e_1^T U_R(r))\ e_1^T\left(I_{3\times 3} - \frac{U_R(r)U_R^T(r)}{\norm{U_R(r)}^2}\right) \frac{\delta U_R(r)}{\norm{U_R(r)}} \\
+	\delta C_L(\alpha(r)) &= 1.58 \cos( (2.13\alpha^\circ - 7.2) \frac{\pi}{180}) \times 2.13\ \delta\alpha_R(r) \\
+	\delta C_D(\alpha(r)) &= 1.55 \sin( (2.04 \alpha^\circ - 9.82 ) \frac{\pi}{180}) \times 2.04\ \delta\alpha_R(r) \\
+%	\delta L_R &= \delta \int_{0}^{l} \frac{1}{2}\rho  C_L(\alpha(r)) \mathrm{sgn} (e_1^T U_R(r) e_3^T U_R(r)) (e_2\times U_R(r))\|U_R(r)\| c(r) dr 
+\end{align*}
+Substituting back these values obtain $ \delta F_R, \delta F_L $.
 
 \end{document}
