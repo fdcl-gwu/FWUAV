@@ -36,7 +36,6 @@ else
     W=varargin{3};
     Q_R=varargin{4};
     Q_L=varargin{5};
-    d_x_dot=varargin{6};
     
     N_r=50;
     rs=linspace(0,INSECT.l,N_r);
@@ -50,16 +49,16 @@ else
     
     for i=1:N_r-1
         r=rs(i);
-        c=polyval(INSECT.cr_poly,r*1e2)*1e-2;
+        c=polyval(INSECT.cr_poly,r/INSECT.scale)*INSECT.scale;
         U_R = (eye(3)-e2*e2')*Q_R'*(R'*x_dot+hat(W)*INSECT.mu_R) + r*hat(Q_R*W+W_R)*e2;
-        d_U_R = (eye(3)-e2*e2')*Q_R'*R'*d_x_dot;
+        d_U_R = (eye(3)-e2*e2')*Q_R'*R';
         [d_L d_D d_M]=compute_d_LD(INSECT, U_R, d_U_R);
         d_L_R = d_L_R + d_L/INSECT.S*c*dr;
         d_D_R = d_D_R + d_D/INSECT.S*c*dr;
         d_M_R = d_M_R + d_M/INSECT.S*c*dr;
         
         U_L = (eye(3)-e2*e2')*Q_L'*(R'*x_dot+hat(W)*INSECT.mu_L) - r*hat(Q_L*W+W_L)*e2;
-        d_U_L = (eye(3)-e2*e2')*Q_L'*R'*d_x_dot;
+        d_U_L = (eye(3)-e2*e2')*Q_L'*R';
         [d_L d_D d_M]=compute_d_LD(INSECT, U_L, d_U_L);
         d_L_L = d_L_L + d_L/INSECT.S*c*dr;
         d_D_L = d_D_L + d_D/INSECT.S*c*dr;
@@ -86,17 +85,17 @@ global e1 e2 e3
 
 alpha=compute_alpha(U);
 d_alpha= -1/(sin(alpha)) * sign(e1'*U) * e1'*(eye(3)- U*U'/norm(U)^2) * d_U/norm(U);
-[C_L C_D C_L_alpha C_D_alpha]=wing_QS_LD_coeff(alpha);
+[C_L C_D C_L_alpha C_D_alpha]=wing_QS_LD_coeff(INSECT, alpha);
 d_C_L = C_L_alpha * d_alpha;
 d_C_D = C_D_alpha * d_alpha;
 
-d_L = 0.5 * INSECT.rho * d_C_L * sign(U(1)*U(3)) * cross(e2,U) * norm(U) * INSECT.S +...
-    0.5 * INSECT.rho * C_L * sign(U(1)*U(3)) * cross(e2,d_U) * norm(U) * INSECT.S +...
+d_L = 0.5 * INSECT.rho * sign(U(1)*U(3)) * cross(e2,U) * norm(U) * INSECT.S * d_C_L +...
+    0.5 * INSECT.rho * C_L * sign(U(1)*U(3)) * hat(e2) * d_U * norm(U) * INSECT.S +...
     0.5 * INSECT.rho * C_L * sign(U(1)*U(3)) * cross(e2,U) * (U'*d_U/norm(U)) * INSECT.S;
-d_D = - 0.5 * INSECT.rho * d_C_D * norm(U) * U * INSECT.S ...
-    - 0.5 * INSECT.rho * C_D * (U'*d_U/norm(U)) * U * INSECT.S ...
+d_D = - 0.5 * INSECT.rho * norm(U) * U * INSECT.S * d_C_D  ...
+    - 0.5 * INSECT.rho * C_D * U * INSECT.S * (U'*d_U/norm(U))  ...
     - 0.5 * INSECT.rho * C_D * norm(U) * d_U * INSECT.S;
-d_M = INSECT.r_cp * cross(e2, d_L+d_D);
+d_M = INSECT.r_cp * hat(e2) * (d_L+d_D);
 end
 
 function [F_rot M_rot alpha U_alpha_dot]=compute_rotational_force(INSECT, U, U_dot)
@@ -148,7 +147,7 @@ end
 
 end
 
-function [C_L C_D C_L_alpha C_D_alpha] = wing_QS_LD_coeff(alpha)
+function [C_L C_D C_L_alpha C_D_alpha] = wing_QS_LD_coeff(INSECT, alpha)
 %wing_QS_LD_coeff: compute C_L and C_D
 %[C_L C_D] = trans_force_coeff(alpha) computes the lift coefficient and the
 %drag coefficient for a given angle of attack, alpha in RADIAN
@@ -164,5 +163,10 @@ C_L = 0.225 + 1.58 * sind(2.13*alpha_deg -7.2);
 C_D = 1.92 - 1.55 * cosd(2.04*alpha_deg-9.82);
 C_L_alpha = 1.58 * cosd(2.13*alpha_deg -7.2) * 2.13;
 C_D_alpha = 1.55 * sind(2.04*alpha_deg-9.82) * 2.04;
+
+% C_L = INSECT.C_T * sin(2*alpha);
+% C_D = INSECT.C_D_0 * cos(alpha)^2 + INSECT.C_D_pi2 * sin(alpha)^2;
+% C_L_alpha = 2 * INSECT.C_T * cos(2*alpha);
+% C_D_alpha = (-INSECT.C_D_0 + INSECT.C_D_pi2)*sin(2*alpha);
 end
 

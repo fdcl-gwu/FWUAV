@@ -49,7 +49,7 @@ else
     
     for i=1:N_r-1
         r=rs(i);
-        c=polyval(INSECT.cr_poly,r*1e2)*1e-2;
+        c=polyval(INSECT.cr_poly,r/INSECT.scale)*INSECT.scale;
         U_R = (eye(3)-e2*e2')*Q_R'*(R'*x_dot+hat(W)*INSECT.mu_R) + r*hat(Q_R*W+W_R)*e2;
         [L D M]=compute_LD(INSECT, U_R);
         L_R = L_R + L/INSECT.S*c*dr;
@@ -82,7 +82,7 @@ function [L D M alpha]=compute_LD(INSECT, U)
 global e1 e2 e3
 
 alpha=compute_alpha(U);
-[C_L C_D]=wing_QS_LD_coeff(alpha);
+[C_L C_D]=wing_QS_LD_coeff(INSECT, alpha);
 
 L = 0.5 * INSECT.rho * C_L * sign(U(1)*U(3)) * cross(e2,U) * norm(U) * INSECT.S;
 D = - 0.5 * INSECT.rho * C_D * norm(U) * U * INSECT.S;
@@ -138,7 +138,7 @@ end
 
 end
 
-function [C_L C_D] = wing_QS_LD_coeff(alpha)
+function [C_L C_D] = wing_QS_LD_coeff(INSECT, alpha)
 %wing_QS_LD_coeff: compute C_L and C_D
 %[C_L C_D] = trans_force_coeff(alpha) computes the lift coefficient and the
 %drag coefficient for a given angle of attack, alpha in RADIAN
@@ -152,5 +152,8 @@ alpha_deg=alpha*180/pi;
 
 C_L = 0.225 + 1.58 * sind(2.13*alpha_deg -7.2);
 C_D = 1.92 - 1.55 * cosd(2.04*alpha_deg-9.82);
+
+% C_L = INSECT.C_T * sin(2*alpha);
+% C_D = INSECT.C_D_0 * cos(alpha)^2 + INSECT.C_D_pi2 * sin(alpha)^2;
 end
 

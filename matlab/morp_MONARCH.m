@@ -3,6 +3,7 @@ close all;
 
 %% polynomial fitting from Dr. Kang 
 %% all of the units are in centimeters
+scale = 1e-2; %(certain data in centimeters)
 
 DATA=[0	0.172	0.0329	-0.1391
 0.4475	0.6961	0.2329	-0.4632
@@ -70,17 +71,17 @@ disp(polyint_def( conv(conv(cr_poly,cr_poly),[1 0 0]), [0 l]) /l^3 /c_bar^2 /til
 
 %% compute momnet of inertia
 
-J_R_xx = m_R/S * polyint_def( conv(cr_LE_poly-cr_TE_poly,[1 0 0]), [0 l]) * 1e-4;
+J_R_xx = m_R/S * polyint_def( conv(cr_LE_poly-cr_TE_poly,[1 0 0]), [0 l]) * scale^2;
 cr_LE_poly_pow2 = conv(cr_LE_poly,cr_LE_poly);
 cr_TE_poly_pow2 = conv(cr_TE_poly,cr_TE_poly);
-J_R_xy = - m_R/S * polyint_def( 0.5* conv(cr_LE_poly_pow2 - cr_TE_poly_pow2, [1 0]), [0 l])* 1e-4;
+J_R_xy = - m_R/S * polyint_def( 0.5* conv(cr_LE_poly_pow2 - cr_TE_poly_pow2, [1 0]), [0 l])* scale^2;
 cr_LE_poly_pow3 = conv(cr_LE_poly_pow2,cr_LE_poly);
 cr_TE_poly_pow3 = conv(cr_TE_poly_pow2,cr_TE_poly);
-J_R_yy = m_R/S * polyint_def( 1/3* (cr_LE_poly_pow3 - cr_TE_poly_pow3), [0 l])* 1e-4;
+J_R_yy = m_R/S * polyint_def( 1/3* (cr_LE_poly_pow3 - cr_TE_poly_pow3), [0 l])* scale^2;
 J_R_zz = J_R_xx + J_R_yy;
 
-nu_R_x = 1/S * polyint_def( 0.5* (cr_LE_poly_pow2 - cr_TE_poly_pow2), [0 l])* 1e-2
-nu_R_y = 1/S * polyint_def( 0.5* conv(cr_LE_poly - cr_TE_poly, [1 0]), [0 l])* 1e-2
+nu_R_x = 1/S * polyint_def( 0.5* (cr_LE_poly_pow2 - cr_TE_poly_pow2), [0 l])* scale
+nu_R_y = 1/S * polyint_def( 0.5* conv(cr_LE_poly - cr_TE_poly, [1 0]), [0 l])* scale
 nu_R = [nu_R_x nu_R_y 0]';
 nu_L = [nu_R_x -nu_R_y 0]';
 nu_A = [-h_A/2, 0, 0]';
@@ -115,7 +116,7 @@ J_A = diag([J_A_xx J_A_yy J_A_zz]);
 %     tmp(2)=tmp(2)+-0.5*y*(c_LE^2-c_TE^2)*Dy;
 %     tmp(3)=tmp(3)+1/3*(c_LE^3-c_TE^3)*Dy;
 % end
-% tmp*m_R*1e-4/S  
+% tmp*m_R*scale^2/S  
 
 %% plot chord
 figure;
@@ -149,10 +150,11 @@ end
 
 %% save the computed morphological parameters into a structure variable
 
+MONARCH.scale = scale;
 MONARCH.rho = 1.225; % air density (kg/m^3)
 MONARCH.g = 9.81; % air density (kg/m^3)
-MONARCH.l = l*1E-2; % span of the right wing (m)
-MONARCH.S = S*1E-4; % area of the right wing (m^2)
+MONARCH.l = l*scale; % span of the right wing (m)
+MONARCH.S = S*scale^2; % area of the right wing (m^2)
 MONARCH.c_bar = MONARCH.S / MONARCH.l; % mean chord (m)
 MONARCH.AR = AR;
 

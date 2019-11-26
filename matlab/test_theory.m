@@ -1,74 +1,127 @@
 evalin('base','clear all');
-load('morp_MONARCH');
-INSECT=MONARCH;
-load('sim_QS_x_hover_test.mat')
 
 %% Linearized dynamics
+load('sim_QS_x_hover_multistart_vary_vel_and_freq_final_better_no_tol_correct_abdomen_osc_less_freq.mat')
+INSECT.scale=1e-2;
+
+% load('morp_others');
+% INSECT=FRUITFLY;
+% WK.f=116;
+% WK.type='BermanWang';
+% WK.psi_N = 2; % or 1
+% WK.beta =  0.4741;
+% WK.phi_m =  1.2075;
+% WK.phi_K =  0.4676;
+% WK.phi_0 =  -0.0727;
+% WK.theta_m =  0.6575;
+% WK.theta_C =  2.0895;
+% WK.theta_0 =  0.2049;
+% WK.theta_a =  0.4497;
+% WK.psi_m =  0.0658;
+% WK.psi_a =  -1.8263;
+% WK.psi_0 =  -0.0059;
+% WK.theta_B =  0.7772;
+% WK.theta_A_m =  0.0015;
+% WK.theta_A_0 =  -0.0946;
+% WK.theta_A_a =  -0.1637;
+% x0=[0 0 0]';
+% x_dot0=[-0.0258    0.0000   -0.0025]';
+% X0=[x0; x_dot0];
 
 N=1001; % 3001
-T=1/WK.f;
+N_periods=10;
+T=N_periods/WK.f;
+% find(t==T/2);
+ix_d = (N-1)/N_periods;
 t=linspace(0,T,N);
 dt = T/(N-1);
-% epsilon = 1e2;
-% delta = zeros(30, N);
-% delta(5, 1) = rand(1, 1)/epsilon;
-% F_linear = zeros(30, 30);
-% trace_integ = 0;
+epsilon = 1e0;
 
-% for k = 1:N-1
-%     xi = [x_dot(:,k);W(:,k);W_R(:,k);W_L(:,k);W_A(:,k);];
-%     A_g = blkdiag(zeros(3,3), -hat(W(:,k)), -hat(W_R(:,k)), -hat(W_L(:,k)), -hat(W_A(:,k)));
-%     I_g = eye(15, 15);
-%     [J_g, K_g] = inertia(INSECT, R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), x_dot(:,k), W(:,k), W_R(:,k), W_L(:,k), W_A(:,k));
-%     L_g = K_g - 0.5*K_g';
-%     [K_tilde_g] = KK_tilde(INSECT, R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), x_ddot(:,k), W_dot(:,k), W_R_dot(:,k), W_L_dot(:,k), W_A_dot(:,k));
-%     [M_g, M_xi] = M(INSECT, R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), x_dot(:,k), W(:,k), W_R(:,k), W_L(:,k), W_A(:,k));
-%     [M_tilde_g, M_tilde_xi] = M_tilde(INSECT, R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), x_dot(:,k), W(:,k), W_R(:,k), W_L(:,k), W_A(:,k));
-%     L_tilde_g = M_g - 0.5*M_tilde_g;
-%     L_tilde_xi = M_xi - 0.5*M_tilde_xi;
-%     J_g_xi = J_g*xi;
-%     A_tilde_g = blkdiag(zeros(3,3), hat(J_g_xi(4:6)), hat(J_g_xi(7:9)), hat(J_g_xi(10:12)), hat(J_g_xi(13:15)));
-%     [F_g] = F_all(INSECT,x,R(:,:,k),Q_R(:,:,k),Q_L(:,:,k),Q_A(:,:,k),F_R(:,k),F_L(:,k),zeros(3,1),tau(4:6,k),tau(7:9,k),tau(10:12,k));
-% 
-%     F_linear(1:15,1:15) = A_g;
-%     F_linear(1:15,16:30) = I_g;
-%     F_linear(16:30,1:15) = J_g \ (-K_tilde_g + A_g*K_g - L_tilde_g + F_g);
-%     F_linear(16:30,16:30) = J_g \ (A_tilde_g + A_g*J_g - L_tilde_xi - L_g);
-% 
-%     delta(:, k+1) = delta(:, k) + dt*F_linear*delta(:, k);
-%     trace_integ = trace_integ + trace(F_linear) * dt;
-% end
-% 
-% figure;
-% xlabel('$t/T$','interpreter','latex');
-% subplot(2, 1, 1);
-% plot(t*WK.f, diag(delta(1:15, :)'*delta(1:15, :)));
-% ylabel('$\delta g$','interpreter','latex');
-% hold on;
-% subplot(2, 1, 2);
-% plot(t*WK.f, diag(delta(16:30, :)'*delta(16:30, :)));
-% ylabel('$\delta \xi$','interpreter','latex');
+% delta0 = zeros(6, 1);
+% delta0(1:3) = rand(3, 1)/epsilon;
+% delta0(4:6) = rand(3, 1)/epsilon;
+% X0 = [X0; delta0;];
+
+% delta0 = diag(rand(6, 1))/epsilon;
+delta0 = rand(6, 6)/epsilon;
+X0 = [X0; reshape(delta0, 36, 1);];
+
+[t X]=ode45(@(t,X) eom(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+
+F_linear=zeros(6, 6, N);
+for k=1:N
+    [~, F_linear(:, :, k)] = eom(INSECT, WK, WK, t(k), X(k, :)');
+%     eig_vals = eig(F_linear(:, :, k));
+end
+
+x=X(:,1:3)';
+x_dot=X(:,4:6)';
+
+% delta=X(:,7:12)';
+% delta_g_mag = sqrt(diag(delta(1:3, :)'*delta(1:3, :)));
+% delta_xi_mag = sqrt(diag(delta(4:6, :)'*delta(4:6, :)));
+delta_mat=reshape(X(:,7:42)', 6, 6, N);
+B = zeros(6, 6, 1+ix_d);
+for i=1:(1+ix_d)
+    d_F = (F_linear(:, :, i) - F_linear(:, :, i+ix_d))./ F_linear(:, :, i);
+    d_F((isnan(d_F) & F_linear(:, :, i) == 0)) = 0;
+    if(~all(d_F < 1e-2, [1, 2]))
+        disp(d_F)
+    end
+    B(:, :, i) = delta_mat(:, :, i) \ delta_mat(:, :, i+ix_d);
+%     if(rank(delta_mat(:, :, i), 1e-12) < 6)
+%         disp(delta_mat(:, :, i))
+%     end
+end
+c_ix = 4;
+delta_g_mag = sqrt(diag(reshape(delta_mat(1:3, c_ix, :), 3, N)'*reshape(delta_mat(1:3, c_ix, :), 3, N)));
+delta_xi_mag = sqrt(diag(reshape(delta_mat(4:6, c_ix, :), 3, N)'*reshape(delta_mat(4:6, c_ix, :), 3, N)));
+
+time=t*WK.f;
+stop_idx = N;
+
+figure;
+xlabel('$t/T$','interpreter','latex');
+subplot(2, 1, 1);
+plot(time(1:stop_idx), delta_g_mag(1:stop_idx));
+ylabel('$\delta x$','interpreter','latex');
+hold on;
+subplot(2, 1, 2);
+plot(time(1:stop_idx), delta_xi_mag(1:stop_idx));
+ylabel('$\delta \dot{x}$','interpreter','latex');
+% print('sim_QS_x_hover_stability', '-depsc');
+
+ft=fittype('a*exp(-b*x)');
+fit_value=fit(time(1:stop_idx), delta_xi_mag(1:stop_idx), ft, 'StartPoint', [1, 0.1]);
+fit_delta_xi_mag = fit_value.a * exp(-fit_value.b * time);
+
+figure;
+plot(time(1:stop_idx), fit_delta_xi_mag(1:stop_idx));
+hold on;
+plot(time(1:stop_idx), delta_xi_mag(1:stop_idx));
 
 %% Tests
 
-% eta = [2;-1;-1];
-etas = [[1;0;0], [0;1;0], [0;0;1], [2;-1;1]];
-% epsilon = 1e-6;
-epsilons = [1e-6, 1e-8];
-
-for i=1:size(etas,2)
-    for j=1:size(epsilons)
-        eta = etas(:,i) * epsilons(j);
-%         [lhs, rhs, output] = test_M_sub(epsilons(j), eta, N, INSECT, R, Q_R, x_dot, W, W_R);
-%         [lhs, rhs, output] = test_M_tilde(epsilons(j), eta, N, INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
-%         [lhs, rhs, output] = test_KK_tilde(epsilons(j), eta, N, INSECT, x, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A, x_ddot, W_dot, W_R_dot, W_L_dot, W_A_dot);
-        [lhs, rhs, output] = test_full_eqn(epsilons(j), eta, N, INSECT, x, R, Q_R, Q_L, Q_A,...
-            x_dot, W, W_R, W_L, W_A, x_ddot, W_dot, W_R_dot, W_L_dot, W_A_dot, F_R, F_L, M_R, M_L, tau);
-    end
-end
+% load('sim_QS_x_hover_test.mat');
+% % eta = [2;-1;-1];
+% etas = [[1;0;0], [0;1;0], [0;0;1], [2;-1;1]];
+% % epsilon = 1e-6;
+% epsilons = [1e-6, 1e-8];
+% 
+% for i=1:size(etas,2)
+%     for j=1:size(epsilons)
+%         eta = etas(:,i) * epsilons(j);
+% %         [lhs, rhs, output] = test_M_sub(epsilons(j), eta, N, INSECT, R, Q_R, x_dot, W, W_R);
+% %         [lhs, rhs, output] = test_M_tilde(epsilons(j), eta, N, INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
+% %         [lhs, rhs, output] = test_KK_tilde(epsilons(j), eta, N, INSECT, x, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A, x_ddot, W_dot, W_R_dot, W_L_dot, W_A_dot);
+%         [lhs, rhs, output] = test_full_eqn(epsilons(j), eta, N, INSECT, x, R, Q_R, Q_L, Q_A,...
+%             x_dot, W, W_R, W_L, W_A, x_ddot, W_dot, W_R_dot, W_L_dot, W_A_dot, F_R, F_L, M_R, M_L, tau);
+%     end
+% end
 
 function [lhs, rhs, output] = test_full_eqn(epsilon, eta, N, INSECT, x, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A, x_ddot, W_dot, W_R_dot, W_L_dot, W_A_dot, F_R, F_L, M_R, M_L, tau)
 for k=1:N
+    % Verification of full linearization
     [JJ, EL_rhs, KK, LL, co_ad] = EL_equation_terms(INSECT, x(:, k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), x_dot(:, k), W(:, k), W_R(:, k), W_L(:, k), W_A(:, k), x_ddot(:, k), W_dot(:, k), W_R_dot(:, k), W_L_dot(:, k), W_A_dot(:, k), F_R(:, k), F_L(:, k), M_R(:, k), M_L(:, k), tau(:, k));
     [JJ_new, EL_rhs_new] = EL_equation_terms(INSECT, x(:, k), R(:,:,k)*expmso3(eta), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), x_dot(:, k), W(:, k), W_R(:, k), W_L(:, k), W_A(:, k), x_ddot(:, k), W_dot(:, k), W_R_dot(:, k), W_L_dot(:, k), W_A_dot(:, k), F_R(:, k), F_L(:, k), M_R(:, k), M_L(:, k), tau(:, k));
     delta_g = [zeros(3,1); eta; zeros(3,1); zeros(3,1); zeros(3,1);];
@@ -87,6 +140,16 @@ for k=1:N
     
     lhs = (EL_rhs_new - JJ_new*xi_dot) - (EL_rhs - JJ*xi_dot);
     rhs = ((-K_tilde_g + co_ad*KK - L_tilde_g + F_g)) * delta_g + ((A_tilde_g + co_ad*JJ - L_tilde_xi - LL)) * delta_xi;
+    
+    % Verification of linearization of position subsection
+%     [JJ, EL_rhs, KK, LL, co_ad] = EL_equation_terms(INSECT, x(:, k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), x_dot(:, k), W(:, k), W_R(:, k), W_L(:, k), W_A(:, k), x_ddot(:, k), W_dot(:, k), W_R_dot(:, k), W_L_dot(:, k), W_A_dot(:, k), F_R(:, k), F_L(:, k), M_R(:, k), M_L(:, k), tau(:, k));
+%     [JJ_new, EL_rhs_new] = EL_equation_terms(INSECT, x(:, k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), x_dot(:, k)+eta, W(:, k), W_R(:, k), W_L(:, k), W_A(:, k), x_ddot(:, k), W_dot(:, k), W_R_dot(:, k), W_L_dot(:, k), W_A_dot(:, k), F_R(:, k), F_L(:, k), M_R(:, k), M_L(:, k), tau(:, k));
+%     lhs = EL_rhs_new(1:3) - EL_rhs(1:3);
+%     [d_L_R d_L_L d_D_R d_D_L]=wing_QS_aerodynamics_linearized(INSECT, W_R(:, k), W_L(:, k), W_R_dot(:, k), W_L_dot(:, k), x_dot(:, k), R(:,:,k), W(:, k), Q_R(:,:,k), Q_L(:,:,k), eta);
+%     d_F_R=d_L_R+d_D_R;
+%     d_F_L=d_L_L+d_D_L;
+%     rhs = R(:,:,k) * (Q_R(:,:,k)*d_F_R + Q_L(:,:,k)*d_F_L);
+    
     output = (lhs - rhs) ./ max(abs(lhs),abs(rhs));
     e = max(eps, epsilon^2);
     output((isnan(output) & rhs == 0) | (abs(lhs) < e & abs(rhs) < e)) = 0;
@@ -139,6 +202,7 @@ f_tau = [zeros(3,1); -tau(4:6)-tau(7:9)-tau(10:12); Q_R'*tau(4:6); Q_L'*tau(7:9)
 
 xi = [xi_1; xi_2;];
 EL_rhs = co_ad*JJ*xi - LL*xi + f_a + f_g + f_tau;
+
 end
 
 function [lhs, rhs, output] = test_KK_tilde(epsilon, eta, N, INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A, x_ddot, W_dot, W_R_dot, W_L_dot, W_A_dot)
@@ -236,11 +300,110 @@ end
 
 %% Functions
 
-function [JJ_11 JJ_12 JJ_21 JJ_22] = inertia_sub_decompose_6_9(JJ)
-JJ_11 = JJ(1:6,1:6);
-JJ_12 = JJ(1:6,7:15);
-JJ_21 = JJ(7:15,1:6);
-JJ_22 = JJ(7:15,7:15);
+function [X_dot F_linear R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X)
+x=X(1:3);
+x_dot=X(4:6);
+% delta=X(7:12);
+delta_mat=reshape(X(7:42), 6, 6);
+
+% wing/abdoment attitude and aerodynamic force/moment
+[Euler_R, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);
+[Euler_L, Euler_L_dot, Euler_L_ddot] = wing_kinematics(t,WK_L);
+[Q_R Q_L W_R W_L W_R_dot W_L_dot] = wing_attitude(WK_R.beta, Euler_R, Euler_L, Euler_R_dot, Euler_L_dot, Euler_R_ddot, Euler_L_ddot);
+
+% [R W W_dot theta_B] = body_attitude(t,WK_R.f); %time-varying thorax
+% [Q_A W_A W_A_dot theta_A] = abdomen_attitude(t,WK_R.f); %time-varying abdomen
+
+% [R W W_dot theta_B] = body_attitude(15.65*pi/180); % fixed body
+% [Q_A W_A W_A_dot theta_A] = abdomen_attitude(17.32*pi/180); % fixed abdomen
+
+% [R W W_dot theta_B] = body_attitude(t, WK_R, 'designed'); % body
+% [Q_A W_A W_A_dot theta_A] = abdomen_attitude(WK_R.theta_A); %time-varying abdomen
+
+[R W W_dot theta_B] = body_attitude(WK_R.theta_B); % body
+[Q_A W_A W_A_dot theta_A] = abdomen_attitude(t, WK_R, 'designed'); % abdomen
+
+[L_R L_L D_R D_L M_R M_L ...
+    F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);
+F_R=L_R+D_R+F_rot_R;
+F_L=L_L+D_L+F_rot_L;
+M_R=M_R+M_rot_R;
+M_L=M_L+M_rot_L;
+M_A=zeros(3,1);
+
+f_a=[R*Q_R*F_R + R*Q_L*F_L;
+    hat(INSECT.mu_R)*Q_R*F_R + hat(INSECT.mu_L)*Q_L*F_L;
+    M_R;
+    M_L;
+    M_A];
+f_a_1=f_a(1:3);
+f_a_2=f_a(4:15);
+
+% gravitational force and moment
+[~, dU]=potential(INSECT,x,R,Q_R,Q_L,Q_A);
+f_g=-dU;
+f_g_1=f_g(1:3);
+f_g_2=f_g(4:15);
+
+% Euler-Lagrange equation
+xi_1=[x_dot]; 
+xi_2=[W; W_R; W_L; W_A];
+xi_2_dot=[W_dot; W_R_dot; W_L_dot; W_A_dot];
+
+[JJ KK] = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
+LL = KK - 0.5*KK';
+co_ad=blkdiag(zeros(3,3), -hat(W), -hat(W_R), -hat(W_L), -hat(W_A));
+
+[JJ_11 JJ_12 JJ_21 JJ_22] = inertia_sub_decompose_3_12(JJ);
+[LL_11 LL_12 LL_21 LL_22] = inertia_sub_decompose_3_12(LL);
+[co_ad_11, ~, ~, co_ad_22] = inertia_sub_decompose_3_12(co_ad);
+
+xi_1_dot = JJ_11\( -JJ_12*xi_2_dot -LL_11*xi_1 - LL_12*xi_2 + f_a_1 + f_g_1);
+
+f_tau_2 = JJ_21*xi_1_dot + JJ_22*xi_2_dot - co_ad_22*(JJ_21*xi_1 + JJ_22*xi_2) ...
+    + LL_21*xi_1 + LL_22*xi_2 - f_a_2 - f_g_2;
+f_tau = [zeros(3,1); f_tau_2];
+tau = blkdiag(zeros(3), Q_R, Q_L, Q_A)*f_tau_2;
+
+% F_linear = zeros(30, 30);
+% % trace_integ = 0;
+% x_ddot = xi_1_dot;
+% xi = [x_dot;W;W_R;W_L;W_A;];
+% I_g = eye(15, 15);
+% [K_tilde_g] = KK_tilde(INSECT, R, Q_R, Q_L, Q_A, x_ddot, W_dot, W_R_dot, W_L_dot, W_A_dot);
+% [M_g, M_xi] = M(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
+% [M_tilde_g, M_tilde_xi] = M_tilde(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
+% L_tilde_g = M_g - 0.5*M_tilde_g;
+% L_tilde_xi = M_xi - 0.5*M_tilde_xi;
+% J_g_xi = JJ*xi;
+% A_tilde_g = blkdiag(zeros(3,3), hat(J_g_xi(4:6)), hat(J_g_xi(7:9)), hat(J_g_xi(10:12)), hat(J_g_xi(13:15)));
+% [F_g] = F_all(INSECT,R,Q_R,Q_L,Q_A,F_R,F_L,zeros(3,1),tau(4:6),tau(7:9),tau(10:12));
+% 
+% F_linear(1:15,1:15) = co_ad;
+% F_linear(1:15,16:30) = I_g;
+% F_linear(16:30,1:15) = JJ \ (-K_tilde_g + co_ad*KK - L_tilde_g + F_g);
+% F_linear(16:30,16:30) = JJ \ (A_tilde_g + co_ad*JJ - L_tilde_xi - LL);
+% 
+% X_dot=[xi_1; xi_1_dot; F_linear*delta];
+% % X_dot=[xi_1; xi_1_dot; reshape(F_linear*delta_mat, 900, 1);];
+
+% d_x_dot = delta(4:6);
+% [d_L_R d_L_L d_D_R d_D_L]=wing_QS_aerodynamics_linearized(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L, d_x_dot);
+% d_F_R=d_L_R+d_D_R;
+% d_F_L=d_L_L+d_D_L;
+% delta_dot=zeros(6,1);
+% delta_dot(1:3) = d_x_dot;
+% delta_dot(4:6) = JJ_11\ R * (Q_R*d_F_R + Q_L*d_F_L);
+% X_dot=[xi_1; xi_1_dot; delta_dot];
+
+F_linear = zeros(6, 6);
+[d_L_R d_L_L d_D_R d_D_L]=wing_QS_aerodynamics_linearized(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);
+d_F_R=d_L_R+d_D_R;
+d_F_L=d_L_L+d_D_L;
+F_linear(1:3, 4:6) = eye(3);
+F_linear(4:6, 4:6) = JJ_11\ R * (Q_R*d_F_R + Q_L*d_F_L);
+X_dot=[xi_1; xi_1_dot; reshape(F_linear*delta_mat, 36, 1);];
+
 end
 
 function [JJ_11 JJ_12 JJ_21 JJ_22] = inertia_sub_decompose_3_12(JJ)

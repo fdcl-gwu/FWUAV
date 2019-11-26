@@ -9,6 +9,7 @@
 \usepackage{array} % for math mode in table
 \usepackage{multicol}
 \usepackage{hyperref}
+\usepackage{cleveref}
 \usepackage{tikz}
 \usetikzlibrary{arrows}
 
@@ -406,6 +407,23 @@ Hence,
 	\delta C_D(\alpha(r)) &= 1.55 \sin( (2.04 \alpha^\circ - 9.82 ) \frac{\pi}{180}) \times 2.04\ \delta\alpha_R(r) \\
 %	\delta L_R &= \delta \int_{0}^{l} \frac{1}{2}\rho  C_L(\alpha(r)) \mathrm{sgn} (e_1^T U_R(r) e_3^T U_R(r)) (e_2\times U_R(r))\|U_R(r)\| c(r) dr 
 \end{align*}
-Substituting back these values obtain $ \delta F_R, \delta F_L $.
+
+Substituting back these values obtain $ \delta F_R, \delta F_L $. Using these expressions, the perturbation plot is shown in \cref{fig:pos_vel_pert} and it is observed that the disturbance in velocity is damped.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.6\linewidth]{sim_QS_x_hover_stability.eps}
+	\caption{Position and velocity perturbations}
+	\label{fig:pos_vel_pert}
+\end{figure}
+
+Comparing the various kinds of flying insects, one might expect the extent of damping to vary with the total mass. We have a comparison plot in \cref{fig:vel_damping}.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\linewidth]{damping_factor.pdf}
+	\caption{Perturbation damping for different insects}
+	\label{fig:vel_damping}
+\end{figure}
 
 \end{document}
