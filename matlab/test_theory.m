@@ -4,30 +4,6 @@ evalin('base','clear all');
 load('sim_QS_x_hover_multistart_vary_vel_and_freq_final_better_no_tol_correct_abdomen_osc_less_freq.mat')
 INSECT.scale=1e-2;
 
-% load('morp_others');
-% INSECT=FRUITFLY;
-% WK.f=116;
-% WK.type='BermanWang';
-% WK.psi_N = 2; % or 1
-% WK.beta =  0.4741;
-% WK.phi_m =  1.2075;
-% WK.phi_K =  0.4676;
-% WK.phi_0 =  -0.0727;
-% WK.theta_m =  0.6575;
-% WK.theta_C =  2.0895;
-% WK.theta_0 =  0.2049;
-% WK.theta_a =  0.4497;
-% WK.psi_m =  0.0658;
-% WK.psi_a =  -1.8263;
-% WK.psi_0 =  -0.0059;
-% WK.theta_B =  0.7772;
-% WK.theta_A_m =  0.0015;
-% WK.theta_A_0 =  -0.0946;
-% WK.theta_A_a =  -0.1637;
-% x0=[0 0 0]';
-% x_dot0=[-0.0258    0.0000   -0.0025]';
-% X0=[x0; x_dot0];
-
 N=1001; % 3001
 N_periods=10;
 T=N_periods/WK.f;
@@ -42,8 +18,8 @@ epsilon = 1e0;
 % delta0(4:6) = rand(3, 1)/epsilon;
 % X0 = [X0; delta0;];
 
-% delta0 = diag(rand(6, 1))/epsilon;
-delta0 = rand(6, 6)/epsilon;
+delta0 = diag(rand(6, 1))/epsilon;
+% delta0 = rand(6, 6)/epsilon;
 X0 = [X0; reshape(delta0, 36, 1);];
 
 [t X]=ode45(@(t,X) eom(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
@@ -51,7 +27,6 @@ X0 = [X0; reshape(delta0, 36, 1);];
 F_linear=zeros(6, 6, N);
 for k=1:N
     [~, F_linear(:, :, k)] = eom(INSECT, WK, WK, t(k), X(k, :)');
-%     eig_vals = eig(F_linear(:, :, k));
 end
 
 x=X(:,1:3)';
@@ -61,18 +36,7 @@ x_dot=X(:,4:6)';
 % delta_g_mag = sqrt(diag(delta(1:3, :)'*delta(1:3, :)));
 % delta_xi_mag = sqrt(diag(delta(4:6, :)'*delta(4:6, :)));
 delta_mat=reshape(X(:,7:42)', 6, 6, N);
-B = zeros(6, 6, 1+ix_d);
-for i=1:(1+ix_d)
-    d_F = (F_linear(:, :, i) - F_linear(:, :, i+ix_d))./ F_linear(:, :, i);
-    d_F((isnan(d_F) & F_linear(:, :, i) == 0)) = 0;
-    if(~all(d_F < 1e-2, [1, 2]))
-        disp(d_F)
-    end
-    B(:, :, i) = delta_mat(:, :, i) \ delta_mat(:, :, i+ix_d);
-%     if(rank(delta_mat(:, :, i), 1e-12) < 6)
-%         disp(delta_mat(:, :, i))
-%     end
-end
+
 c_ix = 4;
 delta_g_mag = sqrt(diag(reshape(delta_mat(1:3, c_ix, :), 3, N)'*reshape(delta_mat(1:3, c_ix, :), 3, N)));
 delta_xi_mag = sqrt(diag(reshape(delta_mat(4:6, c_ix, :), 3, N)'*reshape(delta_mat(4:6, c_ix, :), 3, N)));
@@ -100,6 +64,15 @@ plot(time(1:stop_idx), fit_delta_xi_mag(1:stop_idx));
 hold on;
 plot(time(1:stop_idx), delta_xi_mag(1:stop_idx));
 
+filename='sim_QS_x_hover_stability_data';
+% Get a list of all variables
+allvars = whos;
+% Identify the variables that ARE NOT graphics handles. This uses a regular
+% expression on the class of each variable to check if it's a graphics object
+tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
+% Pass these variable names to save
+save(filename, allvars(tosave).name)
+evalin('base',['load ' filename]);
 %% Tests
 
 % load('sim_QS_x_hover_test.mat');

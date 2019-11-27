@@ -8,6 +8,7 @@
 \usepackage[paper=portrait,pagesize,DIV=13]{typearea}
 \usepackage{array} % for math mode in table
 \usepackage{multicol}
+\usepackage{float}
 \usepackage{hyperref}
 \usepackage{cleveref}
 \usepackage{tikz}
@@ -417,13 +418,21 @@ Substituting back these values obtain $ \delta F_R, \delta F_L $. Using these ex
 	\label{fig:pos_vel_pert}
 \end{figure}
 
-Comparing the various kinds of flying insects, one might expect the extent of damping to vary with the total mass. We have a comparison plot in \cref{fig:vel_damping}.
+Comparing the various kinds of flying insects, one might expect the nature of perturbation to change with flapping frequency. We have a comparison plot in \cref{fig:vel_damping}.
 
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
-	\includegraphics[width=0.9\linewidth]{damping_factor.pdf}
-	\caption{Perturbation damping for different insects}
+	\includegraphics[width=0.9\linewidth]{convergence_rate.pdf}
+	\caption{Rate of convergence of perturbation for different insects}
 	\label{fig:vel_damping}
+\end{figure}
+
+Using floquet theory, since the values of all the characteristic multipliers, $ \norm{\rho_i} \le 1 $ (\cref{fig:char_multipliers}), the perturbed system is stable.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.4\linewidth]{char_multipliers.eps}
+	\caption{Complex value plot of the characteristic multipliers of  perturbed system}
+	\label{fig:char_multipliers}
 \end{figure}
 
 \end{document}
