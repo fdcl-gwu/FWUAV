@@ -45,10 +45,11 @@ nonlcon = @(WK_arr) hover_condition(WK_arr, WK, INSECT, N, x0);
 tic;
 rng default; % For reproducibility
 
-% options = optimoptions(@fmincon,'Algorithm','interior-point','Display','iter',...
-%     'MaxFunctionEvaluations',500,'PlotFcn',@optimplotfval,'UseParallel',true);
-% [WK_arr, fval, exitflag, output] = fmincon(@(WK_arr) objective_func(WK_arr, WK, INSECT, t, x0),...
-%     WK_arr0,A,b,Aeq,beq,lb,ub,nonlcon,options);
+WK_arr0 = [0.3548    0.6776    0.5100    0.8694    0.6815    2.1146    0.1119   -0.1240    0.0672    0.8652    0.0461   -0.0600   -0.0000  -0.0317    0.9770    0.3277    0.4549    1.3473   11.6286];
+options = optimoptions(@fmincon,'Algorithm','interior-point','Display','iter',...
+    'MaxFunctionEvaluations',5000,'PlotFcn',@optimplotfval,'UseParallel',true);
+[WK_arr, fval, exitflag, output] = fmincon(@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0),...
+    WK_arr0,A,b,Aeq,beq,lb,ub,nonlcon,options);
 
 % options = optimoptions(@surrogateopt,'PlotFcn','surrogateoptplot',...
 %     'InitialPoints',WK_arr0,'MaxFunctionEvaluations',1000,'UseParallel',true);%,...
@@ -62,31 +63,23 @@ rng default; % For reproducibility
 %     'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
 % [WK_arr, fval, exitflag, output, solutions] = run(gs, problem);
 
-ptmatrix = zeros(9, 19);
-ptmatrix(1, :) = [-0.4324    1.4397-0.6658    0.3889    0.6658    0.1137    1.7289   -0.5236    1.5708    8*pi/180   -1.0691    5*pi/180   -0.0441    0.0137 -0.0783 15*pi/180 10*pi/180  0 0 WK.f];
-ptmatrix(2, :) = [-0.9166    0.2074    0.5098    0.9767    0.6109    3.0000   -0.3933   -0.0105    8*pi/180    2.2236   -5*pi/180   -0.1000   -0.0000 0.1000    0.0000 0.0005  0 0 WK.f];
-ptmatrix(3, :) = [0.2641    pi/2-1.2217    0.1576    1.2217   0.5227    1.9579   -0.0186    0.0893    8*pi/180    0.7783    5*pi/180 0 0 0 15*pi/180 10*pi/180  0 0 WK.f];
-ptmatrix(4, :) = [0.2641    pi/2    0.1576    -1.2217   0.5227    1.9579   -0.0186    0.0893    8*pi/180    0.7783    5*pi/180 0 0 0 15*pi/180 10*pi/180  0 0 WK.f];
-ptmatrix(5, :) = [0.0577    pi/2-1.2217    0.3587    1.2217  0.5233    2.7760    0.2207    0.0059    8*pi/180    0.9429    0.0291 0 0 0 15*pi/180 10*pi/180  0 0 WK.f];
-ptmatrix(6, :) = [-1.1117    0.8052    0.9530    0.3491    0.0039    1.5236    0.5158    0.8012    0.1344   -1.5344    0.0771    0.0981    0.0000   -0.0814    0.3219 0.2869   -0.3374    1.5438   11.8923];
-ptmatrix(7, :) = [-0.2400    1.5708-0.7901    0.4012    0.7901    0.6981    2.9999    0.2680    0.1050   8*pi/180    0.9757    5*pi/180   -0.1000   -0.0000 -0.1000    0.0937    0.0937  0 0 WK.f];
-ptmatrix(8, :) = [0.1815    pi/2-1.2217   0.3218    -1.2217    0.5196    2.9411    0.1942    0.0157    8*pi/180    0.9508   -0.0505 0 0 0 15*pi/180 10*pi/180  0 0 WK.f];
-ptmatrix(9, :) = [1.2919    0.2766    0.4487    1.2690    0.6421    1.6676    0.0440    0.0482    0.0964    0.3490    0.0351    0.0015   -0.0000    0.0214    0.3067 0.0093    0.3284    0.0577   12.9930];
-tpoints = CustomStartPointSet(ptmatrix);
-ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf);
-options = optimoptions(@fmincon,'Algorithm','interior-point',...
-    'UseParallel',true);%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
-problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0),...
-    'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
-[WK_arr, fval, exitflag, output, solutions] = run(ms, problem, tpoints);
-
-%     Run       Local       Local      Local    Local   First-order
-%    Index     exitflag      f(x)     # iter   F-count   optimality
-% Warning: MATLAB has disabled some advanced graphics rendering features by switching to software OpenGL. For more information, click here. 
-%        1         2       0.0446        25       559         26.34
-%        3         2       0.0277        66      1506        0.4205
-%        4         2      0.01745        70      1593        0.3328
-%        8         2      0.07329        36       925        0.9252
+% ptmatrix = zeros(9, 19);
+% ptmatrix(1, :) = [-0.4324    1.4397-0.6658    0.3889    0.6658    0.1137    1.7289   -0.5236    1.5708    8*pi/180   -1.0691    5*pi/180   -0.0441    0.0137 -0.0783 15*pi/180 10*pi/180  0 0 WK.f];
+% ptmatrix(2, :) = [-0.9166    0.2074    0.5098    0.9767    0.6109    3.0000   -0.3933   -0.0105    8*pi/180    2.2236   -5*pi/180   -0.1000   -0.0000 0.1000    0.0000 0.0005  0 0 WK.f];
+% ptmatrix(3, :) = [0.2641    pi/2-1.2217    0.1576    1.2217   0.5227    1.9579   -0.0186    0.0893    8*pi/180    0.7783    5*pi/180 0 0 0 15*pi/180 10*pi/180  0 0 WK.f];
+% ptmatrix(4, :) = [0.2641    pi/2    0.1576    -1.2217   0.5227    1.9579   -0.0186    0.0893    8*pi/180    0.7783    5*pi/180 0 0 0 15*pi/180 10*pi/180  0 0 WK.f];
+% ptmatrix(5, :) = [0.0577    pi/2-1.2217    0.3587    1.2217  0.5233    2.7760    0.2207    0.0059    8*pi/180    0.9429    0.0291 0 0 0 15*pi/180 10*pi/180  0 0 WK.f];
+% ptmatrix(6, :) = [-1.1117    0.8052    0.9530    0.3491    0.0039    1.5236    0.5158    0.8012    0.1344   -1.5344    0.0771    0.0981    0.0000   -0.0814    0.3219 0.2869   -0.3374    1.5438   11.8923];
+% ptmatrix(7, :) = [-0.2400    1.5708-0.7901    0.4012    0.7901    0.6981    2.9999    0.2680    0.1050   8*pi/180    0.9757    5*pi/180   -0.1000   -0.0000 -0.1000    0.0937    0.0937  0 0 WK.f];
+% ptmatrix(8, :) = [0.1815    pi/2-1.2217   0.3218    -1.2217    0.5196    2.9411    0.1942    0.0157    8*pi/180    0.9508   -0.0505 0 0 0 15*pi/180 10*pi/180  0 0 WK.f];
+% ptmatrix(9, :) = [1.2919    0.2766    0.4487    1.2690    0.6421    1.6676    0.0440    0.0482    0.0964    0.3490    0.0351    0.0015   -0.0000    0.0214    0.3067 0.0093    0.3284    0.0577   12.9930];
+% tpoints = CustomStartPointSet(ptmatrix);
+% ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf);
+% options = optimoptions(@fmincon,'Algorithm','interior-point',...
+%     'UseParallel',true);%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
+% problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0),...
+%     'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
+% [WK_arr, fval, exitflag, output, solutions] = run(ms, problem, tpoints);
 
 %     Run       Local       Local      Local    Local   First-order
 %    Index     exitflag      f(x)     # iter   F-count   optimality
@@ -95,7 +88,7 @@ problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_a
 %        8         2      0.02298        85      1872        0.2957 good(+)
 %        9         2      0.03582        62      1515        0.2931 wrong
 
-filename=append('sim_QS_x_hover_','surrogate_temp');
+filename=append('sim_QS_x_hover_','temp');
 
 fprintf('Optimization has been completed\n');
 disp(fval);
@@ -269,6 +262,7 @@ x_dot=X(4:6);
 % [Q_A W_A W_A_dot theta_A] = abdomen_attitude(WK_R.theta_A); % abdomen
 
 [R W W_dot theta_B] = body_attitude(WK_R.theta_B); % body
+% [Q_A W_A W_A_dot theta_A] = abdomen_attitude(WK_R.theta_A_0); % abdomen
 [Q_A W_A W_A_dot theta_A] = abdomen_attitude(t, WK_R, 'designed'); % abdomen
 
 [L_R L_L D_R D_L M_R M_L ...

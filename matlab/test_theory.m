@@ -1,8 +1,12 @@
 evalin('base','clear all');
 
 %% Linearized dynamics
-load('sim_QS_x_hover_multistart_vary_vel_and_freq_final_better_no_tol_correct_abdomen_osc_less_freq.mat')
+load('sim_QS_x_hover_multistart_vary_vel_and_freq_final_better_no_tol_correct_abdomen_osc_less_freq.mat');
 INSECT.scale=1e-2;
+% WK.theta_A_m = 0;
+
+N_sims = 1;
+conv_rate_osc = zeros(N_sims, 6);
 
 N=1001; % 3001
 N_periods=10;
@@ -13,6 +17,64 @@ t=linspace(0,T,N);
 dt = T/(N-1);
 epsilon = 1e0;
 
+% poolobj = parpool(4);
+for i=1:N_sims
+    [delta_mat, F_linear] = sim_perturbation(INSECT, WK, X0, N, t, epsilon);
+    
+    for c_ix=4:6 % Column index for perturbation direction
+        delta_g_mag = vecnorm(reshape(delta_mat(1:3, c_ix, :), 3, N));
+        delta_xi_mag = vecnorm(reshape(delta_mat(4:6, c_ix, :), 3, N));
+
+        stop_idx = N;
+
+        ft=fittype('a*exp(-b*x)');
+        fit_value=fit(t(1:stop_idx)', delta_xi_mag(1:stop_idx)', ft, 'StartPoint', [1, 0.1]);
+        fit_delta_xi_mag = fit_value.a * exp(-fit_value.b * t);
+
+        conv_rate = fit_value.b;
+        conv_rate_osc(i, c_ix) = conv_rate;
+    end
+end
+% delete(poolobj)
+
+f = figure;
+ax = gca;
+f.PaperSize = [9 6.5];
+boxplot(ax, conv_rate_osc);
+
+% save('sim_QS_x_hover_conv_rate', 'conv_rate_osc', '-append');
+
+% time=t*WK.f;
+% figure;
+% xlabel('$t/T$','interpreter','latex');
+% subplot(2, 1, 1);
+% plot(time(1:stop_idx), delta_g_mag(1:stop_idx));
+% ylabel('$\delta x$','interpreter','latex');
+% hold on;
+% subplot(2, 1, 2);
+% plot(time(1:stop_idx), delta_xi_mag(1:stop_idx));
+% ylabel('$\delta \dot{x}$','interpreter','latex');
+% % print('sim_QS_x_hover_stability', '-depsc');
+% 
+% figure;
+% plot(time(1:stop_idx), fit_delta_xi_mag(1:stop_idx));
+% hold on;
+% plot(time(1:stop_idx), delta_xi_mag(1:stop_idx));
+
+% filename='sim_QS_x_hover';
+% filename=append('sim_QS_x_hover_','temp');
+
+% % Get a list of all variables
+% allvars = whos;
+% % Identify the variables that ARE NOT graphics handles. This uses a regular
+% % expression on the class of each variable to check if it's a graphics object
+% tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
+% % Pass these variable names to save
+% save(filename, allvars(tosave).name)
+% evalin('base',['load ' filename]);
+
+%%
+function [delta_mat, F_linear] = sim_perturbation(INSECT, WK, X0, N, t, epsilon)
 % delta0 = zeros(6, 1);
 % delta0(1:3) = rand(3, 1)/epsilon;
 % delta0(4:6) = rand(3, 1)/epsilon;
@@ -20,7 +82,7 @@ epsilon = 1e0;
 
 delta0 = diag(rand(6, 1))/epsilon;
 % delta0 = rand(6, 6)/epsilon;
-X0 = [X0; reshape(delta0, 36, 1);];
+X0 = [X0(1:6); reshape(delta0, 36, 1);];
 
 [t X]=ode45(@(t,X) eom(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
@@ -37,42 +99,8 @@ x_dot=X(:,4:6)';
 % delta_xi_mag = sqrt(diag(delta(4:6, :)'*delta(4:6, :)));
 delta_mat=reshape(X(:,7:42)', 6, 6, N);
 
-c_ix = 4;
-delta_g_mag = sqrt(diag(reshape(delta_mat(1:3, c_ix, :), 3, N)'*reshape(delta_mat(1:3, c_ix, :), 3, N)));
-delta_xi_mag = sqrt(diag(reshape(delta_mat(4:6, c_ix, :), 3, N)'*reshape(delta_mat(4:6, c_ix, :), 3, N)));
+end
 
-time=t*WK.f;
-stop_idx = N;
-
-figure;
-xlabel('$t/T$','interpreter','latex');
-subplot(2, 1, 1);
-plot(time(1:stop_idx), delta_g_mag(1:stop_idx));
-ylabel('$\delta x$','interpreter','latex');
-hold on;
-subplot(2, 1, 2);
-plot(time(1:stop_idx), delta_xi_mag(1:stop_idx));
-ylabel('$\delta \dot{x}$','interpreter','latex');
-% print('sim_QS_x_hover_stability', '-depsc');
-
-ft=fittype('a*exp(-b*x)');
-fit_value=fit(time(1:stop_idx), delta_xi_mag(1:stop_idx), ft, 'StartPoint', [1, 0.1]);
-fit_delta_xi_mag = fit_value.a * exp(-fit_value.b * time);
-
-figure;
-plot(time(1:stop_idx), fit_delta_xi_mag(1:stop_idx));
-hold on;
-plot(time(1:stop_idx), delta_xi_mag(1:stop_idx));
-
-filename='sim_QS_x_hover_stability_data';
-% Get a list of all variables
-allvars = whos;
-% Identify the variables that ARE NOT graphics handles. This uses a regular
-% expression on the class of each variable to check if it's a graphics object
-tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
-% Pass these variable names to save
-save(filename, allvars(tosave).name)
-evalin('base',['load ' filename]);
 %% Tests
 
 % load('sim_QS_x_hover_test.mat');
@@ -294,6 +322,7 @@ delta_mat=reshape(X(7:42), 6, 6);
 % [Q_A W_A W_A_dot theta_A] = abdomen_attitude(WK_R.theta_A); %time-varying abdomen
 
 [R W W_dot theta_B] = body_attitude(WK_R.theta_B); % body
+% [Q_A W_A W_A_dot theta_A] = abdomen_attitude(WK_R.theta_A_0); % abdomen
 [Q_A W_A W_A_dot theta_A] = abdomen_attitude(t, WK_R, 'designed'); % abdomen
 
 [L_R L_L D_R D_L M_R M_L ...

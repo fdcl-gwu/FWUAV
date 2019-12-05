@@ -427,11 +427,18 @@ Comparing the various kinds of flying insects, one might expect the nature of pe
 	\label{fig:vel_damping}
 \end{figure}
 
+Consider a system of the form,
+\[ \dot{x} = \mathbf{A}(t) x\]
+where $ \mathbf{A}(t) $ is periodic with period T. An $ n \times n $ matrix solution of this differential equation, $ X(t) $, whose columns are linearly independent is called a fundamental matrix. There exists a non-singular constant matrix $ \mathbf{B} $ such that $ X(t+T) = X(t)\mathbf{B},\ \forall t $ and $ \det{\mathbf{B}} =\exp{(\int_{0}^{T} \tr{\mathbf{A}(s)} ds)} $. The eigenvalues $ \rho_1, \dots, \rho_n $ of $ \mathbf{B} $ are called characteristic multipliers for the matrix differential equation.
+
 Using floquet theory, since the values of all the characteristic multipliers, $ \norm{\rho_i} \le 1 $ (\cref{fig:char_multipliers}), the perturbed system is stable.
-\begin{figure}[H]
+
+Moreover, the climbing trajectory generated from experimental data is also numerically verified to be stable with a larger convergence rate ($ 1.235 $) than a hover trajectory.
+
+\begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.4\linewidth]{char_multipliers.eps}
-	\caption{Complex value plot of the characteristic multipliers of  perturbed system}
+	\caption{Complex value plot of the characteristic multipliers of perturbed system}
 	\label{fig:char_multipliers}
 \end{figure}
 

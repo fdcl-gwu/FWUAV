@@ -40,7 +40,7 @@ problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_a
     'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
 [WK_arr, fval, exitflag, output, solutions] = run(ms, problem, tpoints);
 
-filename=append('sim_QS_x_hover_','surrogate_temp');
+filename=append('sim_QS_x_hover_','temp');
 
 fprintf('Optimization has been completed\n');
 disp(fval);
