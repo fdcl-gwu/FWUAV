@@ -150,10 +150,14 @@ function [C_L C_D] = wing_QS_LD_coeff(INSECT, alpha)
 % convert radian to degree
 alpha_deg=alpha*180/pi;
 
-C_L = 0.225 + 1.58 * sind(2.13*alpha_deg -7.2);
-C_D = 1.92 - 1.55 * cosd(2.04*alpha_deg-9.82);
+switch INSECT.name
+    case 'MONARCH'
+        C_L = 0.225 + 1.58 * sind(2.13*alpha_deg -7.2);
+        C_D = 1.92 - 1.55 * cosd(2.04*alpha_deg-9.82);
+    otherwise
+        C_L = INSECT.C_T * sin(2*alpha);
+        C_D = INSECT.C_D_0 * cos(alpha)^2 + INSECT.C_D_pi2 * sin(alpha)^2;
+end
 
-% C_L = INSECT.C_T * sin(2*alpha);
-% C_D = INSECT.C_D_0 * cos(alpha)^2 + INSECT.C_D_pi2 * sin(alpha)^2;
 end
 

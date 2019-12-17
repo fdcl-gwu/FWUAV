@@ -145,6 +145,7 @@ end
 
 %% save the computed morphological parameters into a structure variable
 
+HAWKMOTH.name = 'HAWKMOTH';
 HAWKMOTH.scale = scale;
 HAWKMOTH.f = freq;
 HAWKMOTH.C_T = C_T;

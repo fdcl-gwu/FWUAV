@@ -26,46 +26,35 @@ function [Q_A W_A W_A_dot theta_A]=abdomen_attitude(varargin)
 
 e2=[0 1 0]';
 
-bool_period=false;
-if nargin ~= 2
-    bool_fixed=true;
-    theta_A=varargin{1};
-    if nargin == 3
-        bool_period=true;
-        t=varargin{1};
-        WK=varargin{2};
-    end
-else
-    bool_fixed=false;
-    t=varargin{1};
-    f=varargin{2};
-end
-
-if ~bool_fixed 
-    
-    % Data constructed by ./exp_data/fit_VICON_data.m
-    F_theta_ab.f = 10.1756;
-    F_theta_ab.A0 = 17.3417;
-    F_theta_ab.AN = -13.2134053462198;
-    F_theta_ab.BN = -3.91351009294982;
-    
-    [theta_A theta_A_dot theta_A_ddot]= eval_Fourier(t, f, F_theta_ab);
-    
-%     % abdomen with the opposite phase
-%     theta_A = 0.6053 - theta_A;
-%     theta_A_dot = -theta_A_dot;
-%     theta_A_ddot = -theta_A_ddot;
-    
-    Q_A=expm(theta_A*hat(e2));
-    W_A=theta_A_dot*e2;
-    W_A_dot=theta_A_ddot*e2;
-else
-    if ~bool_period
+switch nargin
+    case 1
         % fixed body attidue
+        theta_A=varargin{1};
         Q_A=expm(theta_A*hat(e2));
         W_A=zeros(3,1);
         W_A_dot=zeros(3,1);
-    else
+    case 2
+        t=varargin{1};
+        f=varargin{2};
+        % Data constructed by ./exp_data/fit_VICON_data.m
+        F_theta_ab.f = 10.1756;
+        F_theta_ab.A0 = 17.3417;
+        F_theta_ab.AN = -13.2134053462198;
+        F_theta_ab.BN = -3.91351009294982;
+
+        [theta_A theta_A_dot theta_A_ddot]= eval_Fourier(t, f, F_theta_ab);
+
+    %     % abdomen with the opposite phase
+    %     theta_A = 0.6053 - theta_A;
+    %     theta_A_dot = -theta_A_dot;
+    %     theta_A_ddot = -theta_A_ddot;
+
+        Q_A=expm(theta_A*hat(e2));
+        W_A=theta_A_dot*e2;
+        W_A_dot=theta_A_ddot*e2;
+    otherwise
+        t=varargin{1};
+        WK=varargin{2};
         A=WK.theta_A_m;
         a=2*pi*WK.f;
         b=WK.theta_A_a;
@@ -75,7 +64,6 @@ else
         Q_A=expm(theta_A*hat(e2));
         W_A=theta_A_dot*e2;
         W_A_dot=theta_A_ddot*e2;
-    end
 end
 end
 

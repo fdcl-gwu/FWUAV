@@ -363,7 +363,7 @@ This is to ensure that in the subsequent expression of the pitch angle, the pitc
 
 The pitch angle is given by a hyperbolic function,
 \begin{align}
-    \theta(t) = \frac{\theta_m}{\tanh \theta_C} \tanh( \theta_C \sin(2\pi f t + \theta_a)) +\theta_0,
+    \theta(t) = \frac{\theta_m}{\tanh \theta_C} \tanh( \theta_C \sin(2\pi f t + \theta_a)) +\theta_0,\label{eqn:theta}
 \end{align}
 where $\theta_m\in\Re$ is the amplitude of pitching, and $\theta_0\in\Re$ is the offset. 
 The parameter $\theta_C\in(0,\infty)$ determines the waveform (sinusoidal when $\theta_C\rightarrow 0$; step function when $\theta_C\rightarrow \infty$).
@@ -376,7 +376,7 @@ The parameter $\theta_a\in(-\pi,\pi)$ describes the offset in phase (advance rot
 
 Finally, the deviation angle is given by a sinusoidal oscillation,
 \begin{align}
-    \psi(t) = \psi_m \cos(2\pi \psi_N f t + \psi_a) + \psi_0,
+    \psi(t) = \psi_m \cos(2\pi \psi_N f t + \psi_a) + \psi_0,\label{eqn:psi}
 \end{align}
 where $\psi_m\in\Re$ is the amplitude of the deviation, and $\psi_0\in\Re$ is the offset. 
 The parameter $\psi_N$ is either 1 or 2: $\psi_N=1$ corresponds to one oscillation per a flapping period, and $\psi_N=2$ corresponds to a figure-eight motion. 
@@ -1462,6 +1462,243 @@ The first block of \eqref{eqn:EL} is written as
 which can be numerically integrated to construct $(x,\dot x)$. 
 The control torque $(\tau_R,\tau_L,\tau_A)$ can be constructed by \eqref{eqn:J22dotxi_2}.
 
+\subsubsection{Linearization of dynamics}
+Finally, we need to analyze the characteristics of motion of the model. And to understand the stability properties of a state trajectory, we can use the linearized version of the corresponding dynamics.
+
+For the Euler-Lagrange equation in \eqref{eqn:EL}, consider variations of the form,
+\[ \delta g = (\delta x, \eta, \eta_R, \eta_L, \eta_A) \in \mathbb{R}^{15} \simeq \g, \quad \delta \xi = (\delta \dot{x}, \delta\Omega, \delta\Omega_R, \delta\Omega_L, \delta\Omega_A) \in \mathbb{R}^{15} \simeq \T_e \g \]
+since the variation in attitude can be expressed as $ \delta R = R \hat{\eta} $ and it is related to the angular velocity variation as $ \dot{\eta} = \delta\Omega - \hat{\Omega} \eta $.
+Hence the linearization of dynamics will be,
+\begin{gather*}
+(\delta \mathbf{J}_g) \dot{\xi} + \mathbf{J}_g(\delta \dot{\xi}) - \ad^*_{\delta \xi} \cdot \mathbf{J}_g(\xi) - \ad^*_\xi \cdot \delta \mathbf{J}_g(\xi)  - \ad^*_\xi \cdot \mathbf{J}_g(\delta \xi) + \delta (\mathbf{L}_g(\xi)) (\xi) + \mathbf{L}_g(\xi) (\delta \xi) = \delta (\mathbf{f}_a + \mathbf{f}_g + \mathbf{f}_\tau)
+\end{gather*}
+and will have the form,
+\begin{align*}
+\delta \dot{g} &= \ad^*_{\xi} \cdot \delta g + \mathbf{I}_g(\xi) (\delta \xi) \\
+\delta \dot{\xi} &=  \mathbf{J}_g^{-1} ((-\tilde{\mathbf{K}}_g(\dot{\xi}) + \ad^*_\xi \cdot \mathbf{K}_g(\xi)- \mathbf{M}_g(\xi) + \frac{1}{2}\tilde{\mathbf{M}}_g(\xi) + \mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau) (\delta g) + \\
+& (\tilde{\mathbf{A}}_g(\xi) + \ad^*_\xi \cdot \mathbf{J}_g - (\mathbf{M}_\xi(\xi) - \frac{1}{2}\tilde{\mathbf{M}}_\xi(\xi)) - \mathbf{L}_g(\xi)) (\delta \xi))
+\end{align*}
+
+where,
+\begin{itemize}
+	\item \begin{align*}
+	\tilde{\mathbf{K}}_i(R,Q_i,\ddot{x},\dot{\Omega},\dot{\Omega}_i) = 
+	\begin{bmatrix}
+	0 & m_i R ((\hat\mu_i+\widehat{Q_i\nu_i})\dot{\Omega} + Q_i\hat\nu_i\dot{\Omega}_i)^\wedge 
+	& m_i R( -\hat{\dot{\Omega}} Q_i \hat\nu_i + Q_i \widehat{\hat \nu_i \dot{\Omega}_i}) \\
+	0 & m_i(\hat\mu_i + \widehat{Q_i\nu_i})\widehat{R^T \ddot{x}}
+	& m_i\widehat{R^T\ddot{x}}Q_i\hat\nu_i - Q_i (J_iQ_i^T\dot{\Omega})^\wedge + Q_i J_i \widehat{Q_i^T\dot{\Omega}} \\
+	& & - m_i\hat\mu_i\hat{\dot{\Omega}} Q_i\hat\nu_i - m_i\widehat{\hat\mu_i\dot{\Omega}} Q_i \hat\nu_i \\
+	& & - Q_i \widehat{J_i\dot{\Omega}_i} + m_i \hat\mu_i Q_i \widehat{\hat\nu_i \dot{\Omega}_i} \\
+	0 & m_i \hat\nu_i Q_i^T \widehat{R^T\ddot{x}}
+	& m_i \hat\nu_i (Q_i^T R^T \ddot{x})^\wedge + J_i\widehat{Q_i^T\dot{\Omega}} - m_i\hat\nu_i (Q_i^T\hat\mu_i \dot{\Omega})^\wedge
+	\end{bmatrix}.
+	\end{align*}
+	
+	\begin{align*}
+	\tilde{\mathbf{K}}_g(\dot{\xi}) = \begin{bmatrix}
+	0 & \tilde{\mathbf{K}}_{R_{12}} + \tilde{\mathbf{K}}_{L_{12}} + \tilde{\mathbf{K}}_{A_{12}} & \tilde{\mathbf{K}}_{R_{13}} & \tilde{\mathbf{K}}_{L_{13}} & \tilde{\mathbf{K}}_{A_{13}}\\
+	0 & \tilde{\mathbf{K}}_{R_{22}} + \tilde{\mathbf{K}}_{L_{22}} + \tilde{\mathbf{K}}_{A_{22}} & \tilde{\mathbf{K}}_{R_{23}} & \tilde{\mathbf{K}}_{L_{23}} & \tilde{\mathbf{K}}_{A_{23}} \\
+	0 & \tilde{\mathbf{K}}_{R_{32}} & \tilde{\mathbf{K}}_{R_{33}} & 0 & 0 \\
+	0 & \tilde{\mathbf{K}}_{L_{32}} & 0 & \tilde{\mathbf{K}}_{L_{33}} & 0 \\
+	0 & \tilde{\mathbf{K}}_{A_{32}} & 0 & 0 & \tilde{\mathbf{K}}_{A_{33}}
+	\end{bmatrix}
+	\end{align*}
+	so that,
+	\begin{equation*}
+	(\delta \mathbf{J}_g) \dot{\xi} = \tilde{\mathbf{K}}_g (\dot{\xi}) (\delta g)
+	\end{equation*}
+	%
+	\item $ \ad^*_{\delta \xi} \cdot \mathbf{J}_g(\xi) = \tilde{\mathbf{A}}_g(\xi)(\delta \xi) $ where $ \tilde{\mathbf{A}}_g(\xi) = \mathrm{diag}[0_{3\times 3}, {[\mathbf{J}_g(\xi)]_{4:6}}^{\wedge}, {[\mathbf{J}_g(\xi)]_{7:9}}^{\wedge}, {[\mathbf{J}_g(\xi)]_{10:12}}^{\wedge}, {[\mathbf{J}_g(\xi)]_{13:15}}^{\wedge}] $
+	%
+	\item \begin{align*}
+	\mathbf{M}_{gi} &= \begin{bmatrix}
+	0 & -m_i R \bigl(((\hat\mu_i+\widehat{Q_i\nu_i})\Omega + Q_i\hat\nu_i\Omega_i)^\wedge \Omega +
+	& -m_i R \bigl(\hat{\Omega} (\hat{\Omega} Q_i \hat{\nu}_i - Q_i(\hat{\nu}_i\Omega_i)^\wedge) - \\
+	& (-\hat\Omega Q_i \hat\nu_i + Q_i \widehat{\hat \nu_i \Omega_i})\Omega_i\bigr) ^\wedge
+	& \hat{\Omega} Q_i (\hat{\nu}_i\Omega_i)^\wedge + Q_i ((\hat{\nu}_i\Omega_i)^\wedge\Omega_i)^\wedge \bigr)\\\\
+	0 & - m_i \bigl( (\hat\mu_i + \widehat{Q_i\nu_i}) \hat{\Omega} \widehat{R^T \dot x} + & m_i(\widehat{R^T \dot x} \Omega)^\wedge Q_i \hat{\nu}_i - m_i(\widehat{R^T \dot x}) Q_i (\hat{\nu}_i \Omega_i)^\wedge \\
+	& (Q_i \hat{\nu}_i \Omega_i)^\wedge (R^T \dot{x})^\wedge \bigr) & + Q_i ((J_iQ_i^T\Omega)^\wedge \Omega_i)^\wedge + Q_i \hat{\Omega}_i J_i (Q_i^T \Omega)^\wedge - Q_i (J_i \widehat{Q_i^T\Omega}\Omega_i)^\wedge \\
+	& & - Q_i J_i \hat{\Omega}_i \widehat{Q_i^T\Omega} + m_i\hat\mu_i\hat\Omega Q_i (\hat\nu_i \Omega_i)^\wedge + m_i\widehat{\hat\mu_i\Omega} Q_i (\hat\nu_i \Omega_i)^\wedge \\
+	& & + Q_i (\widehat{J_i\Omega_i} \Omega_i)^\wedge - m_i \hat\mu_i Q_i (\widehat{\hat\nu_i \Omega_i} \Omega_i)^\wedge
+	\\\\
+	0 & -m_i \hat\nu_i Q_i^T \hat{\Omega} \widehat{R^T\dot x}  & m_i \hat\nu_i (Q_i^T \widehat{R^T\dot x} \Omega)^\wedge -  m_i \hat\nu_i \hat{\Omega}_i (Q_i^T R^T \dot x)^\wedge \\
+	& - m_i \hat\nu_i \hat{\Omega}_i Q_i^T (R^T \dot x)^\wedge & - J_i \hat{\Omega}_i \widehat{Q_i^T\Omega} + m_i\hat\nu_i \hat{\Omega}_i (Q_i^T\hat\mu_i \Omega)^\wedge
+	\end{bmatrix}
+	\\
+	\mathbf{M}_{\xi i} &= \begin{bmatrix}
+	0 & m_i R (-\hat{\Omega} (\hat{\mu}_i + \widehat{Q_i\nu_i}) + (Q_i \hat{\nu}_i \Omega_i)^\wedge)
+	& -m_i R (\hat{\Omega}Q_i\hat\nu_i + Q_i\hat{\Omega}_i\hat{\nu}_i) \\\\
+	m_i(\hat\mu_i + \widehat{Q_i\nu_i}) \hat{\Omega}^T R^T &
+	Q_i \hat{\Omega}_i (J_iQ_i^T) - Q_i J_i \hat{\Omega}_i Q_i^T & Q_i \hat{\Omega}_i J_i - m_i \hat\mu_i Q_i \hat{\Omega}_i \hat\nu_i  \\
+	-m_i(Q_i\hat\nu_i \Omega_i)^\wedge R^T & + m_i\hat\mu_i(Q_i\hat\nu_i\Omega_i)^\wedge + m_i (Q_i\hat\nu_i\Omega_i)^\wedge \hat{\mu}_i & \\\\
+	-m_i \hat\nu_i Q_i^T \hat{\Omega} R^T -  m_i \hat\nu_i \hat{\Omega}_i Q_i^T R^T & -J_i \hat{\Omega}_i Q_i^T + m_i\hat\nu_i \hat{\Omega}_i Q_i^T\hat\mu_i & 0
+	\end{bmatrix}
+	\end{align*}
+	with $ \mathbf{M}_{\xi i} = \mathbf{M}_{\xi i}^T $. Hence,
+	\begin{align*}
+	{\mathbf{M}_g}(\xi) &= \begin{bmatrix}
+	0 & {\mathbf{M}_g}_{R_{12}} + {\mathbf{M}_g}_{L_{12}} + {\mathbf{M}_g}_{A_{12}} & {\mathbf{M}_g}_{R_{13}} & {\mathbf{M}_g}_{L_{13}} & {\mathbf{M}_g}_{A_{13}}\\
+	0 & {\mathbf{M}_g}_{R_{22}} + {\mathbf{M}_g}_{L_{22}} + {\mathbf{M}_g}_{A_{22}} & {\mathbf{M}_g}_{R_{23}} & {\mathbf{M}_g}_{L_{23}} & {\mathbf{M}_g}_{A_{23}} \\
+	0 & {\mathbf{M}_g}_{R_{32}} & {\mathbf{M}_g}_{R_{33}} & 0 & 0 \\
+	0 & {\mathbf{M}_g}_{L_{32}} & 0 & {\mathbf{M}_g}_{L_{33}} & 0 \\
+	0 & {\mathbf{M}_g}_{A_{32}} & 0 & 0 & {\mathbf{M}_g}_{A_{33}}
+	\end{bmatrix}
+	\\
+	{\mathbf{M}_\xi}(\xi) &= \begin{bmatrix}
+	{\mathbf{M}_\xi}_{R_{11}} + {\mathbf{M}_\xi}_{L_{11}} + {\mathbf{M}_\xi}_{A_{11}}
+	& {\mathbf{M}_\xi}_{R_{12 }} + {\mathbf{M}_\xi}_{L_{12}} + {\mathbf{M}_\xi}_{A_{12}}
+	& {\mathbf{M}_\xi}_{R_{13 }}
+	& {\mathbf{M}_\xi}_{L_{13}} 
+	& {\mathbf{M}_\xi}_{A_{13}} \\
+	\cdot & {\mathbf{M}_\xi}_{R_{22}} + {\mathbf{M}_\xi}_{L_{22}} + {\mathbf{M}_\xi}_{A_{22}}
+	& {\mathbf{M}_\xi}_{R_{23}} 
+	& {\mathbf{M}_\xi}_{L_{23}} 
+	& {\mathbf{M}_\xi}_{A_{23}} \\
+	\cdot & \cdot &  {\mathbf{M}_\xi}_{R_{33}}
+	& 0 & 0 \\
+	\cdot & \cdot & 0
+	& {\mathbf{M}_\xi}_{L_{33}} & 0 \\
+	\cdot & \cdot & 0 & 0 & {\mathbf{M}_\xi}_{A_{33}}
+	\end{bmatrix},
+	\end{align*}
+	so that,
+	\begin{equation*}
+	\delta (\mathbf{K}_g(\xi)) \xi = \mathbf{M}_g(\xi) (\delta g) + \mathbf{M}_\xi (\xi) (\delta \xi)
+	\end{equation*}
+	%
+	\item \begin{align*}
+	\tilde{\mathbf{M}}_{gi} = 2 \begin{bmatrix}
+	0 & 0 & 0 \\\\
+	\cdot & -m_i ((\hat\mu_i+\widehat{Q_i\nu_i})\Omega + Q_i\hat\nu_i\Omega_i)^\wedge \widehat{R^T\dot{x}} & m_i \widehat{R^T\dot{x}} (\hat{\Omega} Q_i \hat{\nu}_i - Q_i(\hat{\nu}_i\Omega_i)^\wedge) \\\\
+	\cdot & \cdot & -m_i \bigl( \hat\nu_i (Q_i^T \hat{\Omega} R^T \dot{x})^\wedge + (\hat{\nu}_i\Omega_i)^\wedge (Q_i^T R^T \dot{x})^\wedge \bigr) \\
+	& & + (J_i Q_i^T \Omega)^\wedge (Q_i^T \Omega)^\wedge -(Q_i^T \Omega)^\wedge J_i (Q_i^T \Omega)^\wedge \\
+	& & + m_i \hat\nu_i(Q_i^T \hat{\Omega}\hat\mu_i\Omega)^\wedge + \widehat{J_i \Omega_i}\widehat{Q_i^T \Omega} \\
+	& & + m_i \widehat{\hat{\nu}_i\Omega_i} (Q_i^T \hat\mu_i \Omega)^\wedge \\
+	\end{bmatrix}
+	\\
+	\tilde{\mathbf{M}}_{\xi i} = \begin{bmatrix}
+	0 & 0 & 0 \\\\
+	-m_i((\hat\mu_i + \widehat{Q_i\nu_i}) \Omega)^\wedge R^T &  m_i \widehat{R^T \dot{x}} (\hat{\mu}_i + \widehat{Q_i\nu_i})
+	& m_i\widehat{R^T \dot{x}}Q_i\hat\nu_i\\
+	-m_i \ (Q_i \hat{\nu}_i \Omega_i)^\wedge R^T  & &
+	\\\\
+	-m_i \hat{\nu}_iQ_i^T\hat{\Omega}R^T &  m_i \hat{\nu}_i Q_i^T (R^T \dot{x})^\wedge - \widehat{Q_i^T\Omega}J_iQ_i^T &  m_i (Q_i^T R^T \dot{x})^\wedge \hat\nu_i \\
+	-m_i \widehat{\hat\nu_i\Omega_i} Q_i^T R^T & + (J_iQ_i^T\Omega)^\wedge Q_i^T -m_i\hat\nu_i Q_i^T \widehat{\hat\mu_i \Omega} & -\widehat{Q_i^T \Omega} J_i \\
+	& +m_i\hat{\nu}_i Q_i^T \hat{\Omega} \hat\mu_i + \widehat{J_i\Omega_i}Q_i^T + m_i\widehat{\hat\nu_i \Omega_i} Q_i^T\hat\mu_i & - m_i(Q_i^T \hat\mu_i \Omega)^\wedge\hat\nu_i
+	\end{bmatrix}
+	\end{align*}
+	with $ \tilde{\mathbf{M}}_{gi} = \tilde{\mathbf{M}}_{gi}^T $. Hence,
+	\begin{align*}
+	{\tilde{\mathbf{M}}_g}(\xi) &= \begin{bmatrix}
+	0 & 0 & 0 & 0 & 0\\
+	\cdot & \tilde{\mathbf{M}}_{gR_{22}} + \tilde{\mathbf{M}}_{gL_{22}} + \tilde{\mathbf{M}}_{gA_{22}} & \tilde{\mathbf{M}}_{gR_{23}} & \tilde{\mathbf{M}}_{gL_{23}} & \tilde{\mathbf{M}}_{gA_{23}} \\
+	\cdot & \cdot & \tilde{\mathbf{M}}_{gR_{33}} & 0 & 0 \\
+	\cdot & \cdot & \cdot & \tilde{\mathbf{M}}_{gL_{33}} & 0 \\
+	\cdot & \cdot & \cdot & \cdot & \tilde{\mathbf{M}}_{gA_{33}}
+	\end{bmatrix}
+	\\
+	{\tilde{\mathbf{M}}_\xi}(\xi) &= \begin{bmatrix}
+	0 & 0 & 0 & 0 & 0 \\
+	\tilde{\mathbf{M}}_{\xi R_{21}} + \tilde{\mathbf{M}}_{\xi L_{21}} + \tilde{\mathbf{M}}_{\xi A_{21}} & \tilde{\mathbf{M}}_{\xi R_{22}} + \tilde{\mathbf{M}}_{\xi L_{22}} + \tilde{\mathbf{M}}_{\xi A_{22}}
+	& \tilde{\mathbf{M}}_{\xi R_{23}} 
+	& \tilde{\mathbf{M}}_{\xi L_{23}} 
+	& \tilde{\mathbf{M}}_{\xi A_{23}} \\
+	\tilde{\mathbf{M}}_{\xi R_{31}} & \tilde{\mathbf{M}}_{\xi R_{32}} &  \tilde{\mathbf{M}}_{\xi R_{33}}
+	& 0 & 0 \\
+	\tilde{\mathbf{M}}_{\xi L_{31}} & \tilde{\mathbf{M}}_{\xi L_{32}} & 0
+	& \tilde{\mathbf{M}}_{\xi L_{33}} & 0 \\
+	\tilde{\mathbf{M}}_{\xi A_{31}} & \tilde{\mathbf{M}}_{\xi A_{32}} & 0 & 0 & \tilde{\mathbf{M}}_{\xi A_{33}}
+	\end{bmatrix}
+	\end{align*}
+	so that,
+	\begin{align*}
+	\delta(\mathbf{K}^T_g(\xi)) \xi = \tilde{\mathbf{M}}_g(\xi) (\delta g) + \tilde{\mathbf{M}}_\xi(\xi) (\delta \xi)
+	\end{align*}
+	%
+	\item \begin{align*}
+	\delta (\mathbf{f}_{gravity} + \mathbf{f}_a + \mathbf{f}_\tau) = (\mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau) (\delta g)
+	\end{align*}
+	where,
+	{\small \begin{align*}
+	\mathbf{F}_{gravity} = \begin{bmatrix}
+	0 & 0 & 0 & 0 & 0 \\
+	0 & \sum_{i} m_i g (\mu_i + Q_i \nu_i)^\wedge (R^T e_3)^\wedge & m_Rg (R^T e_3)^\wedge Q_R \hat{\nu}_R & m_Lg (R^T e_3)^\wedge Q_L \hat{\nu}_L & m_Ag (R^T e_3)^\wedge Q_A \hat{\nu}_A \\
+	0 & m_R g \hat\nu_R Q_R^T (R^T e_3)^\wedge & m_R g \hat\nu_R (Q_R^T R^T e_3)^\wedge & 0 & 0\\
+	0 & m_L g \hat\nu_L Q_L^T (R^T e_3)^\wedge & 0 & m_L g \hat\nu_L (Q_L^T R^T e_3)^\wedge & 0 \\
+	0 & m_A g \hat\nu_A Q_A^T (R^T e_3)^\wedge & 0 & 0 & m_A g \hat\nu_A (Q_A^T R^T e_3)^\wedge
+	\end{bmatrix}
+	\end{align*}
+	\begin{align*}
+	\mathbf{F}_a =  \begin{bmatrix}
+	0 & \sum_{i} -R(Q_i F_i)^\wedge & -RQ_R\hat{F}_R & -RQ_L\hat{F}_L & -RQ_A\hat{F}_A \\
+	0 & 0 & -\hat{\mu}_R Q_R \hat{F}_R & -\hat{\mu}_L Q_L \hat{F}_L & -\hat{\mu}_A Q_A \hat{F}_A\\
+	& & 0_{3 \times 5} & &
+	\end{bmatrix}
+	,\mathbf{F}_\tau = \begin{bmatrix}
+	& 0_{2\times 5} &  &  \\
+	& (Q_R^T \tau_R)^\wedge & 0 & 0 \\
+	0_{3 \times 2} & 0 & (Q_L^T \tau_L)^\wedge & 0 \\
+	&  0 & 0 & (Q_A^T \tau_A)^\wedge
+	\end{bmatrix}
+	\end{align*}}
+	\textbf{NOTE:} We have not linearized the aerodynamic forces $ F_R, F_L, F_A $ themselves
+\end{itemize}
+%
+Subsequently denote,
+\begin{align*}
+\mathbf{F}_g &:= \mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau &\mathbf{A}_g(\xi) := \ad^*_\xi\\
+\mathbf{\tilde{L}}_g(\xi) &:= (\mathbf{M}_g - \frac{1}{2}\tilde{\mathbf{M}}_g)(\xi)
+&\mathbf{\tilde{L}}_\xi(\xi) := (\mathbf{M}_\xi - \frac{1}{2}\tilde{\mathbf{M}}_\xi)(\xi)
+\end{align*}
+Thus obtaining,
+\begin{align}
+\begin{bmatrix}
+\delta \dot{g} \\\\
+\delta \dot{\xi}
+\end{bmatrix} =
+\begin{bmatrix}
+\mathbf{A}_g(\xi) & \mathbf{I}_g(\xi) \\\\
+\mathbf{J}_g^{-1} (-\tilde{\mathbf{K}}_g(\dot{\xi}) + \mathbf{A}_g(\xi) \mathbf{K}_g(\xi)- \mathbf{\tilde{L}}_g(\xi) + \mathbf{F}_g) &\quad \mathbf{J}_g^{-1} (\tilde{\mathbf{A}}_g(\xi) +  \mathbf{A}_g(\xi) \mathbf{J}_g - \mathbf{\tilde{L}}_\xi(\xi) - \mathbf{L}_g(\xi))
+\end{bmatrix}
+\begin{bmatrix}
+\delta g \\\\
+\delta \xi
+\end{bmatrix}
+\end{align}
+
+\subsubsection{Linearization with prescribed wing kinematics and abdomen/body attitude}
+For the simplified case of only position dynamics,
+\begin{align*}
+m\ddot x + 
+\sum_{i\in\{R,L,A\}} \big\{ \mathbf{J}_{i_{12}} \dot\Omega + \mathbf{J}_{i_{13}}\dot\Omega_R 
++ \ \mathbf{K}_{i_{12}}\Omega + \mathbf{K}_{i_{13}}\Omega_i \big\} = R\sum_{i\in\{R,L,A\}} Q_i F_i + mg e_3
+\end{align*}
+linearization will yield,
+\begin{align}
+\frac{d (\delta x)}{dt} &= \delta \dot{x} \nonumber \\
+m \frac{d (\delta \dot{x} )}{dt} &= R \sum_{i\in\{R,L,A\}} Q_i \delta F_i \label{eqn:pos_vel_pert}
+\end{align}
+where,
+\begin{align*}
+F_R &= L_R + D_R \\
+L_R &= \int_{0}^{l} \frac{1}{2}\rho  C_L(\alpha(r)) \mathrm{sgn} (e_1^T U_R(r) e_3^T U_R(r)) (e_2\times U_R(r))\|U_R(r)\| c(r) dr \\
+D_R &= \int_{0}^{l} - \frac{1}{2}\rho  C_D(\alpha(r)) \|U_R(r)\|U_R(r) c(r) dr \\
+C_L(\alpha) & = 0.225 + 1.58 \sin( (2.13\alpha^\circ - 7.2) \frac{\pi}{180}) \\
+C_D(\alpha) & = 1.92 - 1.55 \cos( (2.04 \alpha^\circ - 9.82 ) \frac{\pi}{180}) \\
+\alpha_R (r) & = \cos^{-1} ( \frac{|e_1^T U_R(r)|}{\|U_R(r)\|} ) \\
+U_R(r) &= (I_{3\times 3}- e_2 e_2^T) Q_R^T( R^T (\dot x-v_{\mathrm{wind}}) + \Omega\times \mu_R ) + r  (Q_R\Omega + \Omega_R )\times e_2
+\end{align*}
+Hence,
+\begin{align*}
+\delta U_R(r) &= (I_{3\times 3}- e_2 e_2^T) Q_R^T R^T \delta\dot x \\
+\delta \alpha_R(r) &= \frac{-1}{\sin(\alpha_R(r))} \mathrm{sgn}(e_1^T U_R(r))\ e_1^T\left(I_{3\times 3} - \frac{U_R(r)U_R^T(r)}{\norm{U_R(r)}^2}\right) \frac{\delta U_R(r)}{\norm{U_R(r)}} \\
+\delta C_L(\alpha(r)) &= 1.58 \cos( (2.13\alpha^\circ - 7.2) \frac{\pi}{180}) \times 2.13\ \delta\alpha_R(r) \\
+\delta C_D(\alpha(r)) &= 1.55 \sin( (2.04 \alpha^\circ - 9.82 ) \frac{\pi}{180}) \times 2.04\ \delta\alpha_R(r)
+%	\delta L_R &= \delta \int_{0}^{l} \frac{1}{2}\rho  C_L(\alpha(r)) \mathrm{sgn} (e_1^T U_R(r) e_3^T U_R(r)) (e_2\times U_R(r))\|U_R(r)\| c(r) dr 
+\end{align*}
+Substituting back these values of $ \delta F_R $ and $ \delta F_L $ ($ \delta F_A = 0 $) in \eqref{eqn:pos_vel_pert}, obtain the linearization of position dynamics.
+
 \subsection{Dynamic Simulation for Monarch Butterfly}
 
 \subsubsection{Monarch Morphological Parameters}
@@ -1490,7 +1727,7 @@ From the fitted chord, we determine the morphological parameters as summarized i
         \begin{tabular}{|m|m|m|m|m|m|}
             \hline
             \multicolumn{2}{|c}{{Head/Thorax}} & \multicolumn{2}{|c|}{{Abdomen}} & \multicolumn{2}{c|}{{Right Wing}}\\\hline
-            m_B & \num{1.485e-4}\,\si{kg} &
+            m_B & \num{1.485e-4}\,\si{kg} & 
             m_A & \num{1.092e-4}\,\si{kg} &    
             m_R & \num{2.5100 e-5}\,\si{kg} \\
             h_B & \num{1.463e-2}\,\si{m} &
@@ -1732,6 +1969,212 @@ Furthermore, an abdomen undulation in the opposite phase reduces those.
 Another interesting results of Figure \ref{fig:comp_ab}.(c) is that the trajectory of the velocity asymptotically converges to a periodic orbit.  
 This suggests that the flapping motion captured by the Monarch butterfly yields an asymptotically stable periodic solution. 
 This should be further investigated by dynamic system theory such as Floquet's theorem. 
+
+\subsection{Floquet stability analysis}
+\subsubsection{Periodic orbit generation}
+Ideally, we want to control the MAV so that it would be able to hover at a particular point in space. So a periodic orbit for the model is required such that at the end of a flapping cycle it comes back to its original position. This problem can be approached by using \textit{BermanWang} model for kinematics of wing and optimizing its parameters so as to obtain hover.
+
+\noindent \textbf{Formulation of optimization:}
+\begin{itemize}
+	\item The objective function is :
+	%	\[ J = \alpha\ \norm{x(0) - x(T)}^2 + \beta\ \norm{\dot{x}(0) - \dot{x}(T)}^2 \]
+	\begin{equation}\label{eqn:obj_func}
+		J = \alpha \int_{0}^{T} \norm{E(t)} dt + \beta \int_{0}^{T} \norm{\dot{E}(t)} dt
+	\end{equation}
+	which is directly related to absolute amount of energy into the system and the corresponding power required
+	\item Constraints for the problem are $ x(0) = x(T), \dot{x}(0) = \dot{x}(T) $ and all the other parameters must be kept within their physical limits
+	\item Optimization parameters include wing kinematics angles, stroke angle, initial velocity, body and abdomen angles, and flapping frequency
+\end{itemize}
+
+\noindent \textbf{Results:}
+
+Using the global optimization algorithms in MATLAB like surrogate and multistart methods, we obtain the parameters necessary for a hover trajectory.
+
+\begin{itemize}
+	\item The objective function in \eqref{eqn:obj_func} is minimized wherein,
+	\[ E(t) = \frac{1}{2} m \norm{\dot x(t)}^2 - mge_3^T x(t), \quad \dot{E}(t) = \frac{d E(t)}{d t} \]
+	%
+	\item Parameters are constrained within the limits mentioned in Table \ref{tab:hover_params} along with these additional constraints:
+	\begin{itemize}
+		\item[*] $ |\phi_m| + |\phi_0| < \pi/2 $ for practically feasible flapping
+		\item[*] $ x(0) = x(T),\ \dot{x}(0) = \dot{x}(T) $ for hovering at a position
+	\end{itemize}
+	%
+	\item Utilizing the parameters being optimized,
+	\begin{itemize}
+		\item[*] Wing kinematics and subsequently attitude are determined from the \textit{BermanWang} model in \eqref{eqn:phi},\eqref{eqn:theta},\eqref{eqn:psi}
+		\item[*] While the body pitch is kept constant at $ \theta_B $, the relative abdomen pitch is either varying as $ \theta_A = \theta_{A_m} \cos{(2 \pi f t + \theta_{A_a})} + \theta_{A_0} $ or non-oscillating in the second case as $ \theta_A = \theta_{A_0} $
+		\item[*] Initial velocity is considered to be $ \dot{x}(0) = [\dot{x}_1(0), \dot{x}_2(0), \dot{x}_3(0)]^T $; meanwhile $ x(0) = [0, 0, 0]^T $
+	\end{itemize}
+\end{itemize}
+
+%\newcolumntype{m}{>{$}l<{$}} % math-mode version of "c" column type
+\begin{table}[h!]
+	\caption{Optimized parameters}\label{tab:hover_params}
+	\begin{center}
+		\begin{tabular}{|m|m|m|m|m|}
+			\hline
+			\text{Parameters} & \text{With abdomen} & \text{Without abdomen} & \text{Lower bound} & \text{Upper bound}\\
+			 & \text{oscillation} & \text{oscillation} & & \\\hline
+			f & 11.6286\,\si{Hz} & 11.7584\,\si{Hz} & (1-0.15)f_{natural} & (1+0.15)f_{natural} \\
+			\beta & 0.3548 & 0.3223 & -\pi/2 & \pi/2 \\
+			\phi_m & 0.6776 & 0.7024 & 0 & \pi/2 \\
+			\phi_K & 0.5100 & 0.3527 & 0 & 1 \\
+			\phi_0 & 0.8694 & 0.8684 & -\pi/2 & \pi/2 \\
+			\theta_m & 0.6815 & 0.6981 & 0 & 40 \times \pi/180 \\
+			\theta_C & 2.1146 & 3.0000 & 0 & 3\\
+			\theta_0 & 0.1119 & 0.2467 & -\pi/6 & \pi/6 \\
+			\theta_a & -0.1240 & -0.1253 & -\pi/2 & \pi/2 \\
+			\psi_m & 0.0672 & 0.1396 & 0 & 8 \times \pi/180 \\
+			\psi_N & 2 & 2 & 2 & 2\\
+			\psi_0 & 0.0461 & 0.0873 & -5 \times \pi/180 & 5 \times \pi/180 \\
+			\psi_a & 0.8652 & 1.3741 & -\pi & \pi \\
+			\theta_B & 0.9770 & 0.7676 & -\pi/3 & \pi/3 \\
+			\theta_{A_m} & 0.3277 & \text{\textemdash} & 0 & \pi/9 \\
+			\theta_{A_0} & 0.4549 & 0.3592 & -\pi/4 & \pi/4 \\
+			\theta_{A_a} & 1.3473 & \text{\textemdash} & -\pi/2 & \pi/2 \\
+			\dot x_1(0) & -0.0600\,\si{m/s} & -0.1000\,\si{m/s} & -0.1\,\si{m/s} & 0.1\,\si{m/s} \\
+			\dot x_2(0) & 0.0000\,\si{m/s} & 0.0000\,\si{m/s} & -0.1\,\si{m/s} & 0.1\,\si{m/s} \\
+			\dot x_3(0) & -0.0317\,\si{m/s} & -0.1000\,\si{m/s} & -0.1\,\si{m/s} & 0.1\,\si{m/s} \\\hline
+			\text{Optimized}\ J & 0.0230 & 0.0449 & \text{\textemdash} & \text{\textemdash} \\\hline
+		\end{tabular}\\[0.1cm]
+		($ f_{natural} = 10.2247\,\si{Hz} $ and $ \psi_N $ is fixed at $ 2 $)
+	\end{center}
+\end{table}
+
+One of the resulting solutions is illustrated in Figure \ref{fig:hover_pos_vel} for which the corresponding parameters are listed in the second column of Table \ref{tab:hover_params}. It can be noticed that the MAV is able to come back to its initial position after the end of each flapping cycle. However, the whole body of the MAV tilts back ($ \because \theta_B + \beta $ is very high) and the wings are flapping nearly horizontally so as to generate the forces necessary to counter its own weight.
+
+\begin{figure}[h!]
+	\centerline{
+		\subfigure[Position]{
+			\includegraphics[width=0.5\textwidth]{hover_position_3d}
+		}
+		\hfill
+		\subfigure[Velocity]{
+			\includegraphics[width=0.5\textwidth]{hover_velocity}
+		}
+	}
+	\centerline{
+		\subfigure[Wing kinematics angles]{
+			\includegraphics[width=0.5\textwidth]{hover_wing_kinematics}
+		}
+		\hfill
+		\subfigure[Body pitch / Abdomen relative pitch]{
+			\includegraphics[width=0.5\textwidth]{hover_abd_body}
+		}
+	}
+	\caption{Sample hover trajectory generated using optimized parameters}
+	\label{fig:hover_pos_vel}
+\end{figure}
+
+To further observe the effects of abdomen, a second simulation is generated in which relative abdomen pitch is fixed at a constant value (parameters in third column of Table \ref{tab:hover_params}). The comparison between these two is shown in Figure \ref{fig:hover_comp_ab} wherein power input at the joints are calculated as $ P_R = \tau_R^T (Q_R \Omega_R),\ P_L = \tau_L^T (Q_L \Omega_L),\ P_A = \tau_A^T (Q_A \Omega_A) $. Relative abdomen movement (with body kept at a constant attitude) helps to decrease the amount of energy input to the MAV.
+
+\begin{figure}[h!]
+	\centerline{
+		\subfigure[Energy]{
+			\includegraphics[width=0.5\textwidth]{hover_energy_ab}
+		}
+		\hfill
+		\subfigure[Power]{
+			\includegraphics[width=0.5\textwidth]{hover_power_ab}
+		}
+	}
+	\caption{Comparison between hovering with (blue) and without (red) abdomen undulation; energy and power input to the model is relatively high if there is no abdomen movement}
+	\label{fig:hover_comp_ab}
+\end{figure}
+
+\subsubsection{Floquet stability}
+For the hover trajectory in Figure \ref{fig:hover_pos_vel}, any disturbance in the system ($ \delta x(t), \delta \dot x(t) $) evolves according to the dynamics in \eqref{eqn:pos_vel_pert}. It is observed that the disturbance in velocity is quickly nullified, while keeping position perturbation bounded (Figure \ref{fig:pos_vel_pert}).
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.5\linewidth]{hover_pos_vel_pert}
+	\caption{Norm of position and velocity perturbations}
+	\label{fig:pos_vel_pert}
+\end{figure}
+
+To formalize this idea of stability, we use floquet theory~\cite[Section 3.5]{teschl2012ordinary} to study the solutions of the periodic linear differential equation in \eqref{eqn:pos_vel_pert}. Consider a system of the form,
+\begin{equation}\label{eqn:periodic_ode}
+	\dot{x} = \mathbf{A}(t) x
+\end{equation}
+where $ \mathbf{A}(t) $ is periodic with period T. An $ n \times n $ matrix solution of this differential equation, $ X(t) $, whose columns are linearly independent is called a fundamental matrix.
+
+There exists a non-singular constant matrix $ \mathbf{B} $ such that $ X(t+T) = X(t)\mathbf{B},\ \forall t $ and $ \det{\mathbf{B}} =\exp{(\int_{0}^{T} \tr{\mathbf{A}(s)} ds)} $. Besides, the eigenvalues $ \rho_1, \dots, \rho_n $ of $ \mathbf{B} $ are called characteristic multipliers and $ \lbrace \mu_j \vert\ \rho_j = e^{\mu_j T} \rbrace $ are the corresponding characteristic exponents for the matrix differential equation. It is to be noted that $ \rho_j, \mu_j $ are characteristic properties of the system \eqref{eqn:periodic_ode} and are independent of the fundamental matrix. Moreover, there are $ n $ linearly independent solutions to the system which are given by,
+\[ \mathbf{x}_j(t) = X(t)b_j = e^{\mu_j t} \mathbf{p}_j(t)\]
+where $ b_j $ are the eigenvectors of $ \mathbf{B} $ and $ \mathbf{p}_j(t) $ are $ T $-periodic. If all the characteristic multipliers, $ \norm{\rho_j} \le 1 $, the periodic differential dynamics is stable.
+
+For the case of disturbance dynamics of the optimized hover trajectory in Figure \ref{fig:hover_pos_vel}, these values turn out to be
+\begin{gather*}
+	\rho = \lbrace 1.0000, 1.0000, 1.0000, 0.5951, 0.4694, 0.3697 \rbrace\\
+	\mu = \lbrace 0, 0, 0, -6.0349, -8.7958, -11.5706 \rbrace
+\end{gather*}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=\textwidth]{hover_char_soln}
+	\caption{Characteristic solutions and their components which are indicated by colored labels of the plots}
+	\label{fig:hover_char_soln}
+\end{figure}
+
+Since all $ \norm{\rho_j} \le 1 $, the perturbed equation \ref{eqn:pos_vel_pert} is stable. Moreover the characteristic solutions, $ \mathbf{x}_j(t) $, show interesting properties (non-trivial values are shown in Figure \ref{fig:hover_char_soln}). The first three $ j = {1, 2, 3} $ correspond to constant position perturbations. However, the next $ \lbrace \mathbf{x}_j(t),\ j = {4, 5} \rbrace $ have zero values only along $ \delta x_2, \delta \dot{x}_2 $ axes (2nd, 5th), and negative characteristic exponents implying convergence of solution to zero. And finally $ \mathbf{x}_6(t) $ has non-zero values only along $ \delta x_2, \delta \dot{x}_2 $ axes (2nd, 5th) and has the highest convergence rate. Hence, any position or velocity perturbation along the y-axis is related to an independent mode which separates it from other directions.
+
+Furthermore, climbing trajectory of the model generated using experimental data in Figure \ref{fig:comp_ab} suggests that velocity values asymptotically converge to a periodic orbit. Thus we can apply floquet theory to just the velocity perturbation dynamics which is the second equation in \eqref{eqn:pos_vel_pert}. This trajectory is numerically verified to be stable since for the periodic differential equation with 3 states ($ \delta \dot x $),
+\begin{gather*}
+\rho = \lbrace 0.2131, 0.1426, 0.2998 \rbrace \implies \norm{\rho_j} \le 1\\
+\mu = \lbrace -15.8085, -19.9164, -12.3171 \rbrace
+\end{gather*}
+From \eqref{eqn:pos_vel_pert}, we can also conclude that the position perturbation will also be bounded. Observe that since the characteristic exponents for this trajectory are much higher in magnitude than the values for hover trajectory, it has superior stability properties.
+
+%Moreover, the characteristic solutions still exhibit the same features (Figure \ref{fig:comp_char_soln}).
+%\begin{figure}[h!]
+%	\centering
+%	\includegraphics[width=\textwidth]{hover_char_soln}
+%	\caption{Characteristic solutions and their components which are indicated by colored labels of the plots}
+%	\label{fig:comp_char_soln}
+%\end{figure}
+
+Finally, we are interested in the stability properties of other insects as well - Hawkmoth, Bumblebee, Fruitfly. One might expect the nature of perturbation to change with flapping frequency of the wing. To begin with, the necessary morphological and aerodynamic parameters are taken from~\cite{berman2007energy} for these insects while assuming the wing cross-section to be elliptical. After obtaining a simulated hover trajectory using optimization for each of these insects (see Table \ref{tab:hover_insect_params}), we compare the characteristic exponents of the perturbation dynamics in Figure \ref{fig:conv_insects}. It is observed that, in general, the convergence rate of perturbation is positively correlated to a decrease in frequency. However, the fruitfly is an exception which shows extremely good stability characteristics.
+%
+%\newcolumntype{m}{>{$}l<{$}} % math-mode version of "c" column type
+\begin{table}[h!]
+	\caption{Optimized parameters for various insects}\label{tab:hover_insect_params}
+	\begin{center}
+		\begin{tabular}{|m|m|m|m|m|}
+			\hline
+			\text{Parameters} & \text{Monarch} & \text{Hawkmoth} & \text{Bumblebee} & \text{Fruitfly}\\\hline
+			f & 11.6286\,\si{Hz} & 25.2965\,\si{Hz} & 127.4135\,\si{Hz} & 259.1754\,\si{Hz} \\
+			\beta & 0.3548 & 0.7747 & 0.9117 & 1.4942 \\
+			\phi_m & 0.6776 & 1.1769 & 1.2445 & 1.3162 \\
+			\phi_K & 0.5100 & 0.7875 & 0.3758 & 0.1159 \\
+			\phi_0 & 0.8694 & -0.3194 & 0.1204 & 0.0039 \\0
+			\theta_m & 0.6815 & 0.6643 & 0.6565 & 0.6929 \\
+			\theta_C & 2.1146 & 1.6022 & 2.4667 & 32.6852 \\
+			\theta_0 & 0.1119 & -0.0939 & 0.3283 & -0.0298 \\
+			\theta_a & -0.1240 & 0.5546 & -0.1089 & -0.3111 \\
+			\psi_m & 0.0672 & 0.0177 & 0.0637 & 0.0406 \\
+			\psi_N & 2 & 2 & 2 & 2\\
+			\psi_0 & 0.0461 & 0.0366 & -0.0193 & 0.0266 \\
+			\psi_a & 0.8652 & 0.0982 & -2.2377 & 0.0734 \\
+			\theta_B & 0.9770 & 0.9012 & 0.0817 & 0.1614 \\
+			\theta_{A_m} & 0.3277 & 0.1367 & 0.0050 & 0.2429 \\
+			\theta_{A_0} & 0.4549 & 0.5344 & -0.5937 & -0.6029 \\
+			\theta_{A_a} & 1.3473 & 1.5573 & 0.3554 & -0.1486 \\
+			\dot x_1(0) & -0.0600\,\si{m/s} & 0.0193\,\si{m/s} & -0.0236\,\si{m/s} & -0.0025\,\si{m/s} \\
+			\dot x_2(0) & 0.0000\,\si{m/s} & 0.0000\,\si{m/s} & 0.0000\,\si{m/s} & 0.0000\,\si{m/s} \\
+			\dot x_3(0) & -0.0317\,\si{m/s} & 0.0376\,\si{m/s} & -0.0035\,\si{m/s} & -0.0326\,\si{m/s} \\\hline
+			\text{Optimized}\ J & 0.0230 & 0.0092 & \num{2.7370e-04} & \num{7.6439e-05} \\\hline
+		\end{tabular}\\[0.1cm]
+		($ \psi_N $ is fixed at $ 2 $)
+	\end{center}
+\end{table}
+%
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\linewidth]{hover_conv_insects}
+	\caption{Comparison plot}
+	\label{fig:conv_insects}
+\end{figure}
+
 
 \subsubsection{Open-Source Software Package}
 

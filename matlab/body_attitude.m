@@ -26,48 +26,37 @@ function [R W W_dot theta]=body_attitude(varargin)
 
 e2=[0 1 0]';
 
-bool_period=false;
-if nargin ~= 2
-    bool_fixed=true;
-    theta=varargin{1};
-    if nargin == 3
-        bool_period=true;
-        t=varargin{1};
-        WK=varargin{2};
-    end
-else
-    bool_fixed=false;
-    t=varargin{1};
-    f=varargin{2};
-end
-
-if ~bool_fixed
-
-%     Data constructed by ./exp_data/fit_exp_data.m    
-%     F_theta_th.f=10.2468;
-%     F_theta_th.A0=19.7703;
-%     F_theta_th.AN=[0.7632 2.1236 -0.1915 -0.3702 -0.1729];
-%     F_theta_th.BN=[9.3219 0.4207 -0.9178 -0.7781 0.3443];
-%     
-%     [theta theta_dot theta_ddot]= eval_Fourier(t, f, F_theta_th);
-
-    % Data constructed by ./exp_data/fit_VICON_data.m    
-    F_theta_th.f = 10.2213;
-    F_theta_th.A0 = 18.6094-3;
-    F_theta_th.AN = 1.1952126587572*1.3;
-    F_theta_th.BN = 8.21314837914776*1.3;
-    [theta theta_dot theta_ddot]= eval_Fourier(t, f, F_theta_th);
-    
-    R=expm(theta*hat(e2));
-    W=theta_dot*e2;
-    W_dot=theta_ddot*e2;
-else
-    if ~bool_period
+switch nargin
+    case 1
         % fixed body attidue
+        theta=varargin{1};
         R=expm(theta*hat(e2));
         W=zeros(3,1);
         W_dot=zeros(3,1);    
-    else
+    case 2
+        t=varargin{1};
+        f=varargin{2};
+%         Data constructed by ./exp_data/fit_exp_data.m    
+%         F_theta_th.f=10.2468;
+%         F_theta_th.A0=19.7703;
+%         F_theta_th.AN=[0.7632 2.1236 -0.1915 -0.3702 -0.1729];
+%         F_theta_th.BN=[9.3219 0.4207 -0.9178 -0.7781 0.3443];
+% 
+%         [theta theta_dot theta_ddot]= eval_Fourier(t, f, F_theta_th);
+% 
+%         Data constructed by ./exp_data/fit_VICON_data.m    
+        F_theta_th.f = 10.2213;
+        F_theta_th.A0 = 18.6094-3;
+        F_theta_th.AN = 1.1952126587572*1.3;
+        F_theta_th.BN = 8.21314837914776*1.3;
+        [theta theta_dot theta_ddot]= eval_Fourier(t, f, F_theta_th);
+
+        R=expm(theta*hat(e2));
+        W=theta_dot*e2;
+        W_dot=theta_ddot*e2;
+    otherwise
+        t=varargin{1};
+        WK=varargin{2};
         A=WK.theta_B_m;
         a=2*pi*WK.f;
         b=WK.theta_B_a;
@@ -77,7 +66,6 @@ else
         R=expm(theta*hat(e2));
         W=theta_dot*e2;
         W_dot=theta_ddot*e2;
-    end
 end
 
 end

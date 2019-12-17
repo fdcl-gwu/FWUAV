@@ -222,7 +222,7 @@ m=INSECT.m;
 %     E(k) = 0.5*m*x_dot(:,k)'*x_dot(:,k) - m*9.81*x(3,k);
 % end
 % 
-E = 0.5*m*diag(x_dot'*x_dot)' - m*9.81*x(3,:);
+E = 0.5*m*(vecnorm(x_dot).^2) - m*9.81*x(3,:);
 E_dot = diff(E')./diff(t);
 E_dot = [E_dot; E_dot(end)];
 
@@ -253,16 +253,10 @@ x_dot=X(4:6);
 [Q_R Q_L W_R W_L W_R_dot W_L_dot] = wing_attitude(WK_R.beta, Euler_R, Euler_L, Euler_R_dot, Euler_L_dot, Euler_R_ddot, Euler_L_ddot);
 
 % [R W W_dot theta_B] = body_attitude(t,WK_R.f); %time-varying thorax
-% [Q_A W_A W_A_dot theta_A] = abdomen_attitude(t,WK_R.f); %time-varying abdomen
-
-% [R W W_dot theta_B] = body_attitude(15.65*pi/180); % fixed body
 % [Q_A W_A W_A_dot theta_A] = abdomen_attitude(17.32*pi/180); % fixed abdomen
-
 % [R W W_dot theta_B] = body_attitude(t, WK_R, 'designed'); % body
-% [Q_A W_A W_A_dot theta_A] = abdomen_attitude(WK_R.theta_A); % abdomen
 
 [R W W_dot theta_B] = body_attitude(WK_R.theta_B); % body
-% [Q_A W_A W_A_dot theta_A] = abdomen_attitude(WK_R.theta_A_0); % abdomen
 [Q_A W_A W_A_dot theta_A] = abdomen_attitude(t, WK_R, 'designed'); % abdomen
 
 [L_R L_L D_R D_L M_R M_L ...

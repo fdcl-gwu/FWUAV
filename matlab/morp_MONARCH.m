@@ -150,6 +150,7 @@ end
 
 %% save the computed morphological parameters into a structure variable
 
+MONARCH.name = 'MONARCH';
 MONARCH.scale = scale;
 MONARCH.rho = 1.225; % air density (kg/m^3)
 MONARCH.g = 9.81; % air density (kg/m^3)
