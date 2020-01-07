@@ -1,27 +1,22 @@
-function sim_QS_all
+function sim_QS_all_hover_control
 % simulate the complete dynamics (x,R,Q_R,Q_L,Q_A) for given torque acting on the joint
 evalin('base','clear all');
 close all;
 filename='sim_QS_all';
-
-INSECT.g=9.81;
-INSECT.m_B=rand;
-INSECT.J_B=rand_spd;
-
-INSECT.m_R=rand;
-INSECT.mu_R=0.3*rand(3,1);
-INSECT.nu_R=0.5*rand(3,1);
-INSECT.J_R=rand_spd;
-
-INSECT.m_L=rand;
-INSECT.mu_L=0.3*rand(3,1);
-INSECT.nu_L=0.5*rand(3,1);
-INSECT.J_L=rand_spd;
-
-INSECT.m_A=rand;
-INSECT.mu_A=0.3*rand(3,1);
-INSECT.nu_A=0.5*rand(3,1);
-INSECT.J_A=rand_spd;
+load('sim_QS_x_hover_abdomen_osc_body_osc_optimized_constrained_more.mat',...
+    'INSECT', 't', 'N', 'x', 'x_dot', 'R', 'Q_R', 'Q_L', 'Euler_R',...
+    'Euler_L', 'W_R', 'W_L');
+des.x = x;
+des.x_dot = x_dot;
+des.R = R;
+des.Q_R = Q_R;
+des.Q_L = Q_L;
+des.Euler_R = Euler_R;
+des.Euler_L = Euler_L;
+des.W_R = W_R;
+des.W_L = W_L;
+global e2;
+e2=[0 1 0]';
 
 R0=expmso3(rand(3,1));
 Q_R0=expmso3(rand(3,1));
@@ -37,10 +32,7 @@ x0=rand(3,1);
 X0=[x0; reshape(R0,9,1); reshape(Q_R0,9,1); reshape(Q_L0,9,1); reshape(Q_A0,9,1);...
     x_dot0; W0; W_R0; W_L0; W_A0];
 
-f=10;
-N=501;
-t=linspace(0,1/f*5,N);
-[t X]=ode45(@(t,X) eom(INSECT,t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+[t X]=ode45(@(t,X) eom(INSECT, t, X, des), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
 x=X(:,1:3)';
 x_dot=X(:,40:42)';
@@ -73,7 +65,7 @@ save(filename);
 evalin('base',['load ' filename]);
 end
 
-function X_dot = eom(INSECT, t, X)
+function X_dot = eom(INSECT, t, X, des, gains)
 x=X(1:3);
 R=reshape(X(4:12),3,3);
 Q_R=reshape(X(13:21),3,3);
@@ -86,12 +78,24 @@ W_L=X(49:51);
 W_A=X(52:54);
 
 xi=[x_dot; W; W_R; W_L; W_A];
-[JJ KK] = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
-[~, dU]=potential(INSECT,x,R,Q_R,Q_L,Q_A);
-
+[JJ, KK] = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
 co_ad=blkdiag(zeros(3,3), -hat(W), -hat(W_R), -hat(W_L), -hat(W_A));
 
-xi_dot=JJ\(-KK*xi + co_ad*JJ*xi + 0.5*KK'*xi - dU);
+[L_R L_L D_R D_L M_R M_L ...
+    F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);
+F_R=L_R+D_R+F_rot_R;
+F_L=L_L+D_L+F_rot_L;
+M_R=M_R+M_rot_R;
+M_L=M_L+M_rot_L;
+M_A=zeros(3,1);
+f_a=[R*Q_R*F_R + R*Q_L*F_L;
+    hat(INSECT.mu_R)*Q_R*F_R + hat(INSECT.mu_L)*Q_L*F_L;
+    M_R;
+    M_L;
+    M_A];
+[~, dU]=potential(INSECT,x,R,Q_R,Q_L,Q_A);
+
+xi_dot=JJ\(-KK*xi + co_ad*JJ*xi + 0.5*KK'*xi - dU + f_a + f_tau);
 
 R_dot = R*hat(W);
 Q_R_dot = Q_R*hat(W_R);

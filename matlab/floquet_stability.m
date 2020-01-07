@@ -4,6 +4,8 @@ evalin('base','clear all');
 load('sim_QS_x_hover_multistart_vary_vel_and_freq_final_better_no_tol_correct_abdomen_osc_less_freq.mat');
 INSECT.scale=1e-2;
 INSECT.name='MONARCH';
+WK.ab_type='varying';
+WK.bo_type='varying';
 % load('sim_QS_x_hover_hawkmoth.mat');
 % INSECT.name='NOT_MONARCH';
 
@@ -21,7 +23,8 @@ dt = T/(N-1);
 epsilon = 1e0;
 
 % poolobj = parpool(4);
-[delta_mat, F_linear] = sim_perturbation(INSECT, WK, X0, N, t, epsilon);
+[delta_mat, F_lineare
+    ] = sim_perturbation(INSECT, WK, X0, N, t, epsilon);
 
 B = zeros(6, 6, 1+ix_d);
 start_ix = max(1, round((N_periods-2)/N_periods * N));
@@ -151,8 +154,8 @@ delta_mat=reshape(X(7:42), 6, 6);
 % [R W W_dot theta_B] = body_attitude(t,WK_R.f); %time-varying thorax
 % [Q_A W_A W_A_dot theta_A] = abdomen_attitude(t,WK_R.f); % abdomen
 
-[R W W_dot theta_B] = body_attitude(WK_R.theta_B); % body
-[Q_A W_A W_A_dot theta_A] = abdomen_attitude(t, WK_R, 'designed'); % abdomen
+[R W W_dot theta_B] = body_attitude(t, WK_R.f, WK_R); % body
+[Q_A W_A W_A_dot theta_A] = abdomen_attitude(t, WK_R.f, WK_R); % abdomen
 
 [L_R L_L D_R D_L M_R M_L ...
     F_rot_R F_rot_L M_rot_R M_rot_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);

@@ -1466,50 +1466,53 @@ The control torque $(\tau_R,\tau_L,\tau_A)$ can be constructed by \eqref{eqn:J22
 Finally, we need to analyze the characteristics of motion of the model. And to understand the stability properties of a state trajectory, we can use the linearized version of the corresponding dynamics.
 
 For the Euler-Lagrange equation in \eqref{eqn:EL}, consider variations of the form,
-\[ \delta g = (\delta x, \eta, \eta_R, \eta_L, \eta_A) \in \mathbb{R}^{15} \simeq \g, \quad \delta \xi = (\delta \dot{x}, \delta\Omega, \delta\Omega_R, \delta\Omega_L, \delta\Omega_A) \in \mathbb{R}^{15} \simeq \T_e \g \]
-since the variation in attitude can be expressed as $ \delta R = R \hat{\eta} $ and it is related to the angular velocity variation as $ \dot{\eta} = \delta\Omega - \hat{\Omega} \eta $.
-Hence the linearization of dynamics will be,
+\[ \delta g = (\delta x, \delta R, \delta Q_R, \delta Q_L, \delta Q_A) \in \T_{g}\G, \quad \delta \xi = (\delta \dot{x}, \delta\Omega, \delta\Omega_R, \delta\Omega_L, \delta\Omega_A) \in \T_e \g \simeq \mathbb{R}^{15} \]
+in which $ \delta g $ can be identified with $ (\delta x, \eta, \eta_R, \eta_L, \eta_A) \in \mathbb{R}^{15} \simeq \g $ since the variation in attitude can be expressed as $ \delta R = R \hat{\eta},\ \delta Q_R = Q_R \hat{\eta}_R,\ \delta Q_L = Q_L \hat{\eta}_L,\ \delta Q_A = Q_A \hat{\eta}_A $. Moreover, it is related to the angular velocity variation, for instance as $ \dot{\eta} = \delta\Omega - \hat{\Omega} \eta $, implying
+\begin{equation*}
+	\delta \dot{g} = \ad^*_{\xi} \cdot \delta g + \delta \xi
+\end{equation*}
+while considering $ \delta g $ as an element of $ \g $.
+
+From this formulation, the linearization of dynamics in \eqref{eqn:EL} will be,
 \begin{gather*}
-(\delta \mathbf{J}_g) \dot{\xi} + \mathbf{J}_g(\delta \dot{\xi}) - \ad^*_{\delta \xi} \cdot \mathbf{J}_g(\xi) - \ad^*_\xi \cdot \delta \mathbf{J}_g(\xi)  - \ad^*_\xi \cdot \mathbf{J}_g(\delta \xi) + \delta (\mathbf{L}_g(\xi)) (\xi) + \mathbf{L}_g(\xi) (\delta \xi) = \delta (\mathbf{f}_a + \mathbf{f}_g + \mathbf{f}_\tau)
+(\delta \mathbf{J}_g) \dot{\xi} + \mathbf{J}_g(\delta \dot{\xi}) - \ad^*_{\delta \xi} \cdot \mathbf{J}_g(\xi) - \ad^*_\xi \cdot \delta (\mathbf{J}_g(\xi)) + \delta (\mathbf{L}_g(\xi)) (\xi) + \mathbf{L}_g(\xi) (\delta \xi) = \delta (\mathbf{f}_a + \mathbf{f}_g + \mathbf{f}_\tau)
 \end{gather*}
-and will have the form,
-\begin{align*}
-\delta \dot{g} &= \ad^*_{\xi} \cdot \delta g + \mathbf{I}_g(\xi) (\delta \xi) \\
-\delta \dot{\xi} &=  \mathbf{J}_g^{-1} ((-\tilde{\mathbf{K}}_g(\dot{\xi}) + \ad^*_\xi \cdot \mathbf{K}_g(\xi)- \mathbf{M}_g(\xi) + \frac{1}{2}\tilde{\mathbf{M}}_g(\xi) + \mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau) (\delta g) + \\
-& (\tilde{\mathbf{A}}_g(\xi) + \ad^*_\xi \cdot \mathbf{J}_g - (\mathbf{M}_\xi(\xi) - \frac{1}{2}\tilde{\mathbf{M}}_\xi(\xi)) - \mathbf{L}_g(\xi)) (\delta \xi))
-\end{align*}
+Simplifying each of the elements in this expression,
+\begin{itemize}
+	\item $	(\delta \mathbf{J}_g) \dot{\xi} = \mathbf{K}_g (\dot{\xi}) (\delta g) $
+	\item $ \ad^*_{\delta \xi} \cdot \mathbf{J}_g(\xi) = - \ad^*_{\mathbf{J}_g(\xi)} \cdot \delta \xi $
+	\item $ \ad^*_\xi \cdot \delta (\mathbf{J}_g(\xi)) =  \ad^*_\xi \cdot (\delta \mathbf{J}_g) \xi +  \ad^*_\xi \cdot \mathbf{J}_g (\delta\xi) = \ad^*_\xi \cdot \mathbf{K}_g(\xi)(\delta g) +  \ad^*_\xi \cdot \mathbf{J}_g (\delta\xi) $
+	\item $ \delta (\mathbf{L}_g(\xi)) (\xi) = \delta (\mathbf{K}_g(\xi)) (\xi) - \frac{1}{2} \delta (\mathbf{K}_g^T(\xi)) (\xi)$ where, $ \delta (\mathbf{K}_g(\xi)) \xi = \mathbf{M}_g(\xi) (\delta g) + \mathbf{M}_\xi (\xi) (\delta \xi) $ and $ \delta(\mathbf{K}^T_g(\xi)) \xi = \tilde{\mathbf{M}}_g(\xi) (\delta g) + \tilde{\mathbf{M}}_\xi(\xi) (\delta \xi) $
+	%
+	\item $	\delta (\mathbf{f}_{gravity} + \mathbf{f}_a + \mathbf{f}_\tau) = (\mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau) (\delta g) $
+	where,
+	{\small \begin{align*}
+	\mathbf{F}_{gravity} = \begin{bmatrix}
+	0 & 0 & 0 & 0 & 0 \\
+	0 & \sum_{i} m_i g (\mu_i + Q_i \nu_i)^\wedge (R^T e_3)^\wedge & m_Rg (R^T e_3)^\wedge Q_R \hat{\nu}_R & m_Lg (R^T e_3)^\wedge Q_L \hat{\nu}_L & m_Ag (R^T e_3)^\wedge Q_A \hat{\nu}_A \\
+	0 & m_R g \hat\nu_R Q_R^T (R^T e_3)^\wedge & m_R g \hat\nu_R (Q_R^T R^T e_3)^\wedge & 0 & 0\\
+	0 & m_L g \hat\nu_L Q_L^T (R^T e_3)^\wedge & 0 & m_L g \hat\nu_L (Q_L^T R^T e_3)^\wedge & 0 \\
+	0 & m_A g \hat\nu_A Q_A^T (R^T e_3)^\wedge & 0 & 0 & m_A g \hat\nu_A (Q_A^T R^T e_3)^\wedge
+	\end{bmatrix}
+	\end{align*}
+	\begin{align*}
+	\mathbf{F}_a =  \begin{bmatrix}
+	0 & \sum_{i} -R(Q_i F_i)^\wedge & -RQ_R\hat{F}_R & -RQ_L\hat{F}_L & -RQ_A\hat{F}_A \\
+	0 & 0 & -\hat{\mu}_R Q_R \hat{F}_R & -\hat{\mu}_L Q_L \hat{F}_L & -\hat{\mu}_A Q_A \hat{F}_A\\
+	& & 0_{3 \times 5} & &
+	\end{bmatrix}
+	,\mathbf{F}_\tau = \begin{bmatrix}
+	& 0_{2\times 5} &  &  \\
+	& (Q_R^T \tau_R)^\wedge & 0 & 0 \\
+	0_{3 \times 2} & 0 & (Q_L^T \tau_L)^\wedge & 0 \\
+	&  0 & 0 & (Q_A^T \tau_A)^\wedge
+	\end{bmatrix}
+	\end{align*}}
+	\textbf{NOTE:} We have not linearized the aerodynamic forces $ F_R, F_L, F_A $ themselves
+\end{itemize}
 
 where,
 \begin{itemize}
-	\item \begin{align*}
-	\tilde{\mathbf{K}}_i(R,Q_i,\ddot{x},\dot{\Omega},\dot{\Omega}_i) = 
-	\begin{bmatrix}
-	0 & m_i R ((\hat\mu_i+\widehat{Q_i\nu_i})\dot{\Omega} + Q_i\hat\nu_i\dot{\Omega}_i)^\wedge 
-	& m_i R( -\hat{\dot{\Omega}} Q_i \hat\nu_i + Q_i \widehat{\hat \nu_i \dot{\Omega}_i}) \\
-	0 & m_i(\hat\mu_i + \widehat{Q_i\nu_i})\widehat{R^T \ddot{x}}
-	& m_i\widehat{R^T\ddot{x}}Q_i\hat\nu_i - Q_i (J_iQ_i^T\dot{\Omega})^\wedge + Q_i J_i \widehat{Q_i^T\dot{\Omega}} \\
-	& & - m_i\hat\mu_i\hat{\dot{\Omega}} Q_i\hat\nu_i - m_i\widehat{\hat\mu_i\dot{\Omega}} Q_i \hat\nu_i \\
-	& & - Q_i \widehat{J_i\dot{\Omega}_i} + m_i \hat\mu_i Q_i \widehat{\hat\nu_i \dot{\Omega}_i} \\
-	0 & m_i \hat\nu_i Q_i^T \widehat{R^T\ddot{x}}
-	& m_i \hat\nu_i (Q_i^T R^T \ddot{x})^\wedge + J_i\widehat{Q_i^T\dot{\Omega}} - m_i\hat\nu_i (Q_i^T\hat\mu_i \dot{\Omega})^\wedge
-	\end{bmatrix}.
-	\end{align*}
-	
-	\begin{align*}
-	\tilde{\mathbf{K}}_g(\dot{\xi}) = \begin{bmatrix}
-	0 & \tilde{\mathbf{K}}_{R_{12}} + \tilde{\mathbf{K}}_{L_{12}} + \tilde{\mathbf{K}}_{A_{12}} & \tilde{\mathbf{K}}_{R_{13}} & \tilde{\mathbf{K}}_{L_{13}} & \tilde{\mathbf{K}}_{A_{13}}\\
-	0 & \tilde{\mathbf{K}}_{R_{22}} + \tilde{\mathbf{K}}_{L_{22}} + \tilde{\mathbf{K}}_{A_{22}} & \tilde{\mathbf{K}}_{R_{23}} & \tilde{\mathbf{K}}_{L_{23}} & \tilde{\mathbf{K}}_{A_{23}} \\
-	0 & \tilde{\mathbf{K}}_{R_{32}} & \tilde{\mathbf{K}}_{R_{33}} & 0 & 0 \\
-	0 & \tilde{\mathbf{K}}_{L_{32}} & 0 & \tilde{\mathbf{K}}_{L_{33}} & 0 \\
-	0 & \tilde{\mathbf{K}}_{A_{32}} & 0 & 0 & \tilde{\mathbf{K}}_{A_{33}}
-	\end{bmatrix}
-	\end{align*}
-	so that,
-	\begin{equation*}
-	(\delta \mathbf{J}_g) \dot{\xi} = \tilde{\mathbf{K}}_g (\dot{\xi}) (\delta g)
-	\end{equation*}
-	%
-	\item $ \ad^*_{\delta \xi} \cdot \mathbf{J}_g(\xi) = \tilde{\mathbf{A}}_g(\xi)(\delta \xi) $ where $ \tilde{\mathbf{A}}_g(\xi) = \mathrm{diag}[0_{3\times 3}, {[\mathbf{J}_g(\xi)]_{4:6}}^{\wedge}, {[\mathbf{J}_g(\xi)]_{7:9}}^{\wedge}, {[\mathbf{J}_g(\xi)]_{10:12}}^{\wedge}, {[\mathbf{J}_g(\xi)]_{13:15}}^{\wedge}] $
 	%
 	\item \begin{align*}
 	\mathbf{M}_{gi} &= \begin{bmatrix}
@@ -1645,6 +1648,12 @@ where,
 	\textbf{NOTE:} We have not linearized the aerodynamic forces $ F_R, F_L, F_A $ themselves
 \end{itemize}
 %
+and will have the form,
+\begin{align*}
+\delta \dot{g} &= \ad^*_{\xi} \cdot \delta g + \mathbf{I}_g(\xi) (\delta \xi) \\
+\delta \dot{\xi} &=  \mathbf{J}_g^{-1} ((-\tilde{\mathbf{K}}_g(\dot{\xi}) + \ad^*_\xi \cdot \mathbf{K}_g(\xi)- \mathbf{M}_g(\xi) + \frac{1}{2}\tilde{\mathbf{M}}_g(\xi) + \mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau) (\delta g) + \\
+& (\tilde{\mathbf{A}}_g(\xi) + \ad^*_\xi \cdot \mathbf{J}_g - (\mathbf{M}_\xi(\xi) - \frac{1}{2}\tilde{\mathbf{M}}_\xi(\xi)) - \mathbf{L}_g(\xi)) (\delta \xi))
+\end{align*}
 Subsequently denote,
 \begin{align*}
 \mathbf{F}_g &:= \mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau &\mathbf{A}_g(\xi) := \ad^*_\xi\\
@@ -1976,12 +1985,13 @@ Ideally, we want to control the MAV so that it would be able to hover at a parti
 
 \noindent \textbf{Formulation of optimization:}
 \begin{itemize}
-	\item The objective function is :
+	\item The objective function is directly related to absolute amount of energy into the system and the corresponding power required:
 	%	\[ J = \alpha\ \norm{x(0) - x(T)}^2 + \beta\ \norm{\dot{x}(0) - \dot{x}(T)}^2 \]
 	\begin{equation}\label{eqn:obj_func}
-		J = \alpha \int_{0}^{T} \norm{E(t)} dt + \beta \int_{0}^{T} \norm{\dot{E}(t)} dt
+		J(\text{parameters}) = \alpha \int_{0}^{T} \norm{E(t)} dt + \beta \int_{0}^{T} \norm{\dot{E}(t)} dt
 	\end{equation}
-	which is directly related to absolute amount of energy into the system and the corresponding power required
+	wherein,
+	\[ E(t) = \frac{1}{2} m \norm{\dot x(t)}^2 - mge_3^T x(t), \quad \dot{E}(t) = \frac{d E(t)}{d t} \]
 	\item Constraints for the problem are $ x(0) = x(T), \dot{x}(0) = \dot{x}(T) $ and all the other parameters must be kept within their physical limits
 	\item Optimization parameters include wing kinematics angles, stroke angle, initial velocity, body and abdomen angles, and flapping frequency
 \end{itemize}
@@ -1991,9 +2001,6 @@ Ideally, we want to control the MAV so that it would be able to hover at a parti
 Using the global optimization algorithms in MATLAB like surrogate and multistart methods, we obtain the parameters necessary for a hover trajectory.
 
 \begin{itemize}
-	\item The objective function in \eqref{eqn:obj_func} is minimized wherein,
-	\[ E(t) = \frac{1}{2} m \norm{\dot x(t)}^2 - mge_3^T x(t), \quad \dot{E}(t) = \frac{d E(t)}{d t} \]
-	%
 	\item Parameters are constrained within the limits mentioned in Table \ref{tab:hover_params} along with these additional constraints:
 	\begin{itemize}
 		\item[*] $ |\phi_m| + |\phi_0| < \pi/2 $ for practically feasible flapping
@@ -2004,7 +2011,7 @@ Using the global optimization algorithms in MATLAB like surrogate and multistart
 	\begin{itemize}
 		\item[*] Wing kinematics and subsequently attitude are determined from the \textit{BermanWang} model in \eqref{eqn:phi},\eqref{eqn:theta},\eqref{eqn:psi}
 		\item[*] While the body pitch is kept constant at $ \theta_B $, the relative abdomen pitch is either varying as $ \theta_A = \theta_{A_m} \cos{(2 \pi f t + \theta_{A_a})} + \theta_{A_0} $ or non-oscillating in the second case as $ \theta_A = \theta_{A_0} $
-		\item[*] Initial velocity is considered to be $ \dot{x}(0) = [\dot{x}_1(0), \dot{x}_2(0), \dot{x}_3(0)]^T $; meanwhile $ x(0) = [0, 0, 0]^T $
+		\item[*] Initial velocity is considered to be $ \dot{x}(0) = [\dot{x}_1(0), \dot{x}_2(0), \dot{x}_3(0)]^T $ whereas initial position is fixed at $ x(0) = [0, 0, 0]^T $
 	\end{itemize}
 \end{itemize}
 

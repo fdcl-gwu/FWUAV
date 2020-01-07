@@ -1,4 +1,4 @@
-function [R W W_dot theta]=body_attitude(varargin)
+function [R W W_dot theta]=body_attitude(t, f, WK)
 %body_attitude compute attitude of body
 %
 % [R W W_dot theta]=body_attitude(t, f) returns the attitude, the angular
@@ -26,16 +26,16 @@ function [R W W_dot theta]=body_attitude(varargin)
 
 e2=[0 1 0]';
 
-switch nargin
-    case 1
+switch WK.bo_type
+    case 'fixed'
         % fixed body attidue
-        theta=varargin{1};
+        theta=WK.theta_B_0;
         R=expm(theta*hat(e2));
         W=zeros(3,1);
         W_dot=zeros(3,1);    
-    case 2
-        t=varargin{1};
-        f=varargin{2};
+    case 'experimental'
+%         t=varargin{1};
+%         f=varargin{2};
 %         Data constructed by ./exp_data/fit_exp_data.m    
 %         F_theta_th.f=10.2468;
 %         F_theta_th.A0=19.7703;
@@ -54,9 +54,9 @@ switch nargin
         R=expm(theta*hat(e2));
         W=theta_dot*e2;
         W_dot=theta_ddot*e2;
-    otherwise
-        t=varargin{1};
-        WK=varargin{2};
+    case 'varying'
+%         t=varargin{1};
+%         WK=varargin{2};
         A=WK.theta_B_m;
         a=2*pi*WK.f;
         b=WK.theta_B_a;

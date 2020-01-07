@@ -1,4 +1,4 @@
-function [Q_A W_A W_A_dot theta_A]=abdomen_attitude(varargin)
+function [Q_A W_A W_A_dot theta_A]=abdomen_attitude(t, f, WK)
 %abdomen_attitude compute attitude of abdomen relative to the body
 %
 % [Q_A W_A W_A_dot theta_A]=abdomen_attitude(t, f) returns the attitude, the angular
@@ -26,16 +26,16 @@ function [Q_A W_A W_A_dot theta_A]=abdomen_attitude(varargin)
 
 e2=[0 1 0]';
 
-switch nargin
-    case 1
+switch WK.ab_type
+    case 'fixed'
         % fixed body attidue
-        theta_A=varargin{1};
+        theta_A=WK.theta_A_0;
         Q_A=expm(theta_A*hat(e2));
         W_A=zeros(3,1);
         W_A_dot=zeros(3,1);
-    case 2
-        t=varargin{1};
-        f=varargin{2};
+    case 'experimental'
+%         t=varargin{1};
+%         f=varargin{2};
         % Data constructed by ./exp_data/fit_VICON_data.m
         F_theta_ab.f = 10.1756;
         F_theta_ab.A0 = 17.3417;
@@ -52,9 +52,9 @@ switch nargin
         Q_A=expm(theta_A*hat(e2));
         W_A=theta_A_dot*e2;
         W_A_dot=theta_A_ddot*e2;
-    otherwise
-        t=varargin{1};
-        WK=varargin{2};
+    case 'varying'
+%         t=varargin{1};
+%         WK=varargin{2};
         A=WK.theta_A_m;
         a=2*pi*WK.f;
         b=WK.theta_A_a;
