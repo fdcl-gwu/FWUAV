@@ -11,9 +11,10 @@ II=eye(3);
 load STLRead/fv_monarch;
 
 load('morp_MONARCH');
-bool_video=false;
+bool_video=true;
+file_to_save = 'sim_QS_x_hover_abdomen_osc_body_osc_optimized_constrained_more.avi';
 
-load('sim_QS_x','x','R','Q_R','Q_L','Q_A', 'N','F_R','F_L');
+load('sim_QS_x_hover_abdomen_osc_body_osc_optimized_constrained_more.mat','x','R','Q_R','Q_L','Q_A', 'N','F_R','F_L');
 
 %% generate the initial object when k=1
 k=1;
@@ -37,11 +38,11 @@ h_x=line(x(1,1:k),x(2,1:k),x(3,1:k),'color','k');
 %% animation
 
 if bool_video
-    vidObj = VideoWriter('sim_QS_x.avi');
+    vidObj = VideoWriter(file_to_save);
     open(vidObj);
 end
 
-for k=floor(linspace(1,N,501))
+for k=floor(linspace(1,(N-2)/2, (N-2)/10))
     disp(k);
     update_monarch(h_fig,[h_body, h_wr, h_wl, h_ab], fv_body, fv_wr, fv_wl, fv_abdomen, x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k));
     update_force(h_F_R,h_F_L,  x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), F_R(:,k), F_L(:,k),D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L,[0 0 0 0 1]);
@@ -250,7 +251,7 @@ axis('image');
 
 view(180+10,30);
 %view(-90,80);
-%view(270,80);
+% view(250,30);
 
 set(gca,'Zdir','reverse','YDir','reverse');
 axis(0.1*[-1 1 -1 1 -1 1]);

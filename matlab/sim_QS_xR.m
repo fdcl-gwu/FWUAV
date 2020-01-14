@@ -69,6 +69,7 @@ INSECT=MONARCH;
 WK.f=10.2;
 WK.beta=30*pi/180;
 WK.type='Monarch';
+WK.ab_type='experimental';
 
 N=501;
 T=5/WK.f;
@@ -199,7 +200,7 @@ W=xi_1(4:6);
 [Euler_R, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);
 [Euler_L, Euler_L_dot, Euler_L_ddot] = wing_kinematics(t,WK_L);
 [Q_R Q_L W_R W_L] = wing_attitude(WK_R.beta, Euler_R, Euler_L, Euler_R_dot, Euler_L_dot, Euler_R_ddot, Euler_L_ddot);
-[Q_A W_A] = abdomen_attitude(t,true);
+[Q_A W_A] = abdomen_attitude(t,WK_R.f,WK_R);
 
 xi_2=[W_R; W_L; W_A];
 JJ = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
@@ -218,7 +219,7 @@ W=X(16:18);
 [Euler_R, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);
 [Euler_L, Euler_L_dot, Euler_L_ddot] = wing_kinematics(t,WK_L);
 [Q_R Q_L W_R W_L W_R_dot W_L_dot] = wing_attitude(WK_R.beta, Euler_R, Euler_L, Euler_R_dot, Euler_L_dot, Euler_R_ddot, Euler_L_ddot);
-[Q_A W_A W_A_dot theta_A] = abdomen_attitude(t,WK_R.f);
+[Q_A W_A W_A_dot theta_A] = abdomen_attitude(t,WK_R.f,WK_R);
 %[Q_A W_A W_A_dot theta_A] = abdomen_attitude(30*pi/180);
 
 [L_R L_L D_R D_L M_R M_L ...
