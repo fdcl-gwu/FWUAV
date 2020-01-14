@@ -3,9 +3,9 @@ function sim_QS_x_hover
 % for given thorax attiude, wing kinematics, abdomen attitude
 evalin('base','clear all');
 close all;
-%filename='sim_QS_x_with_opposite_ab';
 load('morp_MONARCH');
 INSECT=MONARCH;
+filename=append('sim_QS_x_hover_','temp');
 
 WK.f=10.2247;
 % WK.beta=25.4292*pi/180;
@@ -40,23 +40,11 @@ nonlcon = @(WK_arr) hover_condition(WK_arr, WK, INSECT, N, x0);
 tic;
 rng default; % For reproducibility
 
-% WK_arr0 = [0.3548    0.6776    0.5100    0.8694    0.6815    2.1146    0.1119   -0.1240    0.0672    0.8652    0.0461   -0.0600   -0.0000  -0.0317   0 0.9770  0  0.3277    0.4549    1.3473   11.6286];
+% WK_arr0 = [-0.2799    0.7425    0.6669    0.5665    0.6981    3.0000    0.3914   -0.2456    0.0000   -2.8879    0.0524   -0.1000   -0.0000   -0.1000 0.1745    1.0472    1.5708    0.2094   -0.1669    1.5707   11.7584];
 % options = optimoptions(@fmincon,'Algorithm','interior-point','Display','iter',...
 %     'MaxFunctionEvaluations',5000,'PlotFcn',@optimplotfval,'UseParallel',true);
 % [WK_arr, fval, exitflag, output] = fmincon(@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0),...
 %     WK_arr0,A,b,Aeq,beq,lb,ub,nonlcon,options);
-
-% options = optimoptions(@surrogateopt,'PlotFcn','surrogateoptplot',...
-%     'InitialPoints',WK_arr0,'MaxFunctionEvaluations',1000,'UseParallel',true);%,...
-% %     'MinSampleDistance',5e-2);
-% [WK_arr, fval, exitflag, output] = surrogateopt(@(WK_arr) objective_func(WK_arr, WK, INSECT, t, x0), lb, ub, options);
-
-% gs = GlobalSearch('Display','iter','PlotFcn',@gsplotbestf);
-% options = optimoptions(@fmincon,'Algorithm','interior-point',...
-%     'UseParallel',true,'ConstraintTolerance',1e-4,'StepTolerance',1e-6,'OptimalityTolerance',1e-4);
-% problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_arr, WK, INSECT, t, x0),...
-%     'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
-% [WK_arr, fval, exitflag, output, solutions] = run(gs, problem);
 
 ptmatrix = zeros(6, 21);
 ptmatrix(1, :) = [-0.4324    1.4397-0.6658    0.3889    0.6658    0.1137    1.7289   -0.5236    1.5708    8*pi/180   -1.0691    5*pi/180   -0.0441    0.0137 -0.0783 0 15*pi/180 0 10*pi/180  0 0 WK.f];
@@ -76,10 +64,7 @@ problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_a
     'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
 [WK_arr, fval, exitflag, output, solutions] = run(ms, problem, tpoints);
 
-filename=append('sim_QS_x_hover_','temp');
-
 fprintf('Optimization has been completed\n');
-disp(fval);
 disp(output);
 toc;
 

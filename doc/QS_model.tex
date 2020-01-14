@@ -1485,33 +1485,11 @@ Simplifying each of the elements in this expression,
 	\item $ \delta (\mathbf{L}_g(\xi)) (\xi) = \delta (\mathbf{K}_g(\xi)) (\xi) - \frac{1}{2} \delta (\mathbf{K}_g^T(\xi)) (\xi)$ where, $ \delta (\mathbf{K}_g(\xi)) \xi = \mathbf{M}_g(\xi) (\delta g) + \mathbf{M}_\xi (\xi) (\delta \xi) $ and $ \delta(\mathbf{K}^T_g(\xi)) \xi = \tilde{\mathbf{M}}_g(\xi) (\delta g) + \tilde{\mathbf{M}}_\xi(\xi) (\delta \xi) $
 	%
 	\item $	\delta (\mathbf{f}_{gravity} + \mathbf{f}_a + \mathbf{f}_\tau) = (\mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau) (\delta g) $
-	where,
-	{\small \begin{align*}
-	\mathbf{F}_{gravity} = \begin{bmatrix}
-	0 & 0 & 0 & 0 & 0 \\
-	0 & \sum_{i} m_i g (\mu_i + Q_i \nu_i)^\wedge (R^T e_3)^\wedge & m_Rg (R^T e_3)^\wedge Q_R \hat{\nu}_R & m_Lg (R^T e_3)^\wedge Q_L \hat{\nu}_L & m_Ag (R^T e_3)^\wedge Q_A \hat{\nu}_A \\
-	0 & m_R g \hat\nu_R Q_R^T (R^T e_3)^\wedge & m_R g \hat\nu_R (Q_R^T R^T e_3)^\wedge & 0 & 0\\
-	0 & m_L g \hat\nu_L Q_L^T (R^T e_3)^\wedge & 0 & m_L g \hat\nu_L (Q_L^T R^T e_3)^\wedge & 0 \\
-	0 & m_A g \hat\nu_A Q_A^T (R^T e_3)^\wedge & 0 & 0 & m_A g \hat\nu_A (Q_A^T R^T e_3)^\wedge
-	\end{bmatrix}
-	\end{align*}
-	\begin{align*}
-	\mathbf{F}_a =  \begin{bmatrix}
-	0 & \sum_{i} -R(Q_i F_i)^\wedge & -RQ_R\hat{F}_R & -RQ_L\hat{F}_L & -RQ_A\hat{F}_A \\
-	0 & 0 & -\hat{\mu}_R Q_R \hat{F}_R & -\hat{\mu}_L Q_L \hat{F}_L & -\hat{\mu}_A Q_A \hat{F}_A\\
-	& & 0_{3 \times 5} & &
-	\end{bmatrix}
-	,\mathbf{F}_\tau = \begin{bmatrix}
-	& 0_{2\times 5} &  &  \\
-	& (Q_R^T \tau_R)^\wedge & 0 & 0 \\
-	0_{3 \times 2} & 0 & (Q_L^T \tau_L)^\wedge & 0 \\
-	&  0 & 0 & (Q_A^T \tau_A)^\wedge
-	\end{bmatrix}
-	\end{align*}}
+	\\
 	\textbf{NOTE:} We have not linearized the aerodynamic forces $ F_R, F_L, F_A $ themselves
 \end{itemize}
-
-where,
+%
+wherein,
 \begin{itemize}
 	%
 	\item \begin{align*}
@@ -1565,10 +1543,6 @@ where,
 	\cdot & \cdot & 0 & 0 & {\mathbf{M}_\xi}_{A_{33}}
 	\end{bmatrix},
 	\end{align*}
-	so that,
-	\begin{equation*}
-	\delta (\mathbf{K}_g(\xi)) \xi = \mathbf{M}_g(\xi) (\delta g) + \mathbf{M}_\xi (\xi) (\delta \xi)
-	\end{equation*}
 	%
 	\item \begin{align*}
 	\tilde{\mathbf{M}}_{gi} = 2 \begin{bmatrix}
@@ -1614,15 +1588,8 @@ where,
 	\tilde{\mathbf{M}}_{\xi A_{31}} & \tilde{\mathbf{M}}_{\xi A_{32}} & 0 & 0 & \tilde{\mathbf{M}}_{\xi A_{33}}
 	\end{bmatrix}
 	\end{align*}
-	so that,
-	\begin{align*}
-	\delta(\mathbf{K}^T_g(\xi)) \xi = \tilde{\mathbf{M}}_g(\xi) (\delta g) + \tilde{\mathbf{M}}_\xi(\xi) (\delta \xi)
-	\end{align*}
 	%
-	\item \begin{align*}
-	\delta (\mathbf{f}_{gravity} + \mathbf{f}_a + \mathbf{f}_\tau) = (\mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau) (\delta g)
-	\end{align*}
-	where,
+	\item
 	{\small \begin{align*}
 	\mathbf{F}_{gravity} = \begin{bmatrix}
 	0 & 0 & 0 & 0 & 0 \\
@@ -1645,36 +1612,35 @@ where,
 	&  0 & 0 & (Q_A^T \tau_A)^\wedge
 	\end{bmatrix}
 	\end{align*}}
-	\textbf{NOTE:} We have not linearized the aerodynamic forces $ F_R, F_L, F_A $ themselves
 \end{itemize}
 %
-and will have the form,
+So the linearization will have the form,
 \begin{align*}
-\delta \dot{g} &= \ad^*_{\xi} \cdot \delta g + \mathbf{I}_g(\xi) (\delta \xi) \\
-\delta \dot{\xi} &=  \mathbf{J}_g^{-1} ((-\tilde{\mathbf{K}}_g(\dot{\xi}) + \ad^*_\xi \cdot \mathbf{K}_g(\xi)- \mathbf{M}_g(\xi) + \frac{1}{2}\tilde{\mathbf{M}}_g(\xi) + \mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau) (\delta g) + \\
-& (\tilde{\mathbf{A}}_g(\xi) + \ad^*_\xi \cdot \mathbf{J}_g - (\mathbf{M}_\xi(\xi) - \frac{1}{2}\tilde{\mathbf{M}}_\xi(\xi)) - \mathbf{L}_g(\xi)) (\delta \xi))
+\delta \dot{g} &= \ad^*_{\xi} \cdot \delta g + \delta \xi \\
+\delta \dot{\xi} &=  \mathbf{J}_g^{-1} ((-\mathbf{K}_g(\dot{\xi}) + \ad^*_\xi \cdot \mathbf{K}_g(\xi)- (\mathbf{M}_g(\xi) - \frac{1}{2}\tilde{\mathbf{M}}_g(\xi)) + \mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau) (\delta g) + \\
+& (-\ad^*_{\mathbf{J}_g(\xi)} + \ad^*_\xi \cdot \mathbf{J}_g - (\mathbf{M}_\xi(\xi) - \frac{1}{2}\tilde{\mathbf{M}}_\xi(\xi)) - \mathbf{L}_g(\xi)) (\delta \xi))
 \end{align*}
-Subsequently denote,
-\begin{align*}
-\mathbf{F}_g &:= \mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau &\mathbf{A}_g(\xi) := \ad^*_\xi\\
-\mathbf{\tilde{L}}_g(\xi) &:= (\mathbf{M}_g - \frac{1}{2}\tilde{\mathbf{M}}_g)(\xi)
-&\mathbf{\tilde{L}}_\xi(\xi) := (\mathbf{M}_\xi - \frac{1}{2}\tilde{\mathbf{M}}_\xi)(\xi)
-\end{align*}
-Thus obtaining,
-\begin{align}
-\begin{bmatrix}
-\delta \dot{g} \\\\
-\delta \dot{\xi}
-\end{bmatrix} =
-\begin{bmatrix}
-\mathbf{A}_g(\xi) & \mathbf{I}_g(\xi) \\\\
-\mathbf{J}_g^{-1} (-\tilde{\mathbf{K}}_g(\dot{\xi}) + \mathbf{A}_g(\xi) \mathbf{K}_g(\xi)- \mathbf{\tilde{L}}_g(\xi) + \mathbf{F}_g) &\quad \mathbf{J}_g^{-1} (\tilde{\mathbf{A}}_g(\xi) +  \mathbf{A}_g(\xi) \mathbf{J}_g - \mathbf{\tilde{L}}_\xi(\xi) - \mathbf{L}_g(\xi))
-\end{bmatrix}
-\begin{bmatrix}
-\delta g \\\\
-\delta \xi
-\end{bmatrix}
-\end{align}
+%Subsequently denote,
+%\begin{align*}
+%\mathbf{F}_g &:= \mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau &\mathbf{A}_g(\xi) := \ad^*_\xi\\
+%\mathbf{\tilde{L}}_g(\xi) &:= (\mathbf{M}_g - \frac{1}{2}\tilde{\mathbf{M}}_g)(\xi)
+%&\mathbf{\tilde{L}}_\xi(\xi) := (\mathbf{M}_\xi - \frac{1}{2}\tilde{\mathbf{M}}_\xi)(\xi)
+%\end{align*}
+%Thus obtaining,
+%\begin{align}
+%\begin{bmatrix}
+%\delta \dot{g} \\\\
+%\delta \dot{\xi}
+%\end{bmatrix} =
+%\begin{bmatrix}
+%\mathbf{A}_g(\xi) & \mathbf{I}_g(\xi) \\\\
+%\mathbf{J}_g^{-1} (-\tilde{\mathbf{K}}_g(\dot{\xi}) + \mathbf{A}_g(\xi) \mathbf{K}_g(\xi)- \mathbf{\tilde{L}}_g(\xi) + \mathbf{F}_g) &\quad \mathbf{J}_g^{-1} (\tilde{\mathbf{A}}_g(\xi) +  \mathbf{A}_g(\xi) \mathbf{J}_g - \mathbf{\tilde{L}}_\xi(\xi) - \mathbf{L}_g(\xi))
+%\end{bmatrix}
+%\begin{bmatrix}
+%\delta g \\\\
+%\delta \xi
+%\end{bmatrix}
+%\end{align}
 
 \subsubsection{Linearization with prescribed wing kinematics and abdomen/body attitude}
 For the simplified case of only position dynamics,
@@ -2010,7 +1976,7 @@ Using the global optimization algorithms in MATLAB like surrogate and multistart
 	\item Utilizing the parameters being optimized,
 	\begin{itemize}
 		\item[*] Wing kinematics and subsequently attitude are determined from the \textit{BermanWang} model in \eqref{eqn:phi},\eqref{eqn:theta},\eqref{eqn:psi}
-		\item[*] While the body pitch is kept constant at $ \theta_B $, the relative abdomen pitch is either varying as $ \theta_A = \theta_{A_m} \cos{(2 \pi f t + \theta_{A_a})} + \theta_{A_0} $ or non-oscillating in the second case as $ \theta_A = \theta_{A_0} $
+		\item[*] While the body pitch is varying as $ \theta_B = \theta_{B_m} \cos{(2 \pi f t + \theta_{B_a})} + \theta_{B_0} $, the relative abdomen pitch is either varying as $ \theta_A = \theta_{A_m} \cos{(2 \pi f t + \theta_{A_a})} + \theta_{A_0} $ or non-oscillating in the second case as $ \theta_A = \theta_{A_0} $
 		\item[*] Initial velocity is considered to be $ \dot{x}(0) = [\dot{x}_1(0), \dot{x}_2(0), \dot{x}_3(0)]^T $ whereas initial position is fixed at $ x(0) = [0, 0, 0]^T $
 	\end{itemize}
 \end{itemize}
@@ -2023,27 +1989,29 @@ Using the global optimization algorithms in MATLAB like surrogate and multistart
 			\hline
 			\text{Parameters} & \text{With abdomen} & \text{Without abdomen} & \text{Lower bound} & \text{Upper bound}\\
 			 & \text{oscillation} & \text{oscillation} & & \\\hline
-			f & 11.6286\,\si{Hz} & 11.7584\,\si{Hz} & (1-0.15)f_{natural} & (1+0.15)f_{natural} \\
-			\beta & 0.3548 & 0.3223 & -\pi/2 & \pi/2 \\
-			\phi_m & 0.6776 & 0.7024 & 0 & \pi/2 \\
-			\phi_K & 0.5100 & 0.3527 & 0 & 1 \\
-			\phi_0 & 0.8694 & 0.8684 & -\pi/2 & \pi/2 \\
-			\theta_m & 0.6815 & 0.6981 & 0 & 40 \times \pi/180 \\
-			\theta_C & 2.1146 & 3.0000 & 0 & 3\\
-			\theta_0 & 0.1119 & 0.2467 & -\pi/6 & \pi/6 \\
-			\theta_a & -0.1240 & -0.1253 & -\pi/2 & \pi/2 \\
-			\psi_m & 0.0672 & 0.1396 & 0 & 8 \times \pi/180 \\
+			f & 11.7584\,\si{Hz} & 11.7577\,\si{Hz} & (1-0.15)f_{natural} & (1+0.15)f_{natural} \\
+			\beta & -0.2799 & -0.0769 & -\pi/2 & \pi/2 \\
+			\phi_m & 0.7425 & 0.7264 & 0 & \pi/2 \\
+			\phi_K & 0.6669 & 0.0894 & 0 & 1 \\
+			\phi_0 & 0.5665 & 0.7570 & -\pi/2 & \pi/2 \\
+			\theta_m & 0.6981 & 0.6981 & 0 & 40 \times \pi/180 \\
+			\theta_C & 3.0000 & 2.9989 & 0 & 3\\
+			\theta_0 & 0.3914 & 0.3777 & -\pi/6 & \pi/6 \\
+			\theta_a & -0.2456 & -0.2375 & -\pi/2 & \pi/2 \\
+			\psi_m & \num{2.1455e-10} & 0.0871 & 0 & 8 \times \pi/180 \\
 			\psi_N & 2 & 2 & 2 & 2\\
-			\psi_0 & 0.0461 & 0.0873 & -5 \times \pi/180 & 5 \times \pi/180 \\
-			\psi_a & 0.8652 & 1.3741 & -\pi & \pi \\
-			\theta_B & 0.9770 & 0.7676 & -\pi/3 & \pi/3 \\
-			\theta_{A_m} & 0.3277 & \text{\textemdash} & 0 & \pi/9 \\
-			\theta_{A_0} & 0.4549 & 0.3592 & -\pi/4 & \pi/4 \\
-			\theta_{A_a} & 1.3473 & \text{\textemdash} & -\pi/2 & \pi/2 \\
-			\dot x_1(0) & -0.0600\,\si{m/s} & -0.1000\,\si{m/s} & -0.1\,\si{m/s} & 0.1\,\si{m/s} \\
+			\psi_0 & 0.0524 & 0.0521 & -5 \times \pi/180 & 5 \times \pi/180 \\
+			\psi_a & -2.8879 & -3.1413 & -\pi & \pi \\
+			\theta_{B_m} & 0.1745 & 0.1744 & 0 & \pi/18 \\
+			\theta_{B_0} & 1.0472 & 0.9664 & -\pi/3 & \pi/3 \\
+			\theta_{B_a} & 1.5708 & 1.5697 & -\pi/2 & \pi/2 \\
+			\theta_{A_m} & 0.2094 & \text{\textemdash} & 0 & \pi/9 \\
+			\theta_{A_0} & -0.1669 & 0.3972 & -\pi/4 & \pi/4 \\
+			\theta_{A_a} & 1.5707 & \text{\textemdash} & -\pi/2 & \pi/2 \\
+			\dot x_1(0) & -0.1000\,\si{m/s} & -0.1000\,\si{m/s} & -0.1\,\si{m/s} & 0.1\,\si{m/s} \\
 			\dot x_2(0) & 0.0000\,\si{m/s} & 0.0000\,\si{m/s} & -0.1\,\si{m/s} & 0.1\,\si{m/s} \\
-			\dot x_3(0) & -0.0317\,\si{m/s} & -0.1000\,\si{m/s} & -0.1\,\si{m/s} & 0.1\,\si{m/s} \\\hline
-			\text{Optimized}\ J & 0.0230 & 0.0449 & \text{\textemdash} & \text{\textemdash} \\\hline
+			\dot x_3(0) & -0.1000\,\si{m/s} & -0.1000\,\si{m/s} & -0.1\,\si{m/s} & 0.1\,\si{m/s} \\\hline
+			\text{Optimized}\ J & 0.0450 & 0.0531 & \text{\textemdash} & \text{\textemdash} \\\hline
 		\end{tabular}\\[0.1cm]
 		($ f_{natural} = 10.2247\,\si{Hz} $ and $ \psi_N $ is fixed at $ 2 $)
 	\end{center}
@@ -2162,7 +2130,7 @@ Finally, we are interested in the stability properties of other insects as well 
 			\psi_N & 2 & 2 & 2 & 2\\
 			\psi_0 & 0.0461 & 0.0366 & -0.0193 & 0.0266 \\
 			\psi_a & 0.8652 & 0.0982 & -2.2377 & 0.0734 \\
-			\theta_B & 0.9770 & 0.9012 & 0.0817 & 0.1614 \\
+			\theta_B (\text{fixed}) & 0.9770 & 0.9012 & 0.0817 & 0.1614 \\
 			\theta_{A_m} & 0.3277 & 0.1367 & 0.0050 & 0.2429 \\
 			\theta_{A_0} & 0.4549 & 0.5344 & -0.5937 & -0.6029 \\
 			\theta_{A_a} & 1.3473 & 1.5573 & 0.3554 & -0.1486 \\

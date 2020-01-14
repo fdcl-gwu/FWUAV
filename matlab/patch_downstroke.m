@@ -21,6 +21,7 @@ for i=1:length(index_down_begin)
     end
 end
 hold on;
+axis tight;
 
 end
 
