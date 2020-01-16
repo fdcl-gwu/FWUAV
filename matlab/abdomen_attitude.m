@@ -1,4 +1,4 @@
-function [Q_A W_A W_A_dot theta_A]=abdomen_attitude(varargin)
+function [Q_A W_A W_A_dot theta_A]=abdomen_attitude(t, f, WK)
 %abdomen_attitude compute attitude of abdomen relative to the body
 %
 % [Q_A W_A W_A_dot theta_A]=abdomen_attitude(t, f) returns the attitude, the angular
@@ -26,40 +26,45 @@ function [Q_A W_A W_A_dot theta_A]=abdomen_attitude(varargin)
 
 e2=[0 1 0]';
 
-if nargin < 2
-    bool_fixed=true;
-    theta_A=varargin{1};
-else
-    bool_fixed=false;
-    t=varargin{1};
-    f=varargin{2};
-end
+switch WK.ab_type
+    case 'fixed'
+        % fixed body attidue
+        theta_A=WK.theta_A_0;
+        Q_A=expm(theta_A*hat(e2));
+        W_A=zeros(3,1);
+        W_A_dot=zeros(3,1);
+    case 'experimental'
+%         t=varargin{1};
+%         f=varargin{2};
+        % Data constructed by ./exp_data/fit_VICON_data.m
+        F_theta_ab.f = 10.1756;
+        F_theta_ab.A0 = 17.3417;
+        F_theta_ab.AN = -13.2134053462198;
+        F_theta_ab.BN = -3.91351009294982;
 
-if ~bool_fixed 
-    
-    % Data constructed by ./exp_data/fit_VICON_data.m
-    F_theta_ab.f = 10.1756;
-    F_theta_ab.A0 = 17.3417;
-    F_theta_ab.AN = -13.2134053462198;
-    F_theta_ab.BN = -3.91351009294982;
-    
-    [theta_A theta_A_dot theta_A_ddot]= eval_Fourier(t, f, F_theta_ab);
-    
-%     % abdomen with the opposite phase
-%     theta_A = 0.6053 - theta_A;
-%     theta_A_dot = -theta_A_dot;
-%     theta_A_ddot = -theta_A_ddot;
-    
-    Q_A=expm(theta_A*hat(e2));
-    W_A=theta_A_dot*e2;
-    W_A_dot=theta_A_ddot*e2;
-else
-    % fixed abdomen attidue
-    Q_A=expm(theta_A*hat(e2));
-    W_A=zeros(3,1);
-    W_A_dot=zeros(3,1);    
-end
+        [theta_A theta_A_dot theta_A_ddot]= eval_Fourier(t, f, F_theta_ab);
 
+    %     % abdomen with the opposite phase
+    %     theta_A = 0.6053 - theta_A;
+    %     theta_A_dot = -theta_A_dot;
+    %     theta_A_ddot = -theta_A_ddot;
+
+        Q_A=expm(theta_A*hat(e2));
+        W_A=theta_A_dot*e2;
+        W_A_dot=theta_A_ddot*e2;
+    case 'varying'
+%         t=varargin{1};
+%         WK=varargin{2};
+        A=WK.theta_A_m;
+        a=2*pi*WK.f;
+        b=WK.theta_A_a;
+        theta_A = A * cos( a*t + b ) + WK.theta_A_0;
+        theta_A_dot  = A * -a * sin(a*t+b);
+        theta_A_ddot = A * -a^2 * cos(a*t+b);  
+        Q_A=expm(theta_A*hat(e2));
+        W_A=theta_A_dot*e2;
+        W_A_dot=theta_A_ddot*e2;
+end
 end
 
 function [a a_dot a_ddot]= eval_Fourier(t, f, F)
