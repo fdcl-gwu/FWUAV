@@ -1,4 +1,4 @@
-%% Convergence rate
+%% Evaluates the convergence rate for various insects
 load('sim_QS_x_hover_conv_rate.mat');
 
 conv_rates = {conv_rate_osc, conv_rate_hawk, conv_rate_bumb, conv_rate_fruit};
@@ -7,7 +7,6 @@ N_rand = size(conv_rate_osc, 1);
 conv_rate = zeros(N_rand, N);
 
 labels = [{'MONARCH, f=10.2'}, {'HAWKMOTH, f=26.3'}, {'BUMBLEBEE, f=116'}, {'FRUITFLY, f=254'}];
-%y = [{'MONARCH'}, {'m=3.1e-4'}; {'FRUITFLY'}, {'m=7.2e-7'}; {'BUMBLEBEE'}, {'m=1.7e-4'}; {'HAWKMOTH'}, {'m=1.6e-3'};];
 
 f = figure;
 ax = gca;
@@ -32,5 +31,4 @@ xlabel('Insect and its flapping frequency (in Hz)');
 ylabel('Characteristic exponents of perturbed dynamics');
 xlim auto;
 ylim auto;
-% title('');
 % print('hover_conv_insects', '-depsc', '-r0');

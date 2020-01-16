@@ -1,28 +1,19 @@
 function [Q_A W_A W_A_dot theta_A]=abdomen_attitude(t, f, WK)
 %abdomen_attitude compute attitude of abdomen relative to the body
 %
-% [Q_A W_A W_A_dot theta_A]=abdomen_attitude(t, f) returns the attitude, the angular
+% [Q_A W_A W_A_dot theta_A]=abdomen_attitude(t, f, WK) returns the attitude, the angular
 % velocity, the angular acceleration, and the pitch angle of abdomen, computed
 % according to the fitted experimental data (see exp_data/fit_exp_data.m)
 %
 %   INPUT
 %       t:  time (sec)
 %       f:  flapping frequench (Hz)
+%      WK:  wing kinematic parameters
 %   OUTPUT
 %       Q_A:  attitude of the abdomen relative to the body
 %       W_A:  relative angular velocity of the abdomen (rad/sec)
 %       W_A_dot:  relative acceleration of the abdomen (rad/sec^2)
 %       theta_A:  relative pitch angle of the abdomen (rad)
-%
-% [Q_A W_A W_A_dot]=abdomen_attitude(theta_A) returns a fixed attitude for the
-% given body pitch angle
-%
-%   INPUT
-%       theta_A:  relative pitch angle of the abdomen (rad)
-%   OUTPUT
-%       Q_A:  attitude of the abdomen relative to the body
-%       W_A:  relative angular velocity of the abdomen (rad/sec)
-%       W_A_dot:  relative acceleration of the abdomen (rad/sec^2)
 
 e2=[0 1 0]';
 
@@ -53,8 +44,7 @@ switch WK.ab_type
         W_A=theta_A_dot*e2;
         W_A_dot=theta_A_ddot*e2;
     case 'varying'
-%         t=varargin{1};
-%         WK=varargin{2};
+        % Sinusoidal attitude
         A=WK.theta_A_m;
         a=2*pi*WK.f;
         b=WK.theta_A_a;

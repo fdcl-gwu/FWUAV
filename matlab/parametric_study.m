@@ -1,9 +1,11 @@
 function parametric_study
-% simulate the position of thorax (x) for obtaining hover, 
-% for given thorax attiude, wing kinematics, abdomen attitude
+% Simulate the effects on aerodynamic forces when changing wing kinematic
+% parameters considering just the position dynamics
+
 evalin('base','clear all');
 close all;
-load('sim_QS_x_hover_abdomen_osc_body_osc_optimized_constrained_more.mat',...
+addpath('./modules', './sim_data');
+load('sim_QS_x_hover.mat',...
     'INSECT', 'WK', 'X0');
 filename='parametric_study';
 
@@ -52,7 +54,7 @@ scatter(eps, squeeze(f_a_m(3,2,:)), 10, 'k', 'filled');
 xlabel('$\epsilon\ \vert\ \Delta\psi_{m, R} = \epsilon, \Delta\psi_{m, L} = -\epsilon$','interpreter','latex');
 ylabel('mean $\|f_a(2)\|$ along $y$','interpreter','latex');
 
-print(h_f_a, 'hover_param_study', '-depsc', '-r0');
+% print(h_f_a, 'hover_param_study', '-depsc', '-r0');
 
 % Get a list of all variables
 allvars = whos;
@@ -62,8 +64,6 @@ tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
 % Pass these variable names to save
 save(filename, allvars(tosave).name)
 evalin('base',['load ' filename]);
-
-%fig_comp_VICON;
 end
 
 function f_a_m = param_study(INSECT, WK, eps, i, t, X0, N)
@@ -162,121 +162,3 @@ tau = blkdiag(zeros(3), Q_R, Q_L, Q_A)*f_tau_2;
 
 X_dot=[xi_1; xi_1_dot];
 end
-
-function [JJ_11 JJ_12 JJ_21 JJ_22] = inertia_sub_decompose_3_12(JJ)
-JJ_11 = JJ(1:3,1:3);
-JJ_12 = JJ(1:3,4:15);
-JJ_21 = JJ(4:15,1:3);
-JJ_22 = JJ(4:15,4:15);
-end
-    
-function [JJ KK] = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A)
-[JJ_R KK_R] = inertia_wing_sub(INSECT.m_R, INSECT.mu_R, INSECT.nu_R, INSECT.J_R, R, Q_R, x_dot, W, W_R);
-[JJ_L KK_L] = inertia_wing_sub(INSECT.m_L, INSECT.mu_L, INSECT.nu_L, INSECT.J_L, R, Q_L, x_dot, W, W_L);
-[JJ_A KK_A] = inertia_wing_sub(INSECT.m_A, INSECT.mu_A, INSECT.nu_A, INSECT.J_A, R, Q_A, x_dot, W, W_A);
-
-JJ=zeros(15,15);
-JJ(1:3,1:3) = INSECT.m_B*eye(3) + JJ_R(1:3,1:3) + JJ_L(1:3,1:3) + + JJ_A(1:3,1:3);
-JJ(1:3,4:6) = JJ_R(1:3,4:6) + JJ_L(1:3,4:6) + JJ_A(1:3,4:6);
-JJ(1:3,7:9) = JJ_R(1:3,7:9);
-JJ(1:3,10:12) = JJ_L(1:3,7:9);
-JJ(1:3,13:15) = JJ_A(1:3,7:9);
-
-JJ(4:6,1:3) = JJ(1:3,4:6)';
-JJ(4:6,4:6) = INSECT.J_B + JJ_R(4:6,4:6) + JJ_L(4:6,4:6) + + JJ_A(4:6,4:6);
-JJ(4:6,7:9) = JJ_R(4:6,7:9);
-JJ(4:6,10:12) = JJ_L(4:6,7:9);
-JJ(4:6,13:15) = JJ_A(4:6,7:9);
-
-JJ(7:9,1:3) = JJ(1:3,7:9)';
-JJ(7:9,4:6) = JJ(4:6,7:9)';
-JJ(7:9,7:9) = JJ_R(7:9,7:9);
-
-JJ(10:12,1:3) = JJ(1:3,10:12)';
-JJ(10:12,4:6) = JJ(4:6,10:12)';
-JJ(10:12,10:12) = JJ_L(7:9,7:9);
-
-JJ(13:15,1:3) = JJ(1:3,13:15)';
-JJ(13:15,4:6) = JJ(4:6,13:15)';
-JJ(13:15,13:15) = JJ_A(7:9,7:9);
-
-KK=zeros(15,15);
-KK(1:3,4:6) = KK_R(1:3,4:6) + KK_L(1:3,4:6) + KK_A(1:3,4:6);
-KK(1:3,7:9) = KK_R(1:3,7:9);
-KK(1:3,10:12) = KK_L(1:3,7:9);
-KK(1:3,13:15) = KK_A(1:3,7:9);
-
-KK(4:6,4:6) = KK_R(4:6,4:6) + KK_L(4:6,4:6) + KK_A(4:6,4:6);
-KK(4:6,7:9) = KK_R(4:6,7:9);
-KK(4:6,10:12) = KK_L(4:6,7:9);
-KK(4:6,13:15) = KK_A(4:6,7:9);
-
-KK(7:9,4:6) = KK_R(7:9,4:6);
-KK(7:9,7:9) = KK_R(7:9,7:9);
-
-KK(10:12,4:6) = KK_L(7:9,4:6);
-KK(10:12,10:12) = KK_L(7:9,7:9);
-
-KK(13:15,4:6) = KK_A(7:9,4:6);
-KK(13:15,13:15) = KK_A(7:9,7:9);
-end
-
-function [JJ KK] = inertia_wing_sub(m, mu, xi, J, R, Q, x_dot, W, W_i)
-R_dot=R*hat(W);
-Q_dot=Q*hat(W_i);
-
-JJ=zeros(9,9);
-
-JJ(1:3,1:3)=m*eye(3);
-JJ(1:3,4:6)=-m*R*(hat(mu)+hat(Q*xi));
-JJ(1:3,7:9)=-m*R*Q*hat(xi);
-
-JJ(4:6,1:3)=JJ(1:3,4:6)';
-JJ(4:6,4:6)=m*hat(mu)'*hat(mu)+Q*J*Q'+m*(hat(mu)'*hat(Q*xi)+hat(Q*xi)'*hat(mu));
-JJ(4:6,7:9)=Q*J+m*hat(mu)'*Q*hat(xi);
-
-JJ(7:9,1:3)=JJ(1:3,7:9)';
-JJ(7:9,4:6)=JJ(4:6,7:9)';
-JJ(7:9,7:9)=J;
-
-KK=zeros(9,9);
-
-KK(1:3,4:6) = m*R*hat((hat(mu)+hat(Q*xi))*W) + m*R*hat(Q*hat(xi)*W_i);
-KK(1:3,7:9) = -m*R*hat(W)*Q*hat(xi) + m*R*Q*hat(hat(xi)*W_i);
-KK(4:6,4:6) = m*(hat(mu)+hat(Q*xi))*hat(R'*x_dot);
-KK(4:6,7:9) = m*hat(R'*x_dot)*Q*hat(xi) - Q*hat(J*Q'*W) + Q*J*hat(Q'*W) ...
-    -m*hat(mu)*hat(W)*Q*hat(xi) - m* hat(hat(mu)*W)*Q*hat(xi) ...
-    -Q*hat(J*W_i) + m*hat(mu)*Q*hat(hat(xi)*W_i);
-KK(7:9,4:6) = m*hat(xi)*Q'*hat(R'*x_dot);
-KK(7:9,7:9) = m*hat(xi)*hat(Q'*R'*x_dot) + J*hat(Q'*W) - m*hat(xi)*hat(Q'*hat(mu)*W);
-end
-
-function [U dU]=potential(INSECT,x,R,Q_R,Q_L,Q_A)
-e3=[0 0 1]';
-
-mg_B=INSECT.m_B*INSECT.g;
-mg_R=INSECT.m_R*INSECT.g;
-mg_L=INSECT.m_L*INSECT.g;
-mg_A=INSECT.m_A*INSECT.g;
-
-tmp_R = INSECT.mu_R + Q_R*INSECT.nu_R;
-tmp_L = INSECT.mu_L + Q_L*INSECT.nu_L;
-tmp_A = INSECT.mu_A + Q_A*INSECT.nu_A;
-
-U_B = -mg_B*e3'*x;
-U_R = -mg_R*e3' * (x + R*tmp_R);
-U_L = -mg_L*e3' * (x + R*tmp_L);
-U_A = -mg_A*e3' * (x + R*tmp_A);
-U = U_B + U_R + U_L + U_A;
-
-dU = [-(INSECT.m_B + INSECT.m_R + INSECT.m_L + INSECT.m_A) * INSECT.g * e3;
-    mg_R*hat(R'*e3)*tmp_R + mg_L*hat(R'*e3)*tmp_L + mg_A*hat(R'*e3)*tmp_A;
-    mg_R*hat(Q_R'*R'*e3)*INSECT.nu_R;
-    mg_L*hat(Q_L'*R'*e3)*INSECT.nu_L;
-    mg_A*hat(Q_A'*R'*e3)*INSECT.nu_A];
-end
-
-
-
-
-

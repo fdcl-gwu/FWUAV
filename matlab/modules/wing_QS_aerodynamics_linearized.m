@@ -156,6 +156,9 @@ function [C_L C_D C_L_alpha C_D_alpha] = wing_QS_LD_coeff(INSECT, alpha)
 % and a revised quasi-steady model of flapping flight," 
 % Journal of experimental biology, vol. 205, no. 8, pp. 1087?1096, 2002.
 
+% Berman, Gordon J., and Z. Jane Wang. "Energy-minimizing kinematics in
+% hovering insect flight." Journal of Fluid Mechanics 582 (2007): 153-168.
+
 % convert radian to degree
 alpha_deg=alpha*180/pi;
 

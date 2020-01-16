@@ -19,7 +19,12 @@
 .DS_Store
 
 # Matlab data files
-# *.mat
+*.mat
+# Matlab cache
+slprj/
 
 # Generated figures
 *.eps
+*.png
+*.jpg
+*.avi

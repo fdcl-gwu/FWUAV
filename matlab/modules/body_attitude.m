@@ -8,21 +8,12 @@ function [R W W_dot theta]=body_attitude(t, f, WK)
 %   INPUT
 %       t:  time (sec)
 %       f:  flapping frequench (Hz)
+%      WK:  wing kinematic parameters
 %   OUTPUT
 %       R:  attitude of the body
 %       W:  angular velocity of the body (rad/sec)
 %       W_dot:  angular acceleration of the body (rad/sec^2)
 %       theta:  pitch angle of the body (rad)
-%
-% [R W W_dot]=body_attitude(theta) returns a fixed attitude for the given
-% body pitch angle
-%
-%   INPUT
-%       theta:  pitch angle of the body (rad)
-%   OUTPUT
-%       R:  attitude of the body
-%       W:  angular velocity of the body (rad/sec)
-%       W_dot:  angular acceleration of the body (rad/sec^2)
 
 e2=[0 1 0]';
 
@@ -55,8 +46,7 @@ switch WK.bo_type
         W=theta_dot*e2;
         W_dot=theta_ddot*e2;
     case 'varying'
-%         t=varargin{1};
-%         WK=varargin{2};
+        % Sinusoidal attitude
         A=WK.theta_B_m;
         a=2*pi*WK.f;
         b=WK.theta_B_a;
