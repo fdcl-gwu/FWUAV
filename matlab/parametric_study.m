@@ -2,61 +2,57 @@ function parametric_study
 % simulate the position of thorax (x) for obtaining hover, 
 % for given thorax attiude, wing kinematics, abdomen attitude
 evalin('base','clear all');
-% close all;
-load('sim_QS_x_hover_abdomen_osc_body_osc_optimized_constrained_more.mat');
+close all;
+load('sim_QS_x_hover_abdomen_osc_body_osc_optimized_constrained_more.mat',...
+    'INSECT', 'WK', 'X0');
 filename='parametric_study';
 
-N=1001; % 3001
+N=1001;
 T=3/WK.f;
 t=linspace(0,T,N);
 
-WK_R = WK;
-WK_L = WK;
 N_params = 15;
-% eps = linspace(0.001, 0.1, N_params);
 eps = logspace(log10(0.0001), log10(0.1), N_params);
-f_a_m = zeros(3, N_params);
-F_R_m = zeros(3, N_params);
+f_a_m = zeros(3, 3, N_params);
 
-for i=1:N_params
-    WK_R.psi_m = WK_R.psi_m + eps(i);
-    WK_L.psi_m = WK_L.psi_m - eps(i);
-    [t X]=ode45(@(t,X) eom(INSECT, WK_R, WK_L, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
-
-    x=X(:,1:3)';
-    x_dot=X(:,4:6)';
-
-    R=zeros(3,3,N);
-    for k=1:N    
-        [X_dot(:,k), R(:,:,k) Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) theta_B(k) theta_A(k) W(:,k) W_dot(:,k) W_R(:,k) W_R_dot(:,k) W_L(:,k) W_L_dot(:,k) W_A(:,k) W_A_dot(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k)]= eom(INSECT, WK_R, WK_L, t(k), X(k,:)');
-        F_B(:,k)=Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);    
-        [Euler_R(:,k), Euler_R_dot(:,k), Euler_R_ddot(:,k)] = wing_kinematics(t(k),WK);
-    end
-    
-    f_a_m(:, i) = mean(abs(f_a(1:3, :)), 2);
-    F_R_m(:, i) = mean(abs(F_R(1:3, :)), 2);
+parfor i=1:N_params
+    f_a_m(:, :, i) = param_study(INSECT, WK, eps, i, t, X0, N);
+    disp(i);
 end
 
 h_f_a = figure;
 h_f_a.PaperUnits = 'inches';
 h_f_a.PaperPosition = [0 0 8 6];
-subplot(3,2,1);
-plot(eps, f_a_m(1,:));
-subplot(3,2,3);
-plot(eps, f_a_m(2,:));
-ylabel('$mean\ (f_a)$','interpreter','latex');
-subplot(3,2,5);
-plot(eps, f_a_m(3,:));
+
+subplot(2,2,1);
+plot(eps, squeeze(f_a_m(1,1,:)));
+hold on;
+scatter(eps, squeeze(f_a_m(1,1,:)), 10, 'k', 'filled');
+xlabel('$\epsilon\ \vert\ \Delta\phi_{m, R} = \epsilon, \Delta\phi_{m, L} = \epsilon$','interpreter','latex');
+ylabel('mean $\|f_a(1)\|$ along $x$','interpreter','latex');
+
+subplot(2,2,3);
+plot(eps, squeeze(f_a_m(1,3,:)));
+hold on;
+scatter(eps, squeeze(f_a_m(1,3,:)), 10, 'k', 'filled');
+xlabel('$\epsilon\ \vert\ \Delta\phi_{m, R} = \epsilon, \Delta\phi_{m, L} = \epsilon$','interpreter','latex');
+ylabel('mean $\|f_a(3)\|$ along $z$','interpreter','latex');
+
+subplot(2,2,2);
+plot(eps, squeeze(f_a_m(2,1,:)));
+hold on;
+scatter(eps, squeeze(f_a_m(2,1,:)), 10, 'k', 'filled');
+xlabel('$\epsilon\ \vert\ \Delta\theta_{m, R} = \epsilon, \Delta\theta_{m, L} = \epsilon$','interpreter','latex');
+ylabel('mean $\|f_a(1)\|$ along $x$','interpreter','latex');
+
+subplot(2,2,4);
+plot(eps, squeeze(f_a_m(3,2,:)));
+hold on;
+scatter(eps, squeeze(f_a_m(3,2,:)), 10, 'k', 'filled');
 xlabel('$\epsilon\ \vert\ \Delta\psi_{m, R} = \epsilon, \Delta\psi_{m, L} = -\epsilon$','interpreter','latex');
-subplot(3,2,2);
-plot(eps, F_R_m(1,:));
-subplot(3,2,4);
-plot(eps, F_R_m(2,:));
-ylabel('$mean\ F_R$','interpreter','latex');
-subplot(3,2,6);
-plot(eps, F_R_m(3,:));
-xlabel('$\epsilon\ \vert\ \Delta\psi_{m, R} = \epsilon, \Delta\psi_{m, L} = -\epsilon$','interpreter','latex');
-% print(h_f_a, 'hover_param_5', '-depsc', '-r0');
+ylabel('mean $\|f_a(2)\|$ along $y$','interpreter','latex');
+
+print(h_f_a, 'hover_param_study', '-depsc', '-r0');
 
 % Get a list of all variables
 allvars = whos;
@@ -68,6 +64,38 @@ save(filename, allvars(tosave).name)
 evalin('base',['load ' filename]);
 
 %fig_comp_VICON;
+end
+
+function f_a_m = param_study(INSECT, WK, eps, i, t, X0, N)
+    f_a_m = zeros(3, 3);
+    %
+    WK_R = WK;  WK_L = WK;
+    WK_R.phi_m = WK_R.phi_m + eps(i);
+    WK_L.phi_m = WK_L.phi_m + eps(i);
+    f_a_m(1, :) = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N);
+    %
+    WK_R = WK;  WK_L = WK;
+    WK_R.theta_m = WK_R.theta_m + eps(i);
+    WK_L.theta_m = WK_L.theta_m + eps(i);
+    f_a_m(2, :) = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N);
+    %
+    WK_R = WK;  WK_L = WK;
+    WK_R.psi_m = WK_R.psi_m + eps(i);
+    WK_L.psi_m = WK_L.psi_m - eps(i);
+    f_a_m(3, :) = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N);
+end
+
+function f_a_m = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N)
+    [t X]=ode45(@(t,X) eom(INSECT, WK_R, WK_L, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+
+%     x=X(:,1:3)';
+%     x_dot=X(:,4:6)';
+
+    for k=1:N    
+        [~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, f_a(:,k)]= eom(INSECT, WK_R, WK_L, t(k), X(k,:)');
+    end
+    f_a_m = mean(abs(f_a(1:3, :)), 2);
+%     F_R_m(:, i) = mean(abs(F_R(1:3, :)), 2);
 end
 
 function [X_dot R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X)

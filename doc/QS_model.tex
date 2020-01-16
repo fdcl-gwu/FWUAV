@@ -2150,8 +2150,52 @@ Finally, we are interested in the stability properties of other insects as well 
 	\label{fig:conv_insects}
 \end{figure}
 
+\subsection{Control design}
+After studying stability of the dynamics \eqref{eqn:mx_ddot}, now we are going to design a suitable control so as to track the designed hover trajectory in Figure \ref{fig:hover_pos_vel}. For this subsystem, we would like to design a typical PD control with the wing kinematic angles as the input, and position-velocity errors as output.
 
-\subsubsection{Open-Source Software Package}
+Before we bring that about, we study the relation between these wing kinematic angles (from the \textit{BermanWang} model) and the aerodynamic forces acting on the body. For instance, increasing flapping amplitude of both the wings increases force generated in the vertical direction. Figure \ref{fig:hover_param} shows a detailed parametric study wherein the corresponding parameters are varied from their ideal values in the hover trajectory of Figure \ref{fig:hover_pos_vel}.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=\linewidth]{hover_param_study}
+	\caption{Parametric study for control design}
+	\label{fig:hover_param}
+\end{figure}
+
+Employing these observations, a PD controller for the dynamics \eqref{eqn:mx_ddot} can be designed as follows,
+\begin{itemize}
+	\item Calculate the error in position and velocity as
+	\[ \Delta x(t) = x_{des}(t) - (x(t) - x(t_{nT})),\quad \Delta \dot x(t) = \dot x_{des}(t) - \dot x(t) \]
+	where $ t_{nT} = \max \lbrace nT \vert\ t \ge nT,\ n = 0, 1, 2, \dots \rbrace $
+	\item The designed forces will have to reduce $ err = m (K_P \Delta x (t) + K_D \Delta\dot x(t)) $ to zero where $ K_P, K_D $ are the gains
+	\item From Figure \ref{fig:hover_param}, we can obtain the relation of aerodynamic forces to a few parameters:
+	\[ \frac{\partial \norm{f_a(1)}}{\partial \Delta\phi_m},\quad \frac{\partial \norm{f_a(1)}}{\partial \Delta\theta_m},\quad \frac{\partial \norm{f_a(3)}}{\partial \Delta\phi_m},\quad \frac{\partial \norm{f_a(2)}}{\partial \Delta\psi_m} \]
+	\item And hence we obtain the inverse relations,
+	\begin{gather*}
+		\Delta \phi_m = - err(3) \left( \frac{\partial \norm{f_a(3)}}{\partial \Delta\phi_m} \right)^{-1} \text{which has no effect on} \norm{f_a(2)} \\
+		\Delta \theta_m = \left(err(1) - \Delta \phi_m \frac{\partial \norm{f_a(1)}}{\partial \Delta\phi_m} \right) \left( \frac{\partial \norm{f_a(1)}}{\partial \Delta\theta_m} \right)^{-1} \text{which has no effect on} \norm{f_a(2)}, \norm{f_a(3)} \\
+		\Delta \psi_m = err(2) \left( \frac{\partial \norm{f_a(2)}}{\partial \Delta\psi_m} \right)^{-1} \text{which has no effect on} \norm{f_a(1)}, \norm{f_a(3)}
+	\end{gather*}
+	\item These changes in the wing kinematic variables are further utilized to generate aerodynamic forces and thus control the system to obtain a hover trajectory
+\end{itemize}
+%
+For the purposes of simulation, we consider random initial conditions for the UAV. With gain values of $ K_P = -2, K_D = 2 $, we observe in Figure \ref{fig:hover_control} that the states converge to the hover trajectory.
+
+\begin{figure}[h!]
+	\centerline{
+		\subfigure[Position]{
+			\includegraphics[width=0.5\textwidth]{hover_control_pos}
+		}
+		\hfill
+		\subfigure[Velocity: actual (blue), ideal (black)]{
+			\includegraphics[width=0.5\textwidth]{hover_control_vel}
+		}
+	}
+	\caption{Position and velocity trajectory obtained through control design}
+	\label{fig:hover_control}
+\end{figure}
+
+\subsubsection*{Open-Source Software Package}
 
 A software package for the proposed quasi-state dynamic model of a flapping wing UAV has been developed in Matlab, and it is shared as an open-source library at \href{https://github.com/fdcl-gwu/FWUAV}{\texttt{https://github.com/fdcl-gwu/FWUAV}}.
 

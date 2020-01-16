@@ -34,7 +34,6 @@ gains.Kd_att = 0;
 %%% These two don't match; so there are inaccuracies?
 % plot(t*WK.f, f_tau(5, :)); hold on; y = -(tau(4:6, :) + tau(7:9, :) + tau(10:12, :)); plot(t*WK.f, y(2, :), 'r');
 
-eps = 1e-2;
 eps = 0;
 x0 = x0 + rand(3,1)*eps;
 R0 = des.R(:, :, 1)*expmso3(rand(3,1)*eps);
@@ -50,24 +49,17 @@ W_A0 = W_A(:, 1) + rand(3,1)*eps;
 X0=[x0; reshape(R0,9,1); reshape(Q_R0,9,1); reshape(Q_L0,9,1); reshape(Q_A0,9,1);...
     x_dot0; W0; W_R0; W_L0; W_A0];
 
-N = 1001;
+N = 667;
 t = linspace(0, 2/WK.f, N);
 dt = t(2) - t(1);
-% i = 1;
-% [t X]=ode15s(@(t,X) eom(INSECT, t, X, des, gains, i, dt), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+i = 1;
+[t X]=ode15s(@(t,X) eom(INSECT, t, X, des, gains, i, dt), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
-N = 5001;
-t = linspace(0, 2/WK.f, N);
-X = zeros(N, 54);
-X(1, :) = X0;
-dt = t(2) - t(1);
-% Explicit RK4
-for i=1:(N-1)
-    X_dot = eom(INSECT, t(i), X(i, :)', des, gains, i, dt);
-    X(i+1, :) = X(i, :) + dt*X_dot';
-    X(i+1, 4:39) = X_dot(4:39)';
-end
-
+% N = 5001;
+% t = linspace(0, 2/WK.f, N);
+% X = zeros(N, 54);
+% X(1, :) = X0;
+% dt = t(2) - t(1);
 % % Implicit trapezoidal method
 % options = optimoptions('fsolve', 'Display', 'none', 'UseParallel', true);
 % for i=1:(N-1)
@@ -163,17 +155,12 @@ end
 % f_a = zeros(15, 1);
 xi_dot=JJ\(-LL*xi + co_ad*JJ*xi - dU + f_a + f_tau);
 
-% ke = 0;
-% I = eye(3);
-% R_dot = R*hat(W) - ke*R*(R'*R - I);
-% Q_R_dot = Q_R*hat(W_R) - ke*Q_R*(Q_R'*Q_R - I);
-% Q_L_dot = Q_L*hat(W_L) - ke*Q_L*(Q_L'*Q_L - I);
-% Q_A_dot = Q_A*hat(W_A) - ke*Q_A*(Q_A'*Q_A - I);
-
-R_dot = R*expm(hat(W)*dt);
-Q_R_dot = Q_R*expm(hat(W_R)*dt);
-Q_L_dot = Q_L*expm(hat(W_L)*dt);
-Q_A_dot = Q_A*expm(hat(W_A)*dt);
+ke = 0;
+I = eye(3);
+R_dot = R*hat(W) - ke*R*(R'*R - I);
+Q_R_dot = Q_R*hat(W_R) - ke*Q_R*(Q_R'*Q_R - I);
+Q_L_dot = Q_L*hat(W_L) - ke*Q_L*(Q_L'*Q_L - I);
+Q_A_dot = Q_A*hat(W_A) - ke*Q_A*(Q_A'*Q_A - I);
 
 X_dot=[x_dot; reshape(R_dot,9,1); reshape(Q_R_dot,9,1); reshape(Q_L_dot,9,1); reshape(Q_A_dot,9,1); xi_dot];
 end

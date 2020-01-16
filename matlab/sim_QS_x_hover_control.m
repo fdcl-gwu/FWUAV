@@ -2,62 +2,94 @@ function sim_QS_x_hover_control
 % simulate the position of thorax (x) for obtaining hover, 
 % for given thorax attiude, wing kinematics, abdomen attitude
 evalin('base','clear all');
-% close all;
+close all;
+des=load('sim_QS_x_hover_abdomen_osc_body_osc_optimized_constrained_more.mat',...
+    'INSECT', 't', 'N', 'x', 'x_dot', 'R', 'Q_R', 'Q_L', 'W_R', 'W_L', 'f_tau',...
+    'x0', 'x_dot0', 'Q_A', 'WK');
 filename='sim_QS_x_hover_control';
-load('sim_QS_x_hover_abdomen_osc_body_osc_optimized_constrained_more.mat',...
-    'INSECT', 't', 'N', 'x', 'x_dot', 'R', 'Q_R', 'Q_L', 'Euler_R','W_R', 'W_L', 'f_tau',...
-    'x0', 'x_dot0', 'Q_A', 'W', 'W_A', 'WK', 'Euler_R_dot', 'tau');
-des.x = x;
-des.x_dot = x_dot;
-des.W_R_m = mean(W_R, 2);
-des.W_L_m = mean(W_L, 2);
-gains.Kp_pos = 1;
-gains.Kd_pos = 4;
+INSECT = des.INSECT;
+t = des.t;
+WK = des.WK;
+des.x_fit = cell(3, 1); des.x_dot_fit = cell(3, 1);
+for i=1:3
+    des.x_fit{i} = fit(t, des.x(i, :)', 'fourier8');
+    des.x_dot_fit{i} = fit(t, des.x_dot(i, :)', 'fourier8');
+end
 
-eps = 1e-2;
-x0 = x0 + rand(3,1)*eps;
-x_dot0 = x_dot0 + rand(3,1)*eps;
+des.df_a_2_by_dpsi_m = 1e-3 / 0.1; % dpsi_m_R > 0, dpsi_m_L < 0
+des.df_a_1_by_dtheta_m = -1.4e-3 / 0.1; % dtheta_m_R > 0, dtheta_m_L > 0
+des.df_a_1_by_dphi_m = 1.5e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
+des.df_a_3_by_dphi_m = -1.3e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
+
+gains.Kp_pos = -2; %-1
+gains.Kd_pos = 2;
+gains.Ki_pos = 0;
+
+eps = 1e-1;
+x0 = des.x0 + rand(3,1)*eps;
+x_dot0 = des.x_dot0 + rand(3,1)*eps;
 X0 = [x0; x_dot0;];
 
-N=1001; % 3001
-T=2/WK.f;
-t=linspace(0,T,N);
+N = 1001;
+N_period = 10;
+N_single = round((N-1)/N_period);
+T = N_period/WK.f;
+t = linspace(0,T,N);
 
 % [t, X]=ode45(@(t,X) eom(INSECT, WK, WK, t, X, des, gains, i), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
-X = zeros(N, 6);
-X(1, :) = X0;
+X = zeros(N, 9);
+X(1, :) = [X0; zeros(3, 1)];
 dt = t(2) - t(1);
-% Explicit RK4
+% % Explicit RK4
 for i=1:(N-1)
-    k1 = dt * eom(INSECT, WK, WK, t(i), X(i, :)', des, gains, i);
-    k2 = dt * eom(INSECT, WK, WK, t(i)+dt/2, X(i, :)'+k1/2, des, gains, i);
-    k3 = dt * eom(INSECT, WK, WK, t(i)+dt/2, X(i, :)'+k2/2, des, gains, i);
-    k4 = dt * eom(INSECT, WK, WK, t(i), X(i, :)'+k3, des, gains, i);
+    if mod(i-1, N_single) == 0
+        x0 = X(i, 1:3)';
+    end
+    k1 = dt * eom(INSECT, WK, WK, t(i), X(i, :)', des, gains, i, x0);
+    k2 = dt * eom(INSECT, WK, WK, t(i)+dt/2, X(i, :)'+k1/2, des, gains, i, x0);
+    k3 = dt * eom(INSECT, WK, WK, t(i)+dt/2, X(i, :)'+k2/2, des, gains, i, x0);
+    k4 = dt * eom(INSECT, WK, WK, t(i), X(i, :)'+k3, des, gains, i, x0);
     X(i+1, :) = X(i, :) + 1/6 * (k1 + 2*k2 + 2*k3 + k4)';
 end
-
-% % Implicit trapezoidal method
-% options = optimoptions('fsolve', 'Display', 'none');
-% for i=1:(N-1)
-%     X_i = X(i, :)';
-%     f_i = eom(INSECT, WK, WK, t(i), X_i, des, gains, i);
-%     fun = @(X) (X - X_i - 0.5 * dt *(f_i +...
-%         eom(INSECT, WK, WK, t(i) + dt, X, des, gains, i)));
-%     X(i+1, :) = fsolve(fun, X_i, options)';
-% end
 
 x=X(:,1:3)';
 x_dot=X(:,4:6)';
 
 R=zeros(3,3,N);
-for k=1:N    
-    [X_dot(:,k), R(:,:,k) Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) theta_B(k) theta_A(k) W(:,k) W_dot(:,k) W_R(:,k) W_R_dot(:,k) W_L(:,k) W_L_dot(:,k) W_A(:,k) W_A_dot(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k)]= eom(INSECT, WK, WK, t(k), X(k,:)', des, gains, i);
-    F_B(:,k)=Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);    
-    [Euler_R(:,k), Euler_R_dot(:,k), Euler_R_ddot(:,k)] = wing_kinematics(t(k),WK);
+for k=1:N
+    if mod(k-1, N_single) == 0
+        x0 = X(k, 1:3)';
+    end
+    [X_dot(:,k), R(:,:,k) Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) theta_B(k) theta_A(k) W(:,k) W_dot(:,k) W_R(:,k) W_R_dot(:,k) W_L(:,k) W_L_dot(:,k) W_A(:,k) W_A_dot(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k) Euler_R(:,k) Euler_R_dot(:,k)]= eom(INSECT, WK, WK, t(k), X(k,:)', des, gains, k, x0);
+    F_B(:,k)=Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);
 end
-
 x_ddot = X_dot(4:6,:);
+
+h_x=figure;
+for ii=1:3 
+    subplot(3,1,ii);
+    plot(t*WK.f,x(ii,:));
+    patch_downstroke(h_x,t*WK.f,Euler_R_dot);
+end
+xlabel('$t/T$','interpreter','latex');
+subplot(3,1,2);
+ylabel('$x$','interpreter','latex');
+print(h_x, 'hover_control_pos', '-depsc');
+
+h_x_dot=figure;
+for ii=1:3 
+    subplot(3,1,ii);
+    plot(t*WK.f,x_dot(ii,:));
+    hold on;
+    plot(t*WK.f,des.x_dot_fit{ii}(t), 'k');
+%     legend('Actual value', 'Fitted ideal value');
+    patch_downstroke(h_x_dot,t*WK.f,Euler_R_dot);
+end
+xlabel('$t/T$','interpreter','latex');
+subplot(3,1,2);
+ylabel('$\dot x$','interpreter','latex');
+print(h_x_dot, 'hover_control_vel', '-depsc');
 
 % Get a list of all variables
 allvars = whos;
@@ -71,9 +103,28 @@ evalin('base',['load ' filename]);
 %fig_comp_VICON;
 end
 
-function [X_dot R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X, des, gains, i)
+function [X_dot R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau Euler_R Euler_R_dot]= eom(INSECT, WK_R, WK_L, t, X, des, gains, i, x0)
 x=X(1:3);
 x_dot=X(4:6);
+int_d_x=X(7:9);
+
+% Control design
+d_x = zeros(3, 1); d_x_dot = zeros(3, 1);
+for j=1:3
+    d_x(j) = des.x_fit{j}(t) - (x(j) - x0(j));
+    d_x_dot(j) = des.x_dot_fit{j}(t) - x_dot(j);
+end
+pos_err = INSECT.m*(gains.Kp_pos * d_x + gains.Kd_pos * d_x_dot + gains.Ki_pos * int_d_x);
+dphi_m = - pos_err(3) / des.df_a_3_by_dphi_m;
+dtheta_m = (pos_err(1) - dphi_m * des.df_a_1_by_dphi_m) / des.df_a_1_by_dtheta_m;
+dpsi_m = pos_err(2) / des.df_a_2_by_dpsi_m;
+
+WK_R.phi_m = WK_R.phi_m + dphi_m;
+WK_L.phi_m = WK_L.phi_m + dphi_m;
+WK_R.theta_m = WK_R.theta_m + dtheta_m;
+WK_L.theta_m = WK_L.theta_m + dtheta_m;
+WK_R.psi_m = WK_R.psi_m + dpsi_m;
+WK_L.psi_m = WK_L.psi_m - dpsi_m;
 
 % wing/abdoment attitude and aerodynamic force/moment
 [Euler_R, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);
@@ -101,38 +152,6 @@ f_a=[R*Q_R*F_R + R*Q_L*F_L;
     M_A];
 f_a_1=f_a(1:3);
 f_a_2=f_a(4:15);
-
-d_x = des.x(:, i) - x;
-d_x_dot = des.x_dot(:, i) - x_dot;
-pos_err = INSECT.m*(gains.Kp_pos * d_x + gains.Kd_pos * d_x_dot) /2;
-f_a_1 = f_a_1 + 2*pos_err;
-
-[L_R_des, L_L_des]=wing_QS_aerodynamics(INSECT, des.W_R_m, des.W_L_m, zeros(3, 1), zeros(3, 1));
-K_R = -L_R_des(1)/des.W_R_m(1);
-K_L = -L_L_des(1)/des.W_L_m(1);
-
-d_att_R = (1/K_R * Q_R' * R' * pos_err);
-T_R = [-cos(Euler_R(3))*cos(Euler_R(2)), -sin(Euler_R(2));
-       -cos(Euler_R(3))*sin(Euler_R(2)), cos(Euler_R(2))];
-d_att_R = T_R \ [d_att_R(1); d_att_R(3);];
-d_att_L = (1/K_L * Q_L' * R' * pos_err);
-T_L = [cos(Euler_L(3))*cos(Euler_L(2)), sin(Euler_L(2));
-       cos(Euler_L(3))*sin(Euler_L(2)), -cos(Euler_L(2))];
-d_att_L = T_L \ [d_att_L(1); d_att_L(3);];
-global e1 e2 e3
-e1=[1 0 0]';
-e2=[0 1 0]';
-e3=[0 0 1]';
-Euler_R = Euler_R + [d_att_R(1); 0; d_att_R(2);];
-phi_R = Euler_R(1);
-theta_R = Euler_R(2);
-psi_R = Euler_R(3);
-Q_R=expmso3(WK_R.beta*e2)*expmso3(phi_R*e1)*expmso3(-psi_R*e3)*expmso3(theta_R*e2);
-Euler_L = Euler_L + [d_att_L(1); 0; d_att_L(2);];
-phi_L = Euler_L(1);
-theta_L = Euler_L(2);
-psi_L = Euler_L(3);
-Q_L=expmso3(WK_R.beta*e2)*expmso3(-phi_L*e1)*expmso3(psi_L*e3)*expmso3(theta_L*e2);
 
 % gravitational force and moment
 [~, dU]=potential(INSECT,x,R,Q_R,Q_L,Q_A);
@@ -164,7 +183,7 @@ tau = blkdiag(zeros(3), Q_R, Q_L, Q_A)*f_tau_2;
 % xi_dot=JJ\( co_ad*JJ*xi - LL*xi + f_a + f_g + f_tau);
 % disp(norm(xi_dot - [xi_1_dot; xi_2_dot]));
 
-X_dot=[xi_1; xi_1_dot];
+X_dot=[xi_1; xi_1_dot; d_x;];
 end
 
 function [JJ_11 JJ_12 JJ_21 JJ_22] = inertia_sub_decompose_3_12(JJ)
