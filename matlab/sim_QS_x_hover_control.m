@@ -3,7 +3,7 @@ function sim_QS_x_hover_control
 % given thorax attiude, wing kinematics, abdomen attitude.
 
 evalin('base','clear all');
-close all;
+% close all;
 addpath('./modules', './sim_data');
 des=load('sim_QS_x_hover.mat',...
     'INSECT', 't', 'N', 'x', 'x_dot', 'R', 'Q_R', 'Q_L', 'W_R', 'W_L', 'f_tau',...
@@ -13,30 +13,47 @@ filename='sim_QS_x_hover_control';
 INSECT = des.INSECT;
 WK = des.WK;
 des.x_fit = cell(3, 1); des.x_dot_fit = cell(3, 1);
+% fttype = "a0 + ";
+% for i=1:20
+%     fttype = fttype + 'a' + string(i) + '*cos(' + string(i) + '*x*w) + b'...
+%         + string(i) + '*sin(' + string(i) + '*x*w) +';
+% end
+% fttype = fttype + "0";
+% fttype = fittype(fttype);
 for i=1:3
     des.x_fit{i} = fit(des.t, des.x(i, :)', 'fourier8');
     des.x_dot_fit{i} = fit(des.t, des.x_dot(i, :)', 'fourier8');
 end
 
 % Values obtained from parametric study
-des.df_a_2_by_dpsi_m = 1e-3 / 0.1; % dpsi_m_R > 0, dpsi_m_L < 0
-des.df_a_1_by_dtheta_m = -1.4e-3 / 0.1; % dtheta_m_R > 0, dtheta_m_L > 0
+% Orig values
 des.df_a_1_by_dphi_m = 1.5e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
-des.df_a_3_by_dphi_m = -1.3e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
+des.df_a_1_by_dtheta_m = -1.4e-3 / 0.1; % dtheta_m_R > 0, dtheta_m_L > 0
+des.df_a_2_by_dpsi_m = 1e-3 / 0.1; % dpsi_m_R > 0, dpsi_m_L < 0
+des.df_a_3_by_dphi_m = 1.3e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
+% New values
+des.df_a_1_by_dphi_m = 0.54e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
+des.df_a_1_by_dtheta_m = -0.6e-3 / 0.1; % dtheta_m_R > 0, dtheta_m_L > 0
+des.df_a_2_by_dpsi_m = 0.3e-3 / 0.1; % dpsi_m_R > 0, dpsi_m_L < 0
+des.df_a_3_by_dphi_m = 0.47e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
 
 % Gains
+% Original
 gains.Kp_pos = -2;
+gains.Kd_pos = 2;
+% New
+gains.Kp_pos = 2;
 gains.Kd_pos = 2;
 gains.Ki_pos = 0;
 
 %% Simulation
-eps = 1e-1;
-x0 = des.x0 + rand(3,1)*eps;
-x_dot0 = des.x_dot0 + rand(3,1)*eps;
+eps1 = 1e-2; eps2 = 1e-1;
+x0 = des.x0 + rand(3,1)*eps1;
+x_dot0 = des.x_dot0 + rand(3,1)*eps2;
 X0 = [x0; x_dot0;];
 
-N = 1001;
-N_period = 10;
+N = 2001;
+N_period = 20;
 N_single = round((N-1)/N_period);
 T = N_period/WK.f;
 t = linspace(0,T,N);
@@ -48,9 +65,9 @@ X(1, :) = [X0; zeros(3, 1)];
 dt = t(2) - t(1);
 % % Explicit RK4
 for i=1:(N-1)
-    if mod(i-1, N_single) == 0
-        x0 = X(i, 1:3)';
-    end
+%     if mod(i-1, N_single) == 0
+%         x0 = X(i, 1:3)';
+%     end
     k1 = dt * eom(INSECT, WK, WK, t(i), X(i, :)', des, gains, i, x0);
     k2 = dt * eom(INSECT, WK, WK, t(i)+dt/2, X(i, :)'+k1/2, des, gains, i, x0);
     k3 = dt * eom(INSECT, WK, WK, t(i)+dt/2, X(i, :)'+k2/2, des, gains, i, x0);
@@ -63,10 +80,10 @@ x_dot=X(:,4:6)';
 
 R=zeros(3,3,N);
 for k=1:N
-    if mod(k-1, N_single) == 0
-        x0 = X(k, 1:3)';
-    end
-    [X_dot(:,k), R(:,:,k) Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) theta_B(k) theta_A(k) W(:,k) W_dot(:,k) W_R(:,k) W_R_dot(:,k) W_L(:,k) W_L_dot(:,k) W_A(:,k) W_A_dot(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k) Euler_R(:,k) Euler_R_dot(:,k)]= eom(INSECT, WK, WK, t(k), X(k,:)', des, gains, k, x0);
+%     if mod(k-1, N_single) == 0
+%         x0 = X(k, 1:3)';
+%     end
+    [X_dot(:,k), R(:,:,k) Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) theta_B(k) theta_A(k) W(:,k) W_dot(:,k) W_R(:,k) W_R_dot(:,k) W_L(:,k) W_L_dot(:,k) W_A(:,k) W_A_dot(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k) Euler_R(:,k) Euler_R_dot(:,k) pos_err(:, k)]= eom(INSECT, WK, WK, t(k), X(k,:)', des, gains, k, x0);
     F_B(:,k)=Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);
 end
 x_ddot = X_dot(4:6,:);
@@ -76,6 +93,8 @@ h_x=figure;
 for ii=1:3 
     subplot(3,1,ii);
     plot(t*WK.f,x(ii,:));
+    hold on;
+    plot(t*WK.f,des.x_fit{ii}(t), 'k');
     patch_downstroke(h_x,t*WK.f,Euler_R_dot);
 end
 xlabel('$t/T$','interpreter','latex');
@@ -97,6 +116,30 @@ subplot(3,1,2);
 ylabel('$\dot x$','interpreter','latex');
 % print(h_x_dot, 'hover_control_vel', '-depsc');
 
+h_err = figure;
+subplot(3,2,1);
+plot(t*WK.f, pos_err(1,:));
+patch_downstroke(h_err,t*WK.f,Euler_R_dot);
+subplot(3,2,3);
+plot(t*WK.f, pos_err(2,:));
+patch_downstroke(h_err,t*WK.f,Euler_R_dot);
+ylabel('$\Delta x$','interpreter','latex');
+subplot(3,2,5);
+plot(t*WK.f, pos_err(3,:));
+patch_downstroke(h_err,t*WK.f,Euler_R_dot);
+%
+subplot(3,2,2);
+plot(t*WK.f, f_a(1,:));
+patch_downstroke(h_err,t*WK.f,Euler_R_dot);
+subplot(3,2,4);
+plot(t*WK.f, f_a(2,:));
+patch_downstroke(h_err,t*WK.f,Euler_R_dot);
+ylabel('$f_a$','interpreter','latex');
+subplot(3,2,6);
+plot(t*WK.f, f_a(3,:));
+patch_downstroke(h_err,t*WK.f,Euler_R_dot);
+xlabel('$t/T$','interpreter','latex');
+
 %%
 % Get a list of all variables
 allvars = whos;
@@ -106,9 +149,10 @@ tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
 % Pass these variable names to save
 save(filename, allvars(tosave).name)
 evalin('base',['load ' filename]);
+
 end
 
-function [X_dot R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau Euler_R Euler_R_dot]= eom(INSECT, WK_R, WK_L, t, X, des, gains, i, x0)
+function [X_dot R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau Euler_R Euler_R_dot pos_err]= eom(INSECT, WK_R, WK_L, t, X, des, gains, i, x0)
 x=X(1:3);
 x_dot=X(4:6);
 int_d_x=X(7:9);
@@ -116,12 +160,13 @@ int_d_x=X(7:9);
 % Control design
 d_x = zeros(3, 1); d_x_dot = zeros(3, 1);
 for j=1:3
-    d_x(j) = des.x_fit{j}(t) - (x(j) - x0(j));
+%     d_x(j) = des.x_fit{j}(t) - (x(j) - x0(j));
+    d_x(j) = des.x_fit{j}(t) - x(j);
     d_x_dot(j) = des.x_dot_fit{j}(t) - x_dot(j);
 end
 pos_err = INSECT.m*(gains.Kp_pos * d_x + gains.Kd_pos * d_x_dot + gains.Ki_pos * int_d_x);
 dphi_m = - pos_err(3) / des.df_a_3_by_dphi_m;
-dtheta_m = (pos_err(1) - dphi_m * des.df_a_1_by_dphi_m) / des.df_a_1_by_dtheta_m;
+dtheta_m = (pos_err(1) + dphi_m * des.df_a_1_by_dphi_m) / des.df_a_1_by_dtheta_m;
 dpsi_m = pos_err(2) / des.df_a_2_by_dpsi_m;
 
 WK_R.phi_m = WK_R.phi_m + dphi_m;
@@ -135,9 +180,6 @@ WK_L.psi_m = WK_L.psi_m - dpsi_m;
 [Euler_R, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);
 [Euler_L, Euler_L_dot, Euler_L_ddot] = wing_kinematics(t,WK_L);
 [Q_R Q_L W_R W_L W_R_dot W_L_dot] = wing_attitude(WK_R.beta, Euler_R, Euler_L, Euler_R_dot, Euler_L_dot, Euler_R_ddot, Euler_L_ddot);
-
-% [R W W_dot theta_B] = body_attitude(t,WK_R.f); %time-varying thorax
-% [Q_A W_A W_A_dot theta_A] = abdomen_attitude(17.32*pi/180); % fixed abdomen
 
 [R W W_dot theta_B] = body_attitude(t, WK_R.f, WK_R); % body
 [Q_A W_A W_A_dot theta_A] = abdomen_attitude(t, WK_R.f, WK_R); % abdomen

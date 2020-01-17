@@ -2168,7 +2168,7 @@ Employing these observations, a PD controller for the dynamics \eqref{eqn:mx_ddo
 	\[ \Delta x(t) = x_{des}(t) - (x(t) - x(t_{nT})),\quad \Delta \dot x(t) = \dot x_{des}(t) - \dot x(t) \]
 	where $ t_{nT} = \max \lbrace nT \vert\ t \ge nT,\ n = 0, 1, 2, \dots \rbrace $
 	\item The designed forces will have to reduce $ err = m (K_P \Delta x (t) + K_D \Delta\dot x(t)) $ to zero where $ K_P, K_D $ are the gains
-	\item From Figure \ref{fig:hover_param}, we can obtain the relation of aerodynamic forces to a few parameters:
+	\item From Figure \ref{fig:hover_param}, we can obtain the relation of aerodynamic forces to a few parameters which are not negligible:
 	\[ \frac{\partial \norm{f_a(1)}}{\partial \Delta\phi_m},\quad \frac{\partial \norm{f_a(1)}}{\partial \Delta\theta_m},\quad \frac{\partial \norm{f_a(3)}}{\partial \Delta\phi_m},\quad \frac{\partial \norm{f_a(2)}}{\partial \Delta\psi_m} \]
 	\item And hence we obtain the inverse relations,
 	\begin{gather*}

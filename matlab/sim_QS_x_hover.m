@@ -63,6 +63,7 @@ fprintf('Optimization has been completed\n');
 disp(output);
 toc;
 
+%%
 WK.beta=WK_arr(1);
 WK.phi_m=WK_arr(2);
 WK.phi_K=WK_arr(3);

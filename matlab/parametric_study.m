@@ -24,36 +24,71 @@ end
 
 h_f_a = figure;
 h_f_a.PaperUnits = 'inches';
-h_f_a.PaperPosition = [0 0 8 6];
-
-subplot(2,2,1);
+h_f_a.PaperPosition = [0 0 12 9];
+%
+subplot(3,3,1);
 plot(eps, squeeze(f_a_m(1,1,:)));
 hold on;
 scatter(eps, squeeze(f_a_m(1,1,:)), 10, 'k', 'filled');
 xlabel('$\epsilon\ \vert\ \Delta\phi_{m, R} = \epsilon, \Delta\phi_{m, L} = \epsilon$','interpreter','latex');
 ylabel('mean $\|f_a(1)\|$ along $x$','interpreter','latex');
 
-subplot(2,2,3);
+subplot(3,3,4);
+plot(eps, squeeze(f_a_m(1,2,:)));
+hold on;
+scatter(eps, squeeze(f_a_m(1,2,:)), 10, 'k', 'filled');
+xlabel('$\epsilon\ \vert\ \Delta\phi_{m, R} = \epsilon, \Delta\phi_{m, L} = \epsilon$','interpreter','latex');
+ylabel('mean $\|f_a(2)\|$ along $y$','interpreter','latex');
+
+subplot(3,3,7);
 plot(eps, squeeze(f_a_m(1,3,:)));
 hold on;
 scatter(eps, squeeze(f_a_m(1,3,:)), 10, 'k', 'filled');
 xlabel('$\epsilon\ \vert\ \Delta\phi_{m, R} = \epsilon, \Delta\phi_{m, L} = \epsilon$','interpreter','latex');
 ylabel('mean $\|f_a(3)\|$ along $z$','interpreter','latex');
-
-subplot(2,2,2);
+%
+subplot(3,3,2);
 plot(eps, squeeze(f_a_m(2,1,:)));
 hold on;
 scatter(eps, squeeze(f_a_m(2,1,:)), 10, 'k', 'filled');
 xlabel('$\epsilon\ \vert\ \Delta\theta_{m, R} = \epsilon, \Delta\theta_{m, L} = \epsilon$','interpreter','latex');
 ylabel('mean $\|f_a(1)\|$ along $x$','interpreter','latex');
 
-subplot(2,2,4);
+subplot(3,3,5);
+plot(eps, squeeze(f_a_m(2,2,:)));
+hold on;
+scatter(eps, squeeze(f_a_m(2,2,:)), 10, 'k', 'filled');
+xlabel('$\epsilon\ \vert\ \Delta\theta_{m, R} = \epsilon, \Delta\theta_{m, L} = \epsilon$','interpreter','latex');
+ylabel('mean $\|f_a(2)\|$ along $y$','interpreter','latex');
+
+subplot(3,3,8);
+plot(eps, squeeze(f_a_m(2,3,:)));
+hold on;
+scatter(eps, squeeze(f_a_m(2,3,:)), 10, 'k', 'filled');
+xlabel('$\epsilon\ \vert\ \Delta\theta_{m, R} = \epsilon, \Delta\theta_{m, L} = \epsilon$','interpreter','latex');
+ylabel('mean $\|f_a(3)\|$ along $z$','interpreter','latex');
+%
+subplot(3,3,3);
+plot(eps, squeeze(f_a_m(3,1,:)));
+hold on;
+scatter(eps, squeeze(f_a_m(3,1,:)), 10, 'k', 'filled');
+xlabel('$\epsilon\ \vert\ \Delta\psi_{m, R} = \epsilon, \Delta\psi_{m, L} = -\epsilon$','interpreter','latex');
+ylabel('mean $\|f_a(1)\|$ along $x$','interpreter','latex');
+
+subplot(3,3,6);
 plot(eps, squeeze(f_a_m(3,2,:)));
 hold on;
 scatter(eps, squeeze(f_a_m(3,2,:)), 10, 'k', 'filled');
 xlabel('$\epsilon\ \vert\ \Delta\psi_{m, R} = \epsilon, \Delta\psi_{m, L} = -\epsilon$','interpreter','latex');
 ylabel('mean $\|f_a(2)\|$ along $y$','interpreter','latex');
 
+subplot(3,3,9);
+plot(eps, squeeze(f_a_m(3,3,:)));
+hold on;
+scatter(eps, squeeze(f_a_m(3,3,:)), 10, 'k', 'filled');
+xlabel('$\epsilon\ \vert\ \Delta\psi_{m, R} = \epsilon, \Delta\psi_{m, L} = -\epsilon$','interpreter','latex');
+ylabel('mean $\|f_a(3)\|$ along $z$','interpreter','latex');
+%
 % print(h_f_a, 'hover_param_study', '-depsc', '-r0');
 
 % Get a list of all variables
