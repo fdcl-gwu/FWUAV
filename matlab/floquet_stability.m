@@ -7,11 +7,12 @@ addpath('./modules', './sim_data');
 
 %% Linearized dynamics
 filename=append('sim_QS_x_hover_','stability_data');
-load('sim_QS_x_hover.mat');
-INSECT.scale=1e-2;
-INSECT.name='MONARCH';
-WK.ab_type='varying';
-WK.bo_type='varying';
+load('sim_QS_x_hover_control.mat');
+% INSECT.scale=1e-2;
+% INSECT.name='MONARCH';
+% WK.ab_type='varying';
+% WK.bo_type='varying';
+
 % load('sim_QS_x_hover_hawkmoth.mat');
 % INSECT.name='NOT_MONARCH';
 
@@ -19,10 +20,10 @@ N_sims = 10;
 conv_rate_osc = zeros(N_sims, 6);
 var_name_to_save = 'conv_rate_osc';
 
-N=1001;
-N_periods=10;
-T=N_periods/WK.f;
-ix_d = (N-1)/N_periods;
+% N=1001;
+N_period = T*WK.f;
+T=N_period/WK.f;
+ix_d = (N-1)/N_period;
 t=linspace(0,T,N);
 dt = T/(N-1);
 epsilon = 1e0;
@@ -30,14 +31,14 @@ epsilon = 1e0;
 [delta_mat, F_linear] = sim_perturbation(INSECT, WK, X0, N, t, epsilon);
 
 B = zeros(6, 6, 1+ix_d);
-start_ix = max(1, round((N_periods-2)/N_periods * N));
+start_ix = max(1, round((N_period-2)/N_period * N));
 for i=start_ix:(start_ix+ix_d)
     j = i-start_ix+1;
-%         d_F = (F_linear(:, :, k) - F_linear(:, :, k+ix_d))./ F_linear(:, :, k);
-%         d_F(max(abs(F_linear(:, :, k+ix_d)), abs(F_linear(:, :, k))) < 1e-10) = 0;
-%         if(~all(abs(d_F) < 1e-2, [1, 2]))
-%             disp(d_F)
-%         end
+%     d_F = (F_linear(:, :, k) - F_linear(:, :, k+ix_d))./ F_linear(:, :, k);
+%     d_F(max(abs(F_linear(:, :, k+ix_d)), abs(F_linear(:, :, k))) < 1e-10) = 0;
+%     if(~all(abs(d_F) < 1e-2, [1, 2]))
+%         disp(d_F)
+%     end
     B(:, :, j) = delta_mat(:, :, i) \ delta_mat(:, :, i+ix_d);
 end
 B = B(:, :, round(end/2));

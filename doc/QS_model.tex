@@ -52,6 +52,7 @@
 \newcommand{\G}{\ensuremath{\mathsf{G}}}
 \newcommand{\g}{\ensuremath{\mathfrak{g}}}
 \newcommand{\Hess}{\ensuremath{\mathrm{Hess}}}
+\newcommand{\sign}[1]{\ensuremath{\mathsf{sign} \left( #1 \right)}}
 
 \newcommand{\bfi}{\bfseries\itshape\selectfont}
 \def\AR{\text{\itshape\clipbox{0pt 0pt .32em 0pt}\AE\kern-.30emR}}
@@ -2165,21 +2166,30 @@ Before we bring that about, we study the relation between these wing kinematic a
 Employing these observations, a PD controller for the dynamics \eqref{eqn:mx_ddot} can be designed as follows,
 \begin{itemize}
 	\item Calculate the error in position and velocity as
-	\[ \Delta x(t) = x_{des}(t) - (x(t) - x(t_{nT})),\quad \Delta \dot x(t) = \dot x_{des}(t) - \dot x(t) \]
-	where $ t_{nT} = \max \lbrace nT \vert\ t \ge nT,\ n = 0, 1, 2, \dots \rbrace $
-	\item The designed forces will have to reduce $ err = m (K_P \Delta x (t) + K_D \Delta\dot x(t)) $ to zero where $ K_P, K_D $ are the gains
+	\[ \Delta x(t) = x_{des}(t) - x(t),\quad \Delta \dot x(t) = \dot x_{des}(t) - \dot x(t) \]
+	where $ x_{des}, \dot x_{des} $ are desired position and velocity
+%	where $ t_{nT} = \max \lbrace nT \vert\ t \ge nT,\ n = 0, 1, 2, \dots \rbrace $
+	\item The error dynamics compared to the ideal version in \eqref{eqn:mx_ddot} will have the form,
+	\[ m (\ddot{x}(t) - \ddot{x}_{des}(t)) = \Delta f_a = f_a(t) - f_{a, des} (t)\]
+	where $ f_a = R Q_R F_R + R Q_L F_L $ and assuming the angular velocities are unaffected
+	\item The designed forces will have to be equal to $ \Delta f_a = m (K_P \Delta x (t) + K_D \Delta\dot x(t) + K_I \int_{0}^{t} \Delta x(\tau) d\tau) $ where $ K_P, K_D, K_I $ are the gains
 	\item From Figure \ref{fig:hover_param}, we can obtain the relation of aerodynamic forces to a few parameters which are not negligible:
-	\[ \frac{\partial \norm{f_a(1)}}{\partial \Delta\phi_m},\quad \frac{\partial \norm{f_a(1)}}{\partial \Delta\theta_m},\quad \frac{\partial \norm{f_a(3)}}{\partial \Delta\phi_m},\quad \frac{\partial \norm{f_a(2)}}{\partial \Delta\psi_m} \]
+	\[ \frac{\partial \norm{f_a(1)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(1)}}{\partial \theta_m},\quad \frac{\partial \norm{f_a(3)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(2)}}{\partial \psi_m} \]
 	\item And hence we obtain the inverse relations,
 	\begin{gather*}
-		\Delta \phi_m = - err(3) \left( \frac{\partial \norm{f_a(3)}}{\partial \Delta\phi_m} \right)^{-1} \text{which has no effect on} \norm{f_a(2)} \\
-		\Delta \theta_m = \left(err(1) - \Delta \phi_m \frac{\partial \norm{f_a(1)}}{\partial \Delta\phi_m} \right) \left( \frac{\partial \norm{f_a(1)}}{\partial \Delta\theta_m} \right)^{-1} \text{which has no effect on} \norm{f_a(2)}, \norm{f_a(3)} \\
-		\Delta \psi_m = err(2) \left( \frac{\partial \norm{f_a(2)}}{\partial \Delta\psi_m} \right)^{-1} \text{which has no effect on} \norm{f_a(1)}, \norm{f_a(3)}
+		\Delta \phi_m = \sign{f_a(3)} \left(\frac{\partial \norm{f_a(3)}}{\partial \phi_m} \right)^{-1} \Delta f_a(3) \\
+		\Delta \theta_m = \sign{f_a(1)} \left( \frac{\partial \norm{f_a(1)}}{\partial \theta_m} \right)^{-1} \left(\Delta f_a(1) - \sign{f_a(1)} \frac{\partial \norm{f_a(1)}}{\partial \phi_m} \Delta \phi_m \right) \\
+		\Delta \psi_m = \sign{f_a(2)} \left( \frac{\partial \norm{f_a(2)}}{\partial \psi_m} \right)^{-1} \Delta f_a(2)
 	\end{gather*}
-	\item These changes in the wing kinematic variables are further utilized to generate aerodynamic forces and thus control the system to obtain a hover trajectory
+	\item These changes in the wing kinematic variables are further utilized to generate aerodynamic forces and thus control the system to obtain a hover trajectory:
+	\begin{gather*}
+		m (\ddot{x}(t) - \ddot{x}_{des}(t)) = \Delta f_a = m (K_P \Delta x (t) + K_D \Delta\dot x(t) + K_I \int_{0}^{t} \Delta x(\tau) d\tau) \\
+		\implies \Delta \ddot{x}(t) + K_D \Delta\dot x(t) + K_P \Delta x (t) + K_I \int_{0}^{t} \Delta x(\tau) d\tau = 0
+	\end{gather*}
+	from which $ \Delta x(t) \to 0 $ if all the roots of $ \lambda^3 + K_D \lambda^2 + K_P \lambda + K_I = 0 $ have strictly negative real values
 \end{itemize}
 %
-For the purposes of simulation, we consider random initial conditions for the UAV. With gain values of $ K_P = -2, K_D = 2 $, we observe in Figure \ref{fig:hover_control} that the states converge to the hover trajectory.
+For the purposes of simulation, we consider random initial conditions for the UAV. With gain values of $ K_P = 421.8868, K_D = 15.6030, K_I = 1.2655 $ and corresponding roots of $ -7.8 + 19i, -7.8 - 19i, -0.003 $, we observe in Figure \ref{fig:hover_control} that the states converge to the hover trajectory.
 
 \begin{figure}[h!]
 	\centerline{
@@ -2187,11 +2197,11 @@ For the purposes of simulation, we consider random initial conditions for the UA
 			\includegraphics[width=0.5\textwidth]{hover_control_pos}
 		}
 		\hfill
-		\subfigure[Velocity: actual (blue), ideal (black)]{
+		\subfigure[Velocity]{
 			\includegraphics[width=0.5\textwidth]{hover_control_vel}
 		}
 	}
-	\caption{Position and velocity trajectory obtained through control design}
+	\caption{Position and velocity trajectory obtained through control design : actual (blue), ideal (black)}
 	\label{fig:hover_control}
 \end{figure}
 
