@@ -1,4 +1,4 @@
-function floquet_stability
+function floquet_stability_control
 % Study the stability of a periodic trajecoty using floquet theory.
 
 evalin('base','clear all');
@@ -6,66 +6,49 @@ close all;
 addpath('./modules', './sim_data');
 
 %% Linearized dynamics
-filename=append('sim_QS_x_hover_','stability_data');
+filename=append('sim_QS_x_hover_control_','stability_data');
+load('sim_QS_x_hover_control.mat', 'gains');
 load('sim_QS_x_hover.mat');
-% INSECT.scale=1e-2;
-% INSECT.name='MONARCH';
-% WK.ab_type='varying';
-% WK.bo_type='varying';
 
-% load('sim_QS_x_hover_hawkmoth.mat');
-% INSECT.name='NOT_MONARCH';
-
-N_sims = 10;
-conv_rate_osc = zeros(N_sims, 6);
-var_name_to_save = 'conv_rate_osc';
-
-% N=1001;
-N_period = T*WK.f;
-T=N_period/WK.f;
+N = 1001;
+N_period = 10;
+T = N_period/WK.f;
 ix_d = (N-1)/N_period;
 t=linspace(0,T,N);
 dt = T/(N-1);
-epsilon = 1e0;
+epsilon = 1e1;
 
-[delta_mat, F_linear] = sim_perturbation(INSECT, WK, X0, N, t, epsilon);
+[delta_mat, F_linear] = sim_perturbation(INSECT, WK, X0, N, t, epsilon, gains);
 
-B = zeros(6, 6, 1+ix_d);
+B = zeros(9, 9, 1+ix_d);
 start_ix = max(1, round((N_period-2)/N_period * N));
 for i=start_ix:(start_ix+ix_d)
     j = i-start_ix+1;
-%     d_F = (F_linear(:, :, k) - F_linear(:, :, k+ix_d))./ F_linear(:, :, k);
-%     d_F(max(abs(F_linear(:, :, k+ix_d)), abs(F_linear(:, :, k))) < 1e-10) = 0;
-%     if(~all(abs(d_F) < 1e-2, [1, 2]))
-%         disp(d_F)
-%     end
+    d_F = (F_linear(:, :, i) - F_linear(:, :, i+ix_d))./ F_linear(:, :, i);
+    d_F(max(abs(F_linear(:, :, i+ix_d)), abs(F_linear(:, :, i))) < 1e-10) = 0;
+    if(~all(abs(d_F) < 5e-2, [1, 2]))
+        disp(d_F)
+    end
     B(:, :, j) = delta_mat(:, :, i) \ delta_mat(:, :, i+ix_d);
 end
 B = B(:, :, round(end/2));
 [e_vecs, rhos] = eig(B);
 mus = log(diag(rhos)) * WK.f;
 
-char_soln_mat = zeros(6, 6, N);
-per_val_mat = zeros(6, 6, N);
-
-for i=1:N
-    char_soln_mat(:, :, i) = delta_mat(:, :, i) * e_vecs;
-    Y_0 = diag(exp(mus*t(i)));
-    per_val_mat(:, :, i) = char_soln_mat(:, :, i) * inv(Y_0);
-end
+% % Have to change this for complex eigenvalues
+% char_soln_mat = zeros(9, 9, N);
+% per_val_mat = zeros(9, 9, N);
+% 
+% for i=1:N
+%     char_soln_mat(:, :, i) = delta_mat(:, :, i) * e_vecs;
+%     Y_0 = diag(exp(mus*t(i)));
+%     per_val_mat(:, :, i) = char_soln_mat(:, :, i) * inv(Y_0);
+% end
 
 omega = 2*pi*WK.f;
 stop_idx = N;
 
-for c_ix=4:6 % Column index for perturbation direction
-%     delta_g_mag = vecnorm(reshape(delta_mat(1:3, c_ix, :), 3, N));
-%     delta_xi_mag = vecnorm(reshape(delta_mat(4:6, c_ix, :), 3, N));
-    conv_rate_osc(:, c_ix) = repmat(mus(c_ix), [N_sims, 1]);
-end
-
-% save('sim_QS_x_hover_conv_rate', var_name_to_save, '-append');
-
-%% Figures
+%%
 % time=t*WK.f;
 % figure;
 % xlabel('$t/T$','interpreter','latex');
@@ -78,29 +61,6 @@ end
 % ylabel('$\delta \dot{x}$','interpreter','latex');
 % % print('sim_QS_x_hover_stability', '-depsc');
 
-% h_floq = figure;
-% h_floq.PaperUnits = 'inches';
-% h_floq.PaperPosition = [0 0 11 11];
-% for i=1:3
-%     subplot(3, 2, 2*i-1);
-%     plot(t*WK.f, squeeze(char_soln_mat(:, i+3, :)));
-%     lgd = legend(string(1:6));
-% %     title(lgd, 'Component index');
-%     l = "$\mathbf{x}_" + string(i+3) + "(t)$" + " with " + "$\mu_" + string(i+3) + " = " + string(mus(i+3)) + "$";
-%     ylabel(l, 'interpreter', 'latex');
-%     xlabel('$t/T$', 'interpreter', 'latex');
-% 
-%     j = 2*i;
-%     subplot(3, 2, j);
-%     plot(t*WK.f, squeeze(per_val_mat(:, i+3, :)));
-%     lgd = legend(string(1:6));
-%     l = "$\mathbf{p}_" + string(i+3) + "(t)$" + " with " + "$\mu_" + string(i+3) + " = " + string(mus(i+3)) + "$";
-%     ylabel(l, 'interpreter', 'latex');
-%     xlabel('$t/T$', 'interpreter', 'latex');
-% end
-% print(h_floq, 'hover_char_soln', '-depsc', '-r0');
-
-%%
 % Get a list of all variables
 allvars = whos;
 % Identify the variables that ARE NOT graphics handles. This uses a regular
@@ -111,34 +71,33 @@ save(filename, allvars(tosave).name)
 evalin('base',['load ' filename]);
 end
 
-function [delta_mat, F_linear] = sim_perturbation(INSECT, WK, X0, N, t, epsilon)
+function [delta_mat, F_linear] = sim_perturbation(INSECT, WK, X0, N, t, epsilon, gains)
 %%
-delta0 = diag(rand(6, 1))/epsilon;
-% delta0 = rand(6, 6)/epsilon;
-X0 = [X0(1:6); reshape(delta0, 36, 1);];
+n = 9;
+delta0 = diag(rand(n, 1))/epsilon;
+X0 = [X0(1:6); reshape(delta0, n^2, 1);];
 
-[t X]=ode45(@(t,X) eom(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+[t X]=ode45(@(t,X) eom(INSECT, WK, WK, t, X, gains), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
-F_linear=zeros(6, 6, N);
+F_linear=zeros(n, n, N);
 for k=1:N
-    [~, F_linear(:, :, k)] = eom(INSECT, WK, WK, t(k), X(k, :)');
+    [~, F_linear(:, :, k)] = eom(INSECT, WK, WK, t(k), X(k, :)', gains);
 end
 
 x=X(:,1:3)';
 x_dot=X(:,4:6)';
 
-% delta=X(:,7:12)';
 % delta_g_mag = sqrt(diag(delta(1:3, :)'*delta(1:3, :)));
 % delta_xi_mag = sqrt(diag(delta(4:6, :)'*delta(4:6, :)));
-delta_mat=reshape(X(:,7:42)', 6, 6, N);
+delta_mat=reshape(X(:,7:87)', n, n, N);
 
 end
 
-function [X_dot F_linear R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X)
+function [X_dot F_linear R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X, gains)
 %%
 x=X(1:3);
 x_dot=X(4:6);
-delta_mat=reshape(X(7:42), 6, 6);
+delta_mat=reshape(X(7:87), 9, 9);
 
 % wing/abdoment attitude and aerodynamic force/moment
 [Euler_R, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);
@@ -190,12 +149,15 @@ f_tau_2 = JJ_21*xi_1_dot + JJ_22*xi_2_dot - co_ad_22*(JJ_21*xi_1 + JJ_22*xi_2) .
 f_tau = [zeros(3,1); f_tau_2];
 tau = blkdiag(zeros(3), Q_R, Q_L, Q_A)*f_tau_2;
 
-F_linear = zeros(6, 6);
+F_linear = zeros(9, 9);
 [d_L_R d_L_L d_D_R d_D_L]=wing_QS_aerodynamics_linearized(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);
 d_F_R=d_L_R+d_D_R;
 d_F_L=d_L_L+d_D_L;
 F_linear(1:3, 4:6) = eye(3);
-F_linear(4:6, 4:6) = JJ_11\ R * (Q_R*d_F_R + Q_L*d_F_L);
-X_dot=[xi_1; xi_1_dot; reshape(F_linear*delta_mat, 36, 1);];
+F_linear(4:6, 7:9) = eye(3);
+F_linear(7:9, 1:3) = -gains.Ki_pos * eye(3);
+F_linear(7:9, 4:6) = -gains.Kp_pos * eye(3);
+F_linear(7:9, 7:9) = JJ_11\ R * (Q_R*d_F_R + Q_L*d_F_L) - gains.Kd_pos * eye(3);
+X_dot=[xi_1; xi_1_dot; reshape(F_linear*delta_mat, 81, 1);];
 
 end

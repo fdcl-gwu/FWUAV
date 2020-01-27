@@ -2172,7 +2172,11 @@ Employing these observations, a PD controller for the dynamics \eqref{eqn:mx_ddo
 	\item The error dynamics compared to the ideal version in \eqref{eqn:mx_ddot} will have the form,
 	\[ m (\ddot{x}(t) - \ddot{x}_{des}(t)) = \Delta f_a = f_a(t) - f_{a, des} (t)\]
 	where $ f_a = R Q_R F_R + R Q_L F_L $ and assuming the angular velocities are unaffected
-	\item The designed forces will have to be equal to $ \Delta f_a = m (K_P \Delta x (t) + K_D \Delta\dot x(t) + K_I \int_{0}^{t} \Delta x(\tau) d\tau) $ where $ K_P, K_D, K_I $ are the gains
+	\item The designed forces will have to be 
+	\begin{equation} \label{eqn:PID_controller}
+	\Delta f_a = m (K_P \Delta x (t) + K_D \Delta\dot x(t) + K_I \int_{0}^{t} \Delta x(\tau) d\tau)
+	\end{equation}
+	where $ K_P, K_D, K_I $ are the gains
 	\item From Figure \ref{fig:hover_param}, we can obtain the relation of aerodynamic forces to a few parameters which are not negligible:
 	\[ \frac{\partial \norm{f_a(1)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(1)}}{\partial \theta_m},\quad \frac{\partial \norm{f_a(3)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(2)}}{\partial \psi_m} \]
 	\item And hence we obtain the inverse relations,
@@ -2190,6 +2194,24 @@ Employing these observations, a PD controller for the dynamics \eqref{eqn:mx_ddo
 \end{itemize}
 %
 For the purposes of simulation, we consider random initial conditions for the UAV. With gain values of $ K_P = 421.8868, K_D = 15.6030, K_I = 1.2655 $ and corresponding roots of $ -7.8 + 19i, -7.8 - 19i, -0.003 $, we observe in Figure \ref{fig:hover_control} that the states converge to the hover trajectory.
+
+\subsubsection{Stability of controlled trajectory}
+Using the form of trajectory control in \eqref{eqn:PID_controller}, we linearize the original dynamics of \eqref{eqn:mx_ddot} with respect to perturbations $ \delta x, \delta \dot{x} $. Denoting, $ \int_0^{t} \delta x d \tau $ as $ \delta I_x(t) $ we get,
+\begin{equation}\label{eqn:pos_vel_cont_pert}
+\begin{aligned}
+	\frac{d (\delta I_x)}{dt} &= \delta x \\
+	\frac{d (\delta x)}{dt} &= \delta \dot{x} \\
+	\frac{d (\delta \dot{x})}{dt} &= \frac{1}{m} R \sum_{i\in \braces{R, L, A}}Q_i \delta F_i - K_P \delta \dot{x} - K_D \delta \dot{x} - K_I \delta I_x
+\end{aligned}
+\end{equation}
+since $ \delta (\Delta f_a) = m(-K_P \delta \dot{x} - K_D \delta \dot{x} - K_I \delta I_x) $
+
+Consider this case of a periodic linear system along with the gain values used in the previous section. Now the characteristic multipliers from Floquet theory are complex numbers with the following magnitudes:
+\begin{gather*}
+	\norm{\rho} = \braces{0.2592,\ 0.2592,\	0.4139,\ 0.4139,\ 0.3591,\ 0.3591,\	0.9997,\ 0.9997,\ 0.9997}
+\end{gather*}
+
+Since all these $ \norm{\rho_j} \le 1 $, we can say that the perturbed dynamics in \eqref{eqn:pos_vel_cont_pert} is stable.
 
 \begin{figure}[h!]
 	\centerline{

@@ -13,6 +13,7 @@ filename='sim_QS_x_hover_temp';
 INSECT = des.INSECT;
 WK = des.WK;
 des.x_fit = cell(3, 1); des.x_dot_fit = cell(3, 1); des.f_a_fit = cell(3, 1);
+% 'fourier8', 'cubicinterp'
 for i=1:3
     des.x_fit{i} = fit(des.t, des.x(i, :)', 'fourier8');
     des.x_dot_fit{i} = fit(des.t, des.x_dot(i, :)', 'fourier8');
@@ -28,8 +29,8 @@ des.df_a_3_by_dphi_m = 0.47e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
 % Original Gains
 gains.Kp_pos = -2;
 gains.Kd_pos = 2;
-
-eps1 = 1e-5; eps2 = 1e-1;
+%
+eps1 = 1e-4; eps2 = 1e-2;
 x0 = des.x0 + rand(3,1)*eps1;
 x_dot0 = des.x_dot0 + rand(3,1)*eps2;
 X0 = [x0; x_dot0;];
@@ -94,7 +95,7 @@ for i=1:(N-1)
         = eom(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, x0, f_a_im1);
     X(i+1, :) = X(i, :) + dt * X_dot(:, i)';
 end
-i = i+1;
+i = i + 1;
 [X_dot(:,i), R(:,:,i) Q_R(:,:,i) Q_L(:,:,i) Q_A(:,:,i) theta_B(i) theta_A(i) ...
         W(:,i) W_dot(:,i) W_R(:,i) W_R_dot(:,i) W_L(:,i) W_L_dot(:,i) W_A(:,i) ...
         W_A_dot(:,i) F_R(:,i) F_L(:,i) M_R(:,i) M_L(:,i) f_a(:,i) f_g(:,i) ...
@@ -175,6 +176,7 @@ evalin('base',['load ' filename]);
 end
 
 function err =  obtain_err_gains(gs, WK, INSECT, des, X0, N, t)
+%%
     gains.Kp_pos = gs(1);
     gains.Kd_pos = gs(2);
     gains.Ki_pos = gs(3);
@@ -228,6 +230,7 @@ function err =  obtain_err_gains(gs, WK, INSECT, des, X0, N, t)
 end
 
 function [X_dot R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau Euler_R Euler_R_dot pos_err]= eom(INSECT, WK_R, WK_L, t, X, des, gains, i, x0, f_a_im1)
+%%
 x=X(1:3);
 x_dot=X(4:6);
 int_d_x=X(7:9);
@@ -238,12 +241,14 @@ for j=1:3
 %     d_x(j) = des.x_fit{j}(t) - (x(j) - x0(j));
     d_x(j) = des.x_fit{j}(t) - x(j);
     d_x_dot(j) = des.x_dot_fit{j}(t) - x_dot(j);
-%     d_x_ddot(j) = des.x_ddot_fit{j}(t) - x_ddot(j);
 end
 pos_err = INSECT.m*(gains.Kp_pos * d_x + gains.Kd_pos * d_x_dot + gains.Ki_pos * int_d_x);
 dphi_m = sign(f_a_im1(3)) *  pos_err(3) / des.df_a_3_by_dphi_m;
 dtheta_m = sign(f_a_im1(1)) * (pos_err(1) - sign(f_a_im1(1)) * dphi_m * des.df_a_1_by_dphi_m) / des.df_a_1_by_dtheta_m;
 dpsi_m = sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dpsi_m;
+
+% [~, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);
+% [~, Euler_L_dot, Euler_L_ddot] = wing_kinematics(t,WK_L);
 
 WK_R.phi_m = WK_R.phi_m + dphi_m;
 WK_L.phi_m = WK_L.phi_m + dphi_m;

@@ -8,7 +8,7 @@ addpath('./modules', './sim_data');
 des = load('sim_QS_x_hover.mat',...
     'INSECT', 't', 'N', 'x', 'x_dot', 'R', 'Q_R', 'Q_L', 'Euler_R','W_R', 'W_L', 'f_tau',...
     'x0', 'x_dot0', 'Q_A', 'W', 'W_A', 'WK', 'Euler_R_dot', 'tau');
-filename='sim_QS_all_hover_control';
+filename = 'sim_QS_all_hover_control';
 INSECT = des.INSECT;
 WK = des.WK;
 
@@ -18,7 +18,7 @@ des.W_R_m = mean(des.W_R, 2);
 des.W_L_m = mean(des.W_L, 2);
 des.f_tau_fit = cell(15, 1);
 for i=1:15
-    des.f_tau_fit{i} = fit(des.t, des.f_tau(i, :)', 'fourier8');
+    des.f_tau_fit{i} = fit(des.t, des.f_tau(i, :)', 'cubicinterp');
 end
 gains.Kp_pos = -2;
 gains.Kd_pos = 2;
