@@ -1,7 +1,7 @@
 %% Tests to verify the analyitical expressions of linearized dynamics
 evalin('base','clear all');
 close all;
-addpath('./modules', './sim_data');
+addpath('./modules', './sim_data', './plotting');
 
 load('sim_QS_x_hover.mat');
 etas = [[1;0;0], [0;1;0], [0;0;1], [2;-1;1]];

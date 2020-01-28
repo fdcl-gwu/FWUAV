@@ -4,7 +4,7 @@ function sim_QS_all_hover_control
 
 evalin('base','clear all');
 close all;
-addpath('./modules', './sim_data');
+addpath('./modules', './sim_data', './plotting');
 des = load('sim_QS_x_hover.mat',...
     'INSECT', 't', 'N', 'x', 'x_dot', 'R', 'Q_R', 'Q_L', 'Euler_R','W_R', 'W_L', 'f_tau',...
     'x0', 'x_dot0', 'Q_A', 'W', 'W_A', 'WK', 'Euler_R_dot', 'tau');

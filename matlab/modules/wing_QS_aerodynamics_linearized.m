@@ -1,14 +1,8 @@
 function [d_L_R d_L_L d_D_R d_D_L d_M_R d_M_L ...
     F_rot_R F_rot_L M_rot_R M_rot_L ...
     alpha_R alpha_L U_alpha_R_dot U_alpha_L_dot U_R U_L]=wing_QS_aerodynamics_linearized(INSECT, W_R, W_L, W_R_dot, W_L_dot, varargin)
-% compute forces and moment from QS model
-% [L_R L_L ...] = wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot)
-% computes the aerodynamic forces with small velocity assumption
-%
-% [L_R L_L ...] = wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L)
-% computes the aerodynamic forces while considering the effects of x_dot
-% and W on the flow around the wing, by integrating infinitesimal forces
-% along the wing span
+% compute linearized forces and moments from QS model about position and
+% velocity
 
 global e1 e2 e3
 e1=[1 0 0]';

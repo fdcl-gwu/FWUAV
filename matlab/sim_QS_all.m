@@ -4,7 +4,7 @@ function sim_QS_all
 
 evalin('base','clear all');
 close all;
-addpath('./modules', './sim_data');
+addpath('./modules', './sim_data', './plotting');
 filename='sim_QS_all';
 
 INSECT.g=9.81;

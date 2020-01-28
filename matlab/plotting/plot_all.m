@@ -1,5 +1,5 @@
 %% File to plot the data
-addpath('./modules', './sim_data');
+addpath('../modules', '../sim_data', '../');
 
 h_x3=figure;
 plot3(x(1,:),x(2,:),x(3,:));
