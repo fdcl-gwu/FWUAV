@@ -9,10 +9,11 @@ load('sim_QS_x_hover.mat',...
     'INSECT', 'WK', 'X0');
 filename='parametric_study';
 
-N=1001;
-T=3/WK.f;
+N=501;
+T=1/WK.f;
 t=linspace(0,T,N);
 
+% N_params = 1;
 N_params = 10;
 eps = logspace(log10(0.0001), log10(0.1), N_params);
 f_aero = zeros(3, 3, N, N_params);
@@ -42,14 +43,12 @@ hold on;
 plot(eps, squeeze(f_a_m(1,1,:,2)), 'r');
 legend('Positive component', 'Negative component');
 % scatter(eps, squeeze(f_a_m(1,1,:,1)), 10, 'k', 'filled');
-% xlabel('$\epsilon\ \vert\ \Delta\phi_{m, R} = \epsilon, \Delta\phi_{m, L} = \epsilon$','interpreter','latex');
 ylabel('mean $f_a(1)$','interpreter','latex');
 
 subplot(3,3,4);
 plot(eps, squeeze(f_a_m(1,2,:,1)));
 hold on;
 plot(eps, squeeze(f_a_m(1,2,:,2)), 'r');
-% xlabel('$\epsilon\ \vert\ \Delta\phi_{m, R} = \epsilon, \Delta\phi_{m, L} = \epsilon$','interpreter','latex');
 ylabel('mean $f_a(2)$','interpreter','latex');
 
 subplot(3,3,7);
@@ -64,40 +63,31 @@ plot(eps, squeeze(f_a_m(2,1,:,1)));
 hold on;
 plot(eps, squeeze(f_a_m(2,1,:,2)), 'r');
 legend('Positive component', 'Negative component');
-% xlabel('$\epsilon\ \vert\ \Delta\theta_{m, R} = \epsilon, \Delta\theta_{m, L} = \epsilon$','interpreter','latex');
-% ylabel('mean $f_a(1)$','interpreter','latex');
 
 subplot(3,3,5);
 plot(eps, squeeze(f_a_m(2,2,:,1)));
 hold on;
 plot(eps, squeeze(f_a_m(2,2,:,2)), 'r');
-% xlabel('$\epsilon\ \vert\ \Delta\theta_{m, R} = \epsilon, \Delta\theta_{m, L} = \epsilon$','interpreter','latex');
-% ylabel('mean $f_a(2)$','interpreter','latex');
 
 subplot(3,3,8);
 plot(eps, squeeze(f_a_m(2,3,:,2)), 'r');
 xlabel('$\epsilon\ \vert\ \Delta\theta_{m, R} = \epsilon, \Delta\theta_{m, L} = \epsilon$','interpreter','latex');
-% ylabel('mean $f_a(3)$','interpreter','latex');
 %
 subplot(3,3,3);
 plot(eps, squeeze(f_a_m(3,1,:,1)));
 hold on;
 plot(eps, squeeze(f_a_m(3,1,:,2)), 'r');
 legend('Positive component', 'Negative component');
-% xlabel('$\epsilon\ \vert\ \Delta\psi_{m, R} = \epsilon, \Delta\psi_{m, L} = -\epsilon$','interpreter','latex');
-% ylabel('mean $f_a(1)$','interpreter','latex');
 
 subplot(3,3,6);
 plot(eps, squeeze(f_a_m(3,2,:,1)));
 hold on;
 plot(eps, squeeze(f_a_m(3,2,:,2)), 'r');
-% xlabel('$\epsilon\ \vert\ \Delta\psi_{m, R} = \epsilon, \Delta\psi_{m, L} = -\epsilon$','interpreter','latex');
-% ylabel('mean $f_a(2)$','interpreter','latex');
 
 subplot(3,3,9);
 plot(eps, squeeze(f_a_m(3,3,:,2)), 'r');
-xlabel('$\epsilon\ \vert\ \Delta\psi_{m, R} = \epsilon, \Delta\psi_{m, L} = -\epsilon$','interpreter','latex');
-% ylabel('mean $f_a(3)$','interpreter','latex');
+% xlabel('$\epsilon\ \vert\ \Delta\psi_{m, R} = \epsilon, \Delta\psi_{m, L} = -\epsilon$','interpreter','latex');
+xlabel('$\epsilon\ \vert\ \Delta\phi_{m, R} = \epsilon, \Delta\phi_{m, L} = -\epsilon$','interpreter','latex');
 %
 % print(h_f_a, 'hover_param_study', '-depsc', '-r0');
 
@@ -112,6 +102,7 @@ evalin('base',['load ' filename]);
 end
 
 function f_aero = param_study(INSECT, WK, eps, i, t, X0, N)
+%%
     f_aero = zeros(3, 3, N);
     %
     WK_R = WK;  WK_L = WK;
@@ -125,13 +116,16 @@ function f_aero = param_study(INSECT, WK, eps, i, t, X0, N)
     f_aero(2, :, :) = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N);
     %
     WK_R = WK;  WK_L = WK;
-    WK_R.psi_m = WK_R.psi_m + eps(i);
-    WK_L.psi_m = WK_L.psi_m - eps(i);
+%     WK_R.psi_0 = WK_R.psi_0 + eps(i);
+%     WK_L.psi_0 = WK_L.psi_0 - eps(i);
+    WK_R.phi_m = WK_R.phi_m + eps(i);
+    WK_L.phi_m = WK_L.phi_m - eps(i);
     f_aero(3, :, :) = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N);
 end
 
 function f_aero = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N)
-    [t X]=ode45(@(t,X) eom(INSECT, WK_R, WK_L, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+%%
+    [t,X]=ode45(@(t,X) eom(INSECT, WK_R, WK_L, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
 %     x=X(:,1:3)';
 %     x_dot=X(:,4:6)';
@@ -143,7 +137,7 @@ function f_aero = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N)
 end
 
 function [X_dot R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau]= eom(INSECT, WK_R, WK_L, t, X)
-
+%%
 x=X(1:3);
 x_dot=X(4:6);
 
@@ -196,10 +190,6 @@ f_tau_2 = JJ_21*xi_1_dot + JJ_22*xi_2_dot - co_ad_22*(JJ_21*xi_1 + JJ_22*xi_2) .
     + LL_21*xi_1 + LL_22*xi_2 - f_a_2 - f_g_2;
 f_tau = [zeros(3,1); f_tau_2];
 tau = blkdiag(zeros(3), Q_R, Q_L, Q_A)*f_tau_2;
-
-% xi=[xi_1;xi_2];
-% xi_dot=JJ\( co_ad*JJ*xi - LL*xi + f_a + f_g + f_tau);
-% disp(norm(xi_dot - [xi_1_dot; xi_2_dot]));
 
 X_dot=[xi_1; xi_1_dot];
 end

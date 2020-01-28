@@ -25,12 +25,13 @@ des.df_a_1_by_dphi_m = 0.54e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
 des.df_a_1_by_dtheta_m = -0.6e-3 / 0.1; % dtheta_m_R > 0, dtheta_m_L > 0
 des.df_a_2_by_dpsi_m = 0.3e-3 / 0.1; % dpsi_m_R > 0, dpsi_m_L < 0
 des.df_a_3_by_dphi_m = 0.47e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
+des.df_a_2_by_dphi_m = 3.5e-4 / 0.1; % dphi_m_R > 0, dphi_m_L < 0
 
 % Original Gains
 gains.Kp_pos = -2;
 gains.Kd_pos = 2;
 %
-eps1 = 1e-4; eps2 = 1e-2;
+eps1 = 1e-3; eps2 = 1e-2;
 x0 = des.x0 + rand(3,1)*eps1;
 x_dot0 = des.x_dot0 + rand(3,1)*eps2;
 X0 = [x0; x_dot0;];
@@ -105,19 +106,7 @@ i = i + 1;
 x=X(:,1:3)';
 x_dot=X(:,4:6)';
 
-for j=1:3
-    err_pos(:, j) = des.x_fit{j}(t) - x(j, :)';
-    err_vel(:, j) = des.x_dot_fit{j}(t) - x_dot(j, :)';
-end
-err_pos = vecnorm(err_pos, 2, 2);
-err_vel = vecnorm(err_vel, 2, 2);
-err_pos = trapz(t, err_pos) / max(t);
-err_vel = trapz(t, err_vel) / max(t);
-
 % for k=1:N
-% %     if mod(k-1, N_single) == 0
-% %         x0 = X(k, 1:3)';
-% %     end
 %     [X_dot(:,k), R(:,:,k) Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) theta_B(k) theta_A(k) W(:,k) W_dot(:,k) W_R(:,k) W_R_dot(:,k) W_L(:,k) W_L_dot(:,k) W_A(:,k) W_A_dot(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k) Euler_R(:,k) Euler_R_dot(:,k) pos_err(:, k)]= eom(INSECT, WK, WK, t(k), X(k,:)', des, gains, k, x0);
 %     F_B(:,k)=Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);
 % end
@@ -190,13 +179,6 @@ function err =  obtain_err_gains(gs, WK, INSECT, des, X0, N, t)
         else
             f_a_im1 = f_a(1:3, i-1);
         end
-        %
-    %     k1 = dt * eom(INSECT, WK, WK, t(i), X(i, :)', des, gains, i, x0, f_a_im1);
-    %     k2 = dt * eom(INSECT, WK, WK, t(i)+dt/2, X(i, :)'+k1/2, des, gains, i, x0, f_a_im1);
-    %     k3 = dt * eom(INSECT, WK, WK, t(i)+dt/2, X(i, :)'+k2/2, des, gains, i, x0, f_a_im1);
-    %     k4 = dt * eom(INSECT, WK, WK, t(i), X(i, :)'+k3, des, gains, i, x0, f_a_im1);
-    %     X(i+1, :) = X(i, :) + 1/6 * (k1 + 2*k2 + 2*k3 + k4)';
-        %
         [X_dot(:,i), R(:,:,i) Q_R(:,:,i) Q_L(:,:,i) Q_A(:,:,i) theta_B(i) theta_A(i) ...
             W(:,i) W_dot(:,i) W_R(:,i) W_R_dot(:,i) W_L(:,i) W_L_dot(:,i) W_A(:,i) ...
             W_A_dot(:,i) F_R(:,i) F_L(:,i) M_R(:,i) M_L(:,i) f_a(:,i) f_g(:,i) ...
@@ -243,19 +225,17 @@ for j=1:3
     d_x_dot(j) = des.x_dot_fit{j}(t) - x_dot(j);
 end
 pos_err = INSECT.m*(gains.Kp_pos * d_x + gains.Kd_pos * d_x_dot + gains.Ki_pos * int_d_x);
-dphi_m = sign(f_a_im1(3)) *  pos_err(3) / des.df_a_3_by_dphi_m;
-dtheta_m = sign(f_a_im1(1)) * (pos_err(1) - sign(f_a_im1(1)) * dphi_m * des.df_a_1_by_dphi_m) / des.df_a_1_by_dtheta_m;
-dpsi_m = sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dpsi_m;
+% dphi_m = sign(f_a_im1(3)) *  pos_err(3) / des.df_a_3_by_dphi_m;
+% dtheta_m = sign(f_a_im1(1)) * (pos_err(1) - sign(f_a_im1(1)) * dphi_m * des.df_a_1_by_dphi_m) / des.df_a_1_by_dtheta_m;
+% dpsi_m = sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dpsi_m;
+dphi_m_R = sign(f_a_im1(3)) *  pos_err(3) / des.df_a_3_by_dphi_m + sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dphi_m;
+dphi_m_L = sign(f_a_im1(3)) *  pos_err(3) / des.df_a_3_by_dphi_m - sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dphi_m;
+dtheta_m = sign(f_a_im1(1)) * (pos_err(1) - sign(f_a_im1(1)) * (dphi_m_R+dphi_m_L)/2 * des.df_a_1_by_dphi_m) / des.df_a_1_by_dtheta_m;
 
-% [~, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);
-% [~, Euler_L_dot, Euler_L_ddot] = wing_kinematics(t,WK_L);
-
-WK_R.phi_m = WK_R.phi_m + dphi_m;
-WK_L.phi_m = WK_L.phi_m + dphi_m;
+WK_R.phi_m = WK_R.phi_m + dphi_m_R;
+WK_L.phi_m = WK_L.phi_m + dphi_m_L;
 WK_R.theta_m = WK_R.theta_m + dtheta_m;
 WK_L.theta_m = WK_L.theta_m + dtheta_m;
-WK_R.psi_m = WK_R.psi_m + dpsi_m;
-WK_L.psi_m = WK_L.psi_m - dpsi_m;
 
 % wing/abdoment attitude and aerodynamic force/moment
 [Euler_R, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R);

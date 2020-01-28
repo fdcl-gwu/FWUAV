@@ -6,9 +6,9 @@ close all;
 addpath('./modules', './sim_data');
 
 %% Linearized dynamics
-filename=append('sim_QS_x_hover_control_','stability_data');
 load('sim_QS_x_hover_control.mat', 'gains');
 load('sim_QS_x_hover.mat');
+filename=append('sim_QS_x_hover_control_','stability_data');
 
 N = 1001;
 N_period = 10;

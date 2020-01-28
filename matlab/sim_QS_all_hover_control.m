@@ -42,17 +42,25 @@ W_A0 = des.W_A(:, 1) + rand(3,1)*eps;
 X0=[x0; reshape(R0,9,1); reshape(Q_R0,9,1); reshape(Q_L0,9,1); reshape(Q_A0,9,1);...
     x_dot0; W0; W_R0; W_L0; W_A0];
 
-N = 1001;
-t = linspace(0, 2/WK.f, N);
-dt = t(2) - t(1);
-i = 1;
-[t X]=ode15s(@(t,X) eom(INSECT, t, X, des, gains, i, dt), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
-
-% N = 5001;
+% N = 1001;
 % t = linspace(0, 2/WK.f, N);
-% X = zeros(N, 54);
-% X(1, :) = X0;
 % dt = t(2) - t(1);
+% i = 1;
+% [t X]=ode15s(@(t,X) eom(INSECT, t, X, des, gains, i, dt), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+
+N = 5001;
+t = linspace(0, 2/WK.f, N);
+X = zeros(N, 54);
+X(1, :) = X0;
+dt = t(2) - t(1);
+
+% % Explicit method
+for i=1:(N-1)
+    X_dot = eom(INSECT, t(i), X(i, :)', des, gains, i, dt);
+    X(i+1, :) = X(i, :) + dt*X_dot';
+    X(i+1, 4:39) = X_dot(4:39)';
+end
+
 % % Implicit trapezoidal method
 % options = optimoptions('fsolve', 'Display', 'none', 'UseParallel', true);
 % for i=1:(N-1)
@@ -147,12 +155,17 @@ for j=4:15
 end
 xi_dot=JJ\(-LL*xi + co_ad*JJ*xi - dU + f_a + f_tau);
 
-ke = 0;
-I = eye(3);
-R_dot = R*hat(W) - ke*R*(R'*R - I);
-Q_R_dot = Q_R*hat(W_R) - ke*Q_R*(Q_R'*Q_R - I);
-Q_L_dot = Q_L*hat(W_L) - ke*Q_L*(Q_L'*Q_L - I);
-Q_A_dot = Q_A*hat(W_A) - ke*Q_A*(Q_A'*Q_A - I);
+% ke = 0;
+% I = eye(3);
+% R_dot = R*hat(W) - ke*R*(R'*R - I);
+% Q_R_dot = Q_R*hat(W_R) - ke*Q_R*(Q_R'*Q_R - I);
+% Q_L_dot = Q_L*hat(W_L) - ke*Q_L*(Q_L'*Q_L - I);
+% Q_A_dot = Q_A*hat(W_A) - ke*Q_A*(Q_A'*Q_A - I);
+
+R_dot = R*expmso3(W*dt);
+Q_R_dot = Q_R*expmso3(W_R*dt);
+Q_L_dot = Q_L*expmso3(W_L*dt);
+Q_A_dot = Q_A*expmso3(W_A*dt);
 
 X_dot=[x_dot; reshape(R_dot,9,1); reshape(Q_R_dot,9,1); reshape(Q_L_dot,9,1); reshape(Q_A_dot,9,1); xi_dot];
 end

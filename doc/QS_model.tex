@@ -2178,12 +2178,12 @@ Employing these observations, a PD controller for the dynamics \eqref{eqn:mx_ddo
 	\end{equation}
 	where $ K_P, K_D, K_I $ are the gains
 	\item From Figure \ref{fig:hover_param}, we can obtain the relation of aerodynamic forces to a few parameters which are not negligible:
-	\[ \frac{\partial \norm{f_a(1)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(1)}}{\partial \theta_m},\quad \frac{\partial \norm{f_a(3)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(2)}}{\partial \psi_m} \]
+	\[ \frac{\partial \norm{f_a(1)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(1)}}{\partial \theta_m},\quad \frac{\partial \norm{f_a(3)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(2)}}{\partial \phi_m} \]
 	\item And hence we obtain the inverse relations,
 	\begin{gather*}
-		\Delta \phi_m = \sign{f_a(3)} \left(\frac{\partial \norm{f_a(3)}}{\partial \phi_m} \right)^{-1} \Delta f_a(3) \\
-		\Delta \theta_m = \sign{f_a(1)} \left( \frac{\partial \norm{f_a(1)}}{\partial \theta_m} \right)^{-1} \left(\Delta f_a(1) - \sign{f_a(1)} \frac{\partial \norm{f_a(1)}}{\partial \phi_m} \Delta \phi_m \right) \\
-		\Delta \psi_m = \sign{f_a(2)} \left( \frac{\partial \norm{f_a(2)}}{\partial \psi_m} \right)^{-1} \Delta f_a(2)
+		\Delta \phi_{m, R} = \sign{f_a(3)} \left(\frac{\partial \norm{f_a(3)}}{\partial \phi_m} \right)^{-1} \Delta f_a(3) + \sign{f_a(2)} \left( \frac{\partial \norm{f_a(2)}}{\partial \phi_m} \right)^{-1} \Delta f_a(2) \\
+		\Delta \phi_{m, L} = \sign{f_a(3)} \left(\frac{\partial \norm{f_a(3)}}{\partial \phi_m} \right)^{-1} \Delta f_a(3) - \sign{f_a(2)} \left( \frac{\partial \norm{f_a(2)}}{\partial \phi_m} \right)^{-1} \Delta f_a(2) \\
+		\Delta \theta_m = \sign{f_a(1)} \left( \frac{\partial \norm{f_a(1)}}{\partial \theta_m} \right)^{-1} \left(\Delta f_a(1) - \sign{f_a(1)} \frac{\partial \norm{f_a(1)}}{\partial \phi_m} \frac{\parenth{\Delta \phi_{m, R} + \Delta \phi_{m, L}}}{2} \right)
 	\end{gather*}
 	\item These changes in the wing kinematic variables are further utilized to generate aerodynamic forces and thus control the system to obtain a hover trajectory:
 	\begin{gather*}
@@ -2206,7 +2206,7 @@ Using the form of trajectory control in \eqref{eqn:PID_controller}, we linearize
 \end{equation}
 since $ \delta (\Delta f_a) = m(-K_P \delta \dot{x} - K_D \delta \dot{x} - K_I \delta I_x) $
 
-Consider this case of a periodic linear system along with the gain values used in the previous section. Now the characteristic multipliers from Floquet theory are complex numbers with the following magnitudes:
+Consider this case of a periodic linear system along with the gain values used in the previous section. Here we are assuming that its trajectory has already converged to the desired periodic orbit. Now the characteristic multipliers from Floquet theory are complex numbers with the following magnitudes:
 \begin{gather*}
 	\norm{\rho} = \braces{0.2592,\ 0.2592,\	0.4139,\ 0.4139,\ 0.3591,\ 0.3591,\	0.9997,\ 0.9997,\ 0.9997}
 \end{gather*}
