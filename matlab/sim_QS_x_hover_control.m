@@ -24,14 +24,17 @@ end
 des.df_a_1_by_dphi_m = 0.54e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
 des.df_a_1_by_dtheta_m = -0.6e-3 / 0.1; % dtheta_m_R > 0, dtheta_m_L > 0
 des.df_a_2_by_dpsi_m = 0.3e-3 / 0.1; % dpsi_m_R > 0, dpsi_m_L < 0
-des.df_a_3_by_dphi_m = 0.47e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
 des.df_a_2_by_dphi_m = 3.5e-4 / 0.1; % dphi_m_R > 0, dphi_m_L < 0
+des.df_a_3_by_dphi_m = 0.47e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
+des.df_a_1_by_dtheta_A_m = 1.7e-4 / 0.1; % dtheta_A_m > 0
+des.df_a_3_by_dtheta_A_m = 1.25e-4 / 0.1; % dtheta_A_m > 0
 
-eps1 = 1e-3; eps2 = 1e-2;
+rng default;
+eps1 = 1e-1; eps2 = 1e-1;
 x0 = des.x0 + rand(3,1)*eps1;
 x_dot0 = des.x_dot0 + rand(3,1)*eps2;
 X0 = [x0; x_dot0;];
-N = 2001;
+N = 1001; % N = 2001 causes some numerical divergence
 N_period = 10;
 N_single = round((N-1)/N_period);
 T = N_period/WK.f;
@@ -51,7 +54,7 @@ t = linspace(0,T,N);
 % disp(fval);
 % disp(output);
 % toc;
-gs = [427.1529   15.6076  13.4983];
+% gs = [427.1529   15.6076  13.4983];
 
 %% Simulation
 pol = poly([-7.8 + 19i, -7.8 - 19i, -0.003]);
@@ -60,7 +63,7 @@ if ~all(real(roots(pol)) < 0)
 end
 gains.Kp_pos = pol(3); gains.Kd_pos = pol(2); gains.Ki_pos = pol(4);
 
-% [t, X]=ode45(@(t,X) eom(INSECT, WK, WK, t, X, des, gains, i), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+% [t, X]=ode45(@(t,X) eom_control(INSECT, WK, WK, t, X, des, gains, i), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
 X = zeros(N, 9);
 X(1, :) = [X0; zeros(3, 1)];
@@ -71,16 +74,18 @@ for i=1:(N-1)
 %         x0 = X(i, 1:3)';
 %     end
     if i == 1
-        f_a_im1 = zeros(3, 1);
+        f_a_im1 = zeros(6, 1);
     else
-        f_a_im1 = f_a(1:3, i-1);
+        f_a_im1(1:3, :) = f_a(1:3, i-1);
+        [JJ_A, KK_A] = inertia_wing_sub(INSECT.m_A, INSECT.mu_A, INSECT.nu_A, INSECT.J_A, R(:, :, i-1), Q_A(:, :, i-1), X(i-1, 4:6)', W(:, i-1), W_A(:, i-1));
+        f_a_im1(4:6, :) = -(JJ_A(1:3, 7:9)*W_A_dot(:, i-1) + KK_A(1:3, 7:9)*W_A(:, i-1));
     end
     %
     [X_dot(:,i), R(:,:,i) Q_R(:,:,i) Q_L(:,:,i) Q_A(:,:,i) theta_B(i) theta_A(i) ...
         W(:,i) W_dot(:,i) W_R(:,i) W_R_dot(:,i) W_L(:,i) W_L_dot(:,i) W_A(:,i) ...
         W_A_dot(:,i) F_R(:,i) F_L(:,i) M_R(:,i) M_L(:,i) f_a(:,i) f_g(:,i) ...
         f_tau(:,i) tau(:,i) Euler_R(:,i) Euler_R_dot(:,i) pos_err(:, i)]... 
-        = eom(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, x0, f_a_im1);
+        = eom_control(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, x0, f_a_im1);
     X(i+1, :) = X(i, :) + dt * X_dot(:, i)';
 end
 i = i + 1;
@@ -88,7 +93,7 @@ i = i + 1;
         W(:,i) W_dot(:,i) W_R(:,i) W_R_dot(:,i) W_L(:,i) W_L_dot(:,i) W_A(:,i) ...
         W_A_dot(:,i) F_R(:,i) F_L(:,i) M_R(:,i) M_L(:,i) f_a(:,i) f_g(:,i) ...
         f_tau(:,i) tau(:,i) Euler_R(:,i) Euler_R_dot(:,i) pos_err(:, i)]... 
-        = eom(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, x0, f_a_im1);
+        = eom_control(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, x0, f_a_im1);
 
 x=X(:,1:3)';
 x_dot=X(:,4:6)';
@@ -124,7 +129,7 @@ function err =  obtain_err_gains(gs, WK, INSECT, des, X0, N, t)
             W(:,i) W_dot(:,i) W_R(:,i) W_R_dot(:,i) W_L(:,i) W_L_dot(:,i) W_A(:,i) ...
             W_A_dot(:,i) F_R(:,i) F_L(:,i) M_R(:,i) M_L(:,i) f_a(:,i) f_g(:,i) ...
             f_tau(:,i) tau(:,i) Euler_R(:,i) Euler_R_dot(:,i) pos_err(:, i)]... 
-            = eom(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, X0(1:3), f_a_im1);
+            = eom_control(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, X0(1:3), f_a_im1);
         X(i+1, :) = X(i, :) + dt * X_dot(:, i)';
     end
 
@@ -152,7 +157,7 @@ function err =  obtain_err_gains(gs, WK, INSECT, des, X0, N, t)
     end
 end
 
-function [X_dot R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau Euler_R Euler_R_dot pos_err]= eom(INSECT, WK_R, WK_L, t, X, des, gains, i, x0, f_a_im1)
+function [X_dot R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau Euler_R Euler_R_dot pos_err]= eom_control(INSECT, WK_R, WK_L, t, X, des, gains, i, x0, f_a_im1)
 %% Dynamics along with the designed control
 
 x=X(1:3);
@@ -162,22 +167,50 @@ int_d_x=X(7:9);
 % Control design
 d_x = zeros(3, 1); d_x_dot = zeros(3, 1);
 for j=1:3
-%     d_x(j) = des.x_fit{j}(t) - (x(j) - x0(j));
+%     d_x(j) = des.x_fit{j}(t) - (x(j) - x0(j)); % Trying to make the
+%     position periodic first while using this expression
     d_x(j) = des.x_fit{j}(t) - x(j);
     d_x_dot(j) = des.x_dot_fit{j}(t) - x_dot(j);
 end
 pos_err = INSECT.m*(gains.Kp_pos * d_x + gains.Kd_pos * d_x_dot + gains.Ki_pos * int_d_x);
-% dphi_m = sign(f_a_im1(3)) *  pos_err(3) / des.df_a_3_by_dphi_m;
-% dtheta_m = sign(f_a_im1(1)) * (pos_err(1) - sign(f_a_im1(1)) * dphi_m * des.df_a_1_by_dphi_m) / des.df_a_1_by_dtheta_m;
+
+% % 1st strategy
+% dphi_m_R = sign(f_a_im1(3)) * pos_err(3) / des.df_a_3_by_dphi_m + sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dphi_m;
+% dphi_m_L = sign(f_a_im1(3)) * pos_err(3) / des.df_a_3_by_dphi_m - sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dphi_m;
+% dtheta_m = sign(f_a_im1(1)) * (pos_err(1) - ...
+%     sign(f_a_im1(1)) * (dphi_m_R+dphi_m_L)/2 * des.df_a_1_by_dphi_m) / des.df_a_1_by_dtheta_m;
+% % 2nd strategy
+% temp_A = [sign_pos(f_a_im1(1)) * des.df_a_1_by_dphi_m, sign_pos(f_a_im1(4)) * des.df_a_1_by_dtheta_A_m ;
+%           sign_pos(f_a_im1(3)) * des.df_a_3_by_dphi_m, sign_pos(f_a_im1(6)) * des.df_a_3_by_dtheta_A_m ;];
+% if abs(det(temp_A)) < 1e-10
+%     dang = zeros(2, 1);
+% else
+%     dang = temp_A \ [pos_err(1); pos_err(3)];
+% end
+% dphi_m = dang(1); dtheta_A_m = dang(2);
+% dphi_m_R = dphi_m; dphi_m_L = dphi_m;
 % dpsi_m = sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dpsi_m;
-dphi_m_R = sign(f_a_im1(3)) *  pos_err(3) / des.df_a_3_by_dphi_m + sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dphi_m;
-dphi_m_L = sign(f_a_im1(3)) *  pos_err(3) / des.df_a_3_by_dphi_m - sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dphi_m;
-dtheta_m = sign(f_a_im1(1)) * (pos_err(1) - sign(f_a_im1(1)) * (dphi_m_R+dphi_m_L)/2 * des.df_a_1_by_dphi_m) / des.df_a_1_by_dtheta_m;
+% dtheta_m = 0;
+% % 3rd strategy
+wt = 0.1; % weight, wt > 0.5 is unstable?
+dtheta_A_m = sign(f_a_im1(6)) * wt * pos_err(3) / des.df_a_3_by_dtheta_A_m;
+dphi_m_R = sign(f_a_im1(3)) * (1-wt) * pos_err(3) / des.df_a_3_by_dphi_m + ...
+    sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dphi_m;
+dphi_m_L = sign(f_a_im1(3)) * (1-wt) * pos_err(3) / des.df_a_3_by_dphi_m - ...
+    sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dphi_m;
+dtheta_m = sign(f_a_im1(1)) * (pos_err(1) - ...
+    sign(f_a_im1(1)) * (dphi_m_R+dphi_m_L)/2 * des.df_a_1_by_dphi_m -...
+    sign(f_a_im1(4)) * dtheta_A_m * des.df_a_1_by_dtheta_A_m) / des.df_a_1_by_dtheta_m;
+dpsi_m = 0;
 
 WK_R.phi_m = WK_R.phi_m + dphi_m_R;
 WK_L.phi_m = WK_L.phi_m + dphi_m_L;
 WK_R.theta_m = WK_R.theta_m + dtheta_m;
 WK_L.theta_m = WK_L.theta_m + dtheta_m;
+WK_R.psi_m = WK_R.psi_m + dpsi_m;
+WK_L.psi_m = WK_L.psi_m - dpsi_m;
+WK_R.theta_A_m = WK_R.theta_A_m + dtheta_A_m;
+WK_L.theta_A_m = WK_L.theta_A_m + dtheta_A_m;
 
 X = X(1:6);
 [X_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, ...

@@ -1,6 +1,6 @@
 %% Figures for controlled hover
 addpath('../modules', '../sim_data', '../');
-load('sim_QS_x_hover_control.mat');
+% load('sim_QS_x_hover_control.mat');
 
 h_x=figure;
 for ii=1:3 

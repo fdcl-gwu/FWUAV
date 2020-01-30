@@ -8,7 +8,7 @@ addpath('./modules', './sim_data', './plotting');
 %% Linearized dynamics
 load('sim_QS_x_hover_control.mat', 'gains');
 load('sim_QS_x_hover.mat');
-filename='sim_QS_x_hover_stability';
+filename='floquet_stability';
 
 % INSECT.scale=1e-2;
 % INSECT.name='MONARCH';

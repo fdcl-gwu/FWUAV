@@ -2,6 +2,7 @@ function [pow, E, E_dot, eff] = compute_power(m, t, x, x_dot, tau, Q_R, Q_L, Q_A
 % Computes the power and energy input to the system
 
 N=length(t);
+t=reshape(t, [N, 1]);
 pow=zeros(3,N);
 for k=1:N
     pow(1,k) = tau(4:6,k)'*Q_R(:,:,k)*W_R(:,k); 

@@ -2,11 +2,13 @@
 addpath('../modules', '../sim_data', '../');
 
 % Without abdomen oscillation
-load('sim_QS_x_hover_ab_no.mat')
+% load('sim_QS_x_hover_ab_no.mat')
+load('sim_QS_x_hover_control_no_ab.mat')
 [pow_no, E_no, E_dot_no, eff_no] = compute_power(INSECT.m, t, x, x_dot, tau, Q_R, Q_L, Q_A, W_R, W_L, W_A);
 
 % With abdomen oscillation
-load('sim_QS_x_hover.mat')
+% load('sim_QS_x_hover.mat')
+load('sim_QS_x_hover_control_with_ab.mat')
 [pow_ab, E_ab, E_dot_ab, eff_ab] = compute_power(INSECT.m, t, x, x_dot, tau, Q_R, Q_L, Q_A, W_R, W_L, W_A);
 
 h_pow = figure;

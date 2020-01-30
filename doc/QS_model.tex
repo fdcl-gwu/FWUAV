@@ -1457,7 +1457,7 @@ We construct a equation of motion for the position $x$.
 The first block of \eqref{eqn:EL} is written as
 \begin{align}
     m\ddot x + 
-    \sum_{i\in\{R,L,A\}} \big\{ \mathbf{J}_{i_{12}} \dot\Omega + \mathbf{J}_{i_{13}}\dot\Omega_R 
+    \sum_{i\in\{R,L,A\}} \big\{ \mathbf{J}_{i_{12}} \dot\Omega + \mathbf{J}_{i_{13}}\dot\Omega_i 
     + \ \mathbf{K}_{i_{12}}\Omega + \mathbf{K}_{i_{13}}\Omega_i \big\} = R\sum_{i\in\{R,L,A\}} Q_i F_i + mg e_3,\label{eqn:mx_ddot}
 \end{align}
 which can be numerically integrated to construct $(x,\dot x)$. 
@@ -1615,7 +1615,7 @@ wherein,
 	\end{align*}}
 \end{itemize}
 %
-So the linearization will have the form,
+So the linearization will simplify to,
 \begin{align*}
 \delta \dot{g} &= \ad^*_{\xi} \cdot \delta g + \delta \xi \\
 \delta \dot{\xi} &=  \mathbf{J}_g^{-1} ((-\mathbf{K}_g(\dot{\xi}) + \ad^*_\xi \cdot \mathbf{K}_g(\xi)- (\mathbf{M}_g(\xi) - \frac{1}{2}\tilde{\mathbf{M}}_g(\xi)) + \mathbf{F}_{gravity} + \mathbf{F}_a + \mathbf{F}_\tau) (\delta g) + \\
@@ -1647,7 +1647,7 @@ So the linearization will have the form,
 For the simplified case of only position dynamics,
 \begin{align*}
 m\ddot x + 
-\sum_{i\in\{R,L,A\}} \big\{ \mathbf{J}_{i_{12}} \dot\Omega + \mathbf{J}_{i_{13}}\dot\Omega_R 
+\sum_{i\in\{R,L,A\}} \big\{ \mathbf{J}_{i_{12}} \dot\Omega + \mathbf{J}_{i_{13}}\dot\Omega_i 
 + \ \mathbf{K}_{i_{12}}\Omega + \mathbf{K}_{i_{13}}\Omega_i \big\} = R\sum_{i\in\{R,L,A\}} Q_i F_i + mg e_3
 \end{align*}
 linearization will yield,
@@ -2211,7 +2211,7 @@ Consider this case of a periodic linear system along with the gain values used i
 	\norm{\rho} = \braces{0.2592,\ 0.2592,\	0.4139,\ 0.4139,\ 0.3591,\ 0.3591,\	0.9997,\ 0.9997,\ 0.9997}
 \end{gather*}
 
-Since all these $ \norm{\rho_j} \le 1 $, we can say that the perturbed dynamics in \eqref{eqn:pos_vel_cont_pert} is stable.
+Since all these $ \norm{\rho_j} \le 1 $, we can say that the perturbed dynamics in \eqref{eqn:pos_vel_cont_pert} is stable. Moreover the characteristic solutions (or modes), $ \mathbf{x}_j(t) $, corresponding to $ \rho_j \approx 1 $ predominantly consist of perturbations in the integral term. Hence, we are satisfied with such values even though $ \rho = 1 $ implies no dissipation of perturbation.
 
 \begin{figure}[h!]
 	\centerline{
