@@ -26,10 +26,10 @@ dt = T/(N-1);
 epsilon = 1e-1;
 
 % n is the number of perturbation states 
-% n = 6; % for nominal hover with @eom_hover
-% [delta_mat, F_linear] = sim_pert(@eom_hover, n, INSECT, WK, X0, N, t, epsilon);
-n = 9; % for controlled hover with @eom_hover_control
-[delta_mat, F_linear] = sim_pert(@eom_hover_control, n, INSECT, WK, X0, N, t, epsilon, gains);
+n = 6; % for nominal hover with @eom_hover
+[delta_mat, F_linear] = sim_pert(@eom_hover, n, INSECT, WK, X0, N, t, epsilon);
+% n = 9; % for controlled hover with @eom_hover_control
+% [delta_mat, F_linear] = sim_pert(@eom_hover_control, n, INSECT, WK, X0, N, t, epsilon, gains);
 
 B = zeros(n, n, 1+ix_d);
 start_ix = max(1, round((N_period-2)/N_period * N));
