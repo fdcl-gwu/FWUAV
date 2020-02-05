@@ -26,6 +26,8 @@ dt = T/(N-1);
 epsilon = 1e-1;
 
 % n is the number of perturbation states 
+% n = 3; % for nominal hover with @eom_hover_vel if position is not periodic
+% [delta_mat, F_linear] = sim_pert(@eom_hover_vel, n, INSECT, WK, X0, N, t, epsilon);
 n = 6; % for nominal hover with @eom_hover
 [delta_mat, F_linear] = sim_pert(@eom_hover, n, INSECT, WK, X0, N, t, epsilon);
 % n = 9; % for controlled hover with @eom_hover_control
@@ -91,6 +93,27 @@ for k=1:N
 end
 
 delta_mat=reshape(X(:,7:(n^2+6))', n, n, N);
+
+end
+
+function [X_dot F_linear R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau]= eom_hover_vel(n, INSECT, WK_R, WK_L, t, X, varargin)
+%% Stability analysis for only velocity perturbations
+x=X(1:3);
+x_dot=X(4:6);
+delta_mat=reshape(X(7:(n^2+6)), n, n);
+
+X = X(1:6);
+[X_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, ...
+    W_R_dot, W_L, W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, ...
+    f_tau, tau] = eom_QS_x(INSECT, WK_R, WK_L, t, X);
+JJ = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
+JJ_11 = inertia_sub_decompose_3_12(JJ);
+
+[d_L_R, d_L_L, d_D_R, d_D_L]=wing_QS_aerodynamics_linearized(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);
+d_F_R = d_L_R + d_D_R;
+d_F_L = d_L_L + d_D_L;
+F_linear = JJ_11\ R * (Q_R*d_F_R + Q_L*d_F_L);
+X_dot=[X_dot; reshape(F_linear*delta_mat, n^2, 1);];
 
 end
 

@@ -40,15 +40,15 @@ nn = numel(t);
 % end
 h_wk = figure;
 subplot(3,1,1);
-plot(t*WK.f, Euler_R(1,:));
+plot(t*WK.f, Euler_R(1,:) * 180/pi);
 patch_downstroke(h_wk,t*WK.f,Euler_R_dot);
 ylabel('$\phi$','interpreter','latex');
 subplot(3,1,2);
-plot(t*WK.f, Euler_R(2,:));
+plot(t*WK.f, Euler_R(2,:) * 180/pi);
 patch_downstroke(h_wk,t*WK.f,Euler_R_dot);
 ylabel('$\theta$','interpreter','latex');
 subplot(3,1,3);
-plot(t*WK.f, Euler_R(3,:));
+plot(t*WK.f, Euler_R(3,:) * 180/pi);
 patch_downstroke(h_wk,t*WK.f,Euler_R_dot);
 ylabel('$\psi$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');

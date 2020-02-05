@@ -9,7 +9,7 @@ des=load('sim_QS_x_hover.mat',...
     'INSECT', 't', 'N', 'x', 'x_dot', 'R', 'Q_R', 'Q_L', 'W_R', 'W_L', 'f_tau',...
     'x0', 'x_dot0', 'Q_A', 'WK', 'x_ddot', 'f_a');
 
-filename='sim_QS_x_hover_control';
+filename='sim_QS_x_hover_control_monte_carlo';
 INSECT = des.INSECT;
 WK = des.WK;
 des.x_fit = cell(3, 1); des.x_dot_fit = cell(3, 1); des.f_a_fit = cell(3, 1);
@@ -72,25 +72,29 @@ gains.Kp_pos = pol(3); gains.Kd_pos = pol(2); gains.Ki_pos = pol(4);
 
 %% Monte Carlo
 N_sims = 1000;
-epsilons1 = [1e-4, 1e-3, 1e-2]; N_eps1 = length(epsilons1);
+epsilons1 = [1e-4, 1e-3, 1e-2, 1e-1]; N_eps1 = length(epsilons1);
 epsilons2 = [1e-2, 1e-2, 1e-0]; N_eps2 = length(epsilons2);
-wts = [0, 0.05, 0.1]; N_wts = length(wts);
-err_pos = zeros(N_sims, N_eps1, N_eps2, N_wts);
+wts = [0, 0.1, 0.2]; N_wts = length(wts);
+err_pos = zeros(N_sims, N_eps1, N_wts);
+x_pert = zeros(3, N_sims, N_eps1);
+des_x0 = des.x0;
+des_x_dot0 = des.x_dot0;
 
 t1 = clock; t_max = 24*3600;
 tic;
 parfor i = 1:N_sims
+    x_dot0 = des_x_dot0;
     for j = 1:N_eps1
-        for k = 1:N_eps2
-            eps1 = epsilons1(j); eps2 = epsilons2(k);
-            x0 = des.x0 + randn(3,1)*eps1;
-            x_dot0 = des.x_dot0 + randn(3,1)*eps2;
-            X0 = [x0; x_dot0;];
-            for l = 1:N_wts
-                wt = wts(l);
-                err_pos(i, j, k, l) =  simulate_control(gains, WK, ...
-                INSECT, des, X0, N, N_single, N_period, t, wt);
-            end
+        eps1 = epsilons1(j);
+        dx = randn(2, 1)*eps1;
+        dx(3) = dx(2); dx(2) = 0;
+        x_pert(:, i, j) = dx;
+        x0 = des_x0 + dx;
+        X0 = [x0; x_dot0;];
+        for l = 1:N_wts
+            wt = wts(l);
+            err_pos(i, j, l) =  simulate_control(gains, WK, ...
+            INSECT, des, X0, N, N_single, N_period, t, wt);
         end
     end
 %     t2 = clock;
