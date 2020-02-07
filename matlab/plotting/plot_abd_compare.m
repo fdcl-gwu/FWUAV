@@ -1,6 +1,22 @@
-%% Comparison of power and energy to observe the effect of abdomen oscillation
+%% Comparison to observe the effect of abdomen oscillation
 addpath('../modules', '../sim_data', '../');
 
+%% Monte carlo study
+load('sim_QS_x_hover_control_monte_carlo_pos_longitudinal.mat')
+err_bound = 1;
+x_no_ab = x_pert(:, abs(err_pos(:, 1:4, 1)) < err_bound);
+x_with_ab = x_pert(:, abs(err_pos(:, 1:4, 2)) < err_bound);
+
+h_err = figure;
+scatter(x_no_ab(1, :), x_no_ab(3, :), 20, 'r', 'x');
+hold on;
+scatter(x_with_ab(1, :), x_with_ab(3, :), 10, 'b', 'filled');
+legend('without abdomen effect', 'with abdomen effect');
+xlabel('$x$','interpreter','latex');
+ylabel('$z$','interpreter','latex');
+axis tight;
+
+%% Power and energy
 % Without abdomen oscillation
 % load('sim_QS_x_hover_ab_no.mat')
 load('sim_QS_x_hover_control_no_ab.mat')

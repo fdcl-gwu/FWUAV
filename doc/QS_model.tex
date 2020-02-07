@@ -2152,14 +2152,14 @@ Finally, we are interested in the stability properties of other insects as well 
 \end{figure}
 
 \subsection{Control design}
-After studying stability of the dynamics \eqref{eqn:mx_ddot}, now we are going to design a suitable control so as to track the designed hover trajectory in Figure \ref{fig:hover_pos_vel}. For this subsystem, we would like to design a typical PD control with the wing kinematic angles as the input, and position-velocity errors as output.
+After studying stability of the dynamics \eqref{eqn:mx_ddot}, now we are going to design a suitable control so as to track the designed hover trajectory in Figure \ref{fig:hover_pos_vel}. For this subsystem, we would like to design a typical PD control with the wing kinematic angles and relative abdomen attitude (pitch) as the input, and position-velocity errors as output.
 
-Before we bring that about, we study the relation between these wing kinematic angles (from the \textit{BermanWang} model) and the aerodynamic forces acting on the body. For instance, increasing flapping amplitude of both the wings increases force generated in the vertical direction. Figure \ref{fig:hover_param} shows a detailed parametric study wherein the corresponding parameters are varied from their ideal values in the hover trajectory of Figure \ref{fig:hover_pos_vel}.
+Before we bring that about, we study the relation between these wing kinematic angles (from the \textit{BermanWang} model) and the aerodynamic forces acting on the body. For instance, increasing flapping amplitude of both the wings increases force generated in the vertical direction. Figure \ref{fig:hover_param} shows a detailed parametric study wherein the corresponding parameters are varied from their ideal values in the hover trajectory of Figure \ref{fig:hover_pos_vel}. Here, the effect of abdomen is observed by considering $ f_A = -(\mathbf{J}_{A_{13}} \dot\Omega_A + \mathbf{K}_{A_{13}} \Omega_A) $ as a contribution to the aerodynamic force in \eqref{eqn:mx_ddot}.
 
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=\linewidth]{hover_param_study}
-	\caption{Parametric study for control design}
+	\caption{Parametric study for control design : time-averaged force components as a function of variation in parameters; positive and (absolute) negative values are shown separately}
 	\label{fig:hover_param}
 \end{figure}
 
@@ -2178,13 +2178,16 @@ Employing these observations, a PD controller for the dynamics \eqref{eqn:mx_ddo
 	\end{equation}
 	where $ K_P, K_D, K_I $ are the gains
 	\item From Figure \ref{fig:hover_param}, we can obtain the relation of aerodynamic forces to a few parameters which are not negligible:
-	\[ \frac{\partial \norm{f_a(1)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(1)}}{\partial \theta_m},\quad \frac{\partial \norm{f_a(3)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(2)}}{\partial \phi_m} \]
+	\[ \frac{\partial \norm{f_a(1)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(2)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(3)}}{\partial \phi_m},\quad \frac{\partial \norm{f_a(1)}}{\partial \theta_m},\quad \frac{\partial \norm{f_A(1)}}{\partial \theta_{A_m}},\quad \frac{\partial \norm{f_A(3)}}{\partial \theta_{A_m}} \]
 	\item And hence we obtain the inverse relations,
 	\begin{gather*}
-		\Delta \phi_{m, R} = \sign{f_a(3)} \left(\frac{\partial \norm{f_a(3)}}{\partial \phi_m} \right)^{-1} \Delta f_a(3) + \sign{f_a(2)} \left( \frac{\partial \norm{f_a(2)}}{\partial \phi_m} \right)^{-1} \Delta f_a(2) \\
-		\Delta \phi_{m, L} = \sign{f_a(3)} \left(\frac{\partial \norm{f_a(3)}}{\partial \phi_m} \right)^{-1} \Delta f_a(3) - \sign{f_a(2)} \left( \frac{\partial \norm{f_a(2)}}{\partial \phi_m} \right)^{-1} \Delta f_a(2) \\
-		\Delta \theta_m = \sign{f_a(1)} \left( \frac{\partial \norm{f_a(1)}}{\partial \theta_m} \right)^{-1} \left(\Delta f_a(1) - \sign{f_a(1)} \frac{\partial \norm{f_a(1)}}{\partial \phi_m} \frac{\parenth{\Delta \phi_{m, R} + \Delta \phi_{m, L}}}{2} \right)
+		\Delta \theta_{A_m} = \sign{f_A(3)} \left(\frac{\partial \norm{f_A(3)}}{\partial \theta_{A_m}} \right)^{-1} (w\ \Delta f_a(3)) \\
+		\Delta \phi_{m, R} = \sign{f_a(3)} \left(\frac{\partial \norm{f_a(3)}}{\partial \phi_m} \right)^{-1} (1-w) \Delta f_a(3) + \sign{f_a(2)} \left( \frac{\partial \norm{f_a(2)}}{\partial \phi_m} \right)^{-1} \Delta f_a(2) \\
+		\Delta \phi_{m, L} = \sign{f_a(3)} \left(\frac{\partial \norm{f_a(3)}}{\partial \phi_m} \right)^{-1} (1-w) \Delta f_a(3) - \sign{f_a(2)} \left( \frac{\partial \norm{f_a(2)}}{\partial \phi_m} \right)^{-1} \Delta f_a(2) \\
+		\Delta \theta_m = \sign{f_a(1)} \left( \frac{\partial \norm{f_a(1)}}{\partial \theta_m} \right)^{-1} \left(\Delta f_a(1) - \sign{f_a(1)} \frac{\partial \norm{f_a(1)}}{\partial \phi_m} \frac{\parenth{\Delta \phi_{m, R} + \Delta \phi_{m, L}}}{2} - \right. \\
+		\left. \sign{f_A(1)} \frac{\partial \norm{f_A(1)}}{\partial \theta_{A_m}} \Delta \theta_{A_m} \right)
 	\end{gather*}
+	where $ w \in [0, 1] $ is a weight factor deciding the contribution of abdomen
 	\item These changes in the wing kinematic variables are further utilized to generate aerodynamic forces and thus control the system to obtain a hover trajectory:
 	\begin{gather*}
 		m (\ddot{x}(t) - \ddot{x}_{des}(t)) = \Delta f_a = m (K_P \Delta x (t) + K_D \Delta\dot x(t) + K_I \int_{0}^{t} \Delta x(\tau) d\tau) \\

@@ -166,3 +166,65 @@ F_linear(7:9, 7:9) = JJ_11\ R * (Q_R*d_F_R + Q_L*d_F_L) - gains.Kd_pos * eye(3);
 X_dot=[X_dot; reshape(F_linear*delta_mat, n^2, 1);];
 
 end
+
+function [X_dot F_linear R Q_R Q_L Q_A theta_B theta_A W W_dot W_R W_R_dot W_L W_L_dot W_A W_A_dot F_R F_L M_R M_L f_a f_g f_tau tau]= eom_hover_attitude(n, INSECT, WK_R, WK_L, t, X, varargin)
+%% Stability analysis for nominal hover trajectory
+x=X(1:3);
+x_dot=X(4:6);
+delta_mat=reshape(X(7:(n^2+6)), n, n);
+
+X = X(1:6);
+[X_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, ...
+    W_R_dot, W_L, W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, ...
+    f_tau, tau] = eom_QS_x(INSECT, WK_R, WK_L, t, X);
+
+delta_mat_dot = zeros(n, n);
+x_ddot = X_dot(4:6);
+xi_dot = [x_ddot; W_dot; W_R_dot; W_L_dot; W_A_dot;];
+for j=1:size(delta_mat, 2)
+    [JJ, euler_rhs] = EL_equation_terms(INSECT, x, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A, W_R_dot, W_L_dot, tau, f_tau);
+    dx = delta_mat(1:3, j); dx_dot = delta_mat(4:6, j);
+    [JJ_new, euler_rhs_new] = EL_equation_terms(INSECT, x, R*expmso3(dx), Q_R, Q_L, Q_A, x_dot, W+dx_dot, W_R, W_L, W_A, W_R_dot, W_L_dot, tau, f_tau);
+    dx_ddot = ((euler_rhs_new - euler_rhs) - (JJ_new - JJ)*xi_dot);
+    dx_ddot = JJ(4:6, 4:6) \ dx_ddot(4:6);
+    delta_mat_dot(1:3, j) = -hat(W)*dx + dx_dot;
+    delta_mat_dot(4:6, j) = dx_ddot;
+end
+F_linear = delta_mat_dot / delta_mat;
+X_dot = [X_dot; reshape(delta_mat_dot, n^2, 1);];
+
+end
+
+function [JJ, euler_rhs] = EL_equation_terms(INSECT, x, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A, W_R_dot, W_L_dot, tau, f_tau)
+%%
+[L_R, L_L, D_R, D_L, M_R, M_L, ...
+    F_rot_R, F_rot_L, M_rot_R, M_rot_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);
+F_R=L_R+D_R+F_rot_R;
+F_L=L_L+D_L+F_rot_L;
+M_R=M_R+M_rot_R;
+M_L=M_L+M_rot_L;
+M_A=zeros(3,1);
+
+f_a=[R*Q_R*F_R + R*Q_L*F_L; hat(INSECT.mu_R)*Q_R*F_R + hat(INSECT.mu_L)*Q_L*F_L;
+    M_R; M_L; M_A];
+[~, dU]=potential(INSECT,x,R,Q_R,Q_L,Q_A);
+f_g=-dU;
+
+xi = [x_dot; W; W_R; W_L; W_A];
+[JJ, KK] = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
+LL = KK - 0.5*KK';
+co_ad=blkdiag(zeros(3,3), -hat(W), -hat(W_R), -hat(W_L), -hat(W_A));
+
+% [JJ_11, JJ_12, JJ_21, JJ_22] = inertia_sub_decompose_3_12(JJ);
+% [LL_11, LL_12, LL_21, LL_22] = inertia_sub_decompose_3_12(LL);
+% [~, ~, ~, co_ad_22] = inertia_sub_decompose_3_12(co_ad);
+% 
+% xi_1_dot = JJ_11\( -JJ_12*xi_2_dot -LL_11*xi_1 - LL_12*xi_2 + f_a_1 + f_g_1);
+% f_tau_2 = JJ_21*xi_1_dot + JJ_22*xi_2_dot - co_ad_22*(JJ_21*xi_1 + JJ_22*xi_2) ...
+%     + LL_21*xi_1 + LL_22*xi_2 - f_a_2 - f_g_2;
+% f_tau = [zeros(3,1); -tau(4:6)-tau(7:9)-tau(10:12); Q_R'*tau(4:6); Q_L'*tau(7:9); Q_A'*tau(10:12);];
+f_tau = [zeros(3,1); f_tau(4:6); Q_R'*tau(4:6); Q_L'*tau(7:9); Q_A'*tau(10:12);];
+
+euler_rhs = co_ad*JJ*xi - LL*xi + f_a + f_g + f_tau;
+
+end

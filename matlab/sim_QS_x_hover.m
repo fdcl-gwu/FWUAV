@@ -100,7 +100,7 @@ t=linspace(0,T,N);
 [t X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 c(1) = abs(WK.phi_0) + WK.phi_m - WK.phi_max;
 c(2) = abs(WK.psi_0) + WK.psi_m - WK.psi_max;
-final_pos = [0; 0; -0.05;];
+final_pos = [0; 0; 0;];
 ceq(1:3) = X(1,1:3)' - (X(end,1:3)' -final_pos);
 ceq(4:6) = 0.1*(X(1,4:6)' - X(end,4:6)');
 end
