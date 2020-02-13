@@ -4,13 +4,29 @@ addpath('../modules', '../sim_data', '../');
 %% Monte carlo study
 load('sim_QS_x_hover_control_monte_carlo_pos_longitudinal.mat')
 err_bound = 1;
-x_no_ab = x_pert(:, abs(err_pos(:, 1:4, 1)) < err_bound);
-x_with_ab = x_pert(:, abs(err_pos(:, 1:4, 2)) < err_bound);
+x_no_ab = x_pert(:, abs(err_pos(:, :, 1)) < err_bound);
+x_with_ab = x_pert(:, abs(err_pos(:, :, 2)) < err_bound);
+cov_no_ab = diag(cov(x_no_ab'));
+x_cov = linspace(-cov_no_ab(1), cov_no_ab(1), 50);
+y_cov = cov_no_ab(3) * sqrt(1 - (x_cov/cov_no_ab(1)).^2);
+cov_with_ab = diag(cov(x_with_ab'));
+x_cov_ab = linspace(-cov_with_ab(1), cov_with_ab(1), 50);
+y_cov_ab = cov_with_ab(3) * sqrt(1 - (x_cov_ab/cov_with_ab(1)).^2);
 
 h_err = figure;
-scatter(x_no_ab(1, :), x_no_ab(3, :), 20, 'r', 'x');
+plot_ix = abs(x_no_ab(1, :)) < 2*cov_no_ab(1) & abs(x_no_ab(3, :)) < 2*cov_no_ab(3);
+scatter(x_no_ab(1, plot_ix), x_no_ab(3, plot_ix), 20, 'r', 'x');
 hold on;
-scatter(x_with_ab(1, :), x_with_ab(3, :), 10, 'b', 'filled');
+plot_ix = abs(x_with_ab(1, :)) < 2*cov_with_ab(1) & abs(x_with_ab(3, :)) < 2*cov_with_ab(3);
+scatter(x_with_ab(1, plot_ix), x_with_ab(3, plot_ix), 10, 'b', 'filled');
+hold on;
+plot(x_cov, y_cov, 'r', 'LineWidth', 2);
+hold on;
+plot(x_cov, -y_cov, 'r', 'LineWidth', 2);
+hold on;
+plot(x_cov_ab, y_cov_ab, 'b', 'LineWidth', 2);
+hold on;
+plot(x_cov_ab, -y_cov_ab, 'b', 'LineWidth', 2);
 legend('without abdomen effect', 'with abdomen effect');
 xlabel('$x$','interpreter','latex');
 ylabel('$z$','interpreter','latex');

@@ -9,7 +9,7 @@ des=load('sim_QS_x_hover.mat',...
     'INSECT', 't', 'N', 'x', 'x_dot', 'R', 'Q_R', 'Q_L', 'W_R', 'W_L', 'f_tau',...
     'x0', 'x_dot0', 'Q_A', 'WK', 'x_ddot', 'f_a');
 
-filename='sim_QS_x_hover_control';
+filename='sim_QS_x_hover_control_monte_carlo_pos_longitudinal_new';
 INSECT = des.INSECT;
 WK = des.WK;
 des.x_fit = cell(3, 1); des.x_dot_fit = cell(3, 1); des.f_a_fit = cell(3, 1);
@@ -20,7 +20,7 @@ for i=1:3
     des.f_a_fit{i} = fit(des.t, des.f_a(i, :)', 'fourier8');
 end
 
-% Values obtained from parametric study
+% Values obtained from parametric study; need to multiply by 10?
 des.df_a_1_by_dphi_m = 0.54e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
 des.df_a_1_by_dtheta_m = -0.6e-3 / 0.1; % dtheta_m_R > 0, dtheta_m_L > 0
 des.df_a_2_by_dpsi_m = 0.3e-3 / 0.1; % dpsi_m_R > 0, dpsi_m_L < 0
@@ -28,12 +28,22 @@ des.df_a_2_by_dphi_m = 3.5e-4 / 0.1; % dphi_m_R > 0, dphi_m_L < 0
 des.df_a_3_by_dphi_m = 0.47e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
 des.df_a_1_by_dtheta_A_m = 1.7e-4 / 0.1; % dtheta_A_m > 0
 des.df_a_3_by_dtheta_A_m = 1.25e-4 / 0.1; % dtheta_A_m > 0
+
+des.df_a_1_by_dphi_m = 0.54e-3; % dphi_m_R > 0, dphi_m_L > 0
+des.df_a_1_by_dtheta_m = -0.6e-3; % dtheta_m_R > 0, dtheta_m_L > 0
+des.df_a_2_by_dpsi_m = 0.3e-3; % dpsi_m_R > 0, dpsi_m_L < 0
+des.df_a_2_by_dphi_m = 3.5e-4; % dphi_m_R > 0, dphi_m_L < 0
+des.df_a_3_by_dphi_m = 0.47e-3; % dphi_m_R > 0, dphi_m_L > 0
+des.df_a_1_by_dtheta_A_m = 1.7e-4; % dtheta_A_m > 0
+des.df_a_3_by_dtheta_A_m = 1.25e-4; % dtheta_A_m > 0
 wt = 0; % weight, wt > 0.5 is unstable?
 
 rng default;
 eps1 = 1e-3; eps2 = 1e-1;
-x0 = des.x0 + rand(3,1)*eps1;
-x_dot0 = des.x_dot0 + rand(3,1)*eps2;
+dx0 = [rand(1); 0; rand(1);]*eps1;
+dx_dot0 = zeros(3, 1)*eps2;
+x0 = des.x0 + dx0;
+x_dot0 = des.x_dot0 + dx_dot0;
 X0 = [x0; x_dot0;];
 N = 1001; % N = 2001 causes some numerical divergence
 N_period = 10;
@@ -118,7 +128,8 @@ dt = t(2) - t(1);
 % % Explicit RK4
 for i=1:(N-1)
     if i == 1
-        f_a_im1 = zeros(6, 1);
+%         f_a_im1 = zeros(6, 1);
+        f_a_im1 = ones(6, 1);
     else
         f_a_im1(1:3, :) = f_a(1:3, i-1);
         [JJ_A, KK_A] = inertia_wing_sub(INSECT.m_A, INSECT.mu_A, INSECT.nu_A, INSECT.J_A, R(:, :, i-1), Q_A(:, :, i-1), X(i-1, 4:6)', W(:, i-1), W_A(:, i-1));
@@ -179,6 +190,13 @@ dtheta_m = sign(f_a_im1(1)) * (pos_err(1) - ...
     sign(f_a_im1(4)) * dtheta_A_m * des.df_a_1_by_dtheta_A_m) / des.df_a_1_by_dtheta_m;
 dpsi_m = 0;
 
+% X = X(1:6);
+% [X_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, ...
+%     W_R_dot, W_L, W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, ...
+%     f_tau, tau, Euler_R, Euler_R_dot] = eom_QS_x(INSECT, WK_R, WK_L, t, X);
+% [JJ_A, KK_A] = inertia_wing_sub(INSECT.m_A, INSECT.mu_A, INSECT.nu_A, INSECT.J_A, R, Q_A, X(4:6), W, W_A);
+% f1 = -(JJ_A(1:3, 7:9)*W_A_dot + KK_A(1:3, 7:9)*W_A) + f_a(1:3);
+
 WK_R.phi_m = WK_R.phi_m + dphi_m_R;
 WK_L.phi_m = WK_L.phi_m + dphi_m_L;
 WK_R.theta_m = WK_R.theta_m + dtheta_m;
@@ -193,7 +211,7 @@ X = X(1:6);
     W_R_dot, W_L, W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, ...
     f_tau, tau, Euler_R, Euler_R_dot] = eom_QS_x(INSECT, WK_R, WK_L, t, X);
 % [JJ_A, KK_A] = inertia_wing_sub(INSECT.m_A, INSECT.mu_A, INSECT.nu_A, INSECT.J_A, R, Q_A, X(4:6), W, W_A);
-% (JJ_A(1:3, 7:9)*W_A_dot + KK_A(1:3, 7:9)*W_A) + f_a(1:3);
+% f2 = -(JJ_A(1:3, 7:9)*W_A_dot + KK_A(1:3, 7:9)*W_A) + f_a(1:3);
 
 X_dot=[X_dot; d_x;];
 
