@@ -9,7 +9,7 @@ des=load('sim_QS_x_hover.mat',...
     'INSECT', 't', 'N', 'x', 'x_dot', 'R', 'Q_R', 'Q_L', 'W_R', 'W_L', 'f_tau',...
     'x0', 'x_dot0', 'Q_A', 'WK', 'x_ddot', 'f_a');
 
-filename='sim_QS_x_hover_control_monte_carlo_pos_longitudinal_new';
+filename='sim_QS_x_hover_control_temp';
 INSECT = des.INSECT;
 WK = des.WK;
 des.x_fit = cell(3, 1); des.x_dot_fit = cell(3, 1); des.f_a_fit = cell(3, 1);
@@ -28,14 +28,6 @@ des.df_a_2_by_dphi_m = 3.5e-4 / 0.1; % dphi_m_R > 0, dphi_m_L < 0
 des.df_a_3_by_dphi_m = 0.47e-3 / 0.1; % dphi_m_R > 0, dphi_m_L > 0
 des.df_a_1_by_dtheta_A_m = 1.7e-4 / 0.1; % dtheta_A_m > 0
 des.df_a_3_by_dtheta_A_m = 1.25e-4 / 0.1; % dtheta_A_m > 0
-
-des.df_a_1_by_dphi_m = 0.54e-3; % dphi_m_R > 0, dphi_m_L > 0
-des.df_a_1_by_dtheta_m = -0.6e-3; % dtheta_m_R > 0, dtheta_m_L > 0
-des.df_a_2_by_dpsi_m = 0.3e-3; % dpsi_m_R > 0, dpsi_m_L < 0
-des.df_a_2_by_dphi_m = 3.5e-4; % dphi_m_R > 0, dphi_m_L < 0
-des.df_a_3_by_dphi_m = 0.47e-3; % dphi_m_R > 0, dphi_m_L > 0
-des.df_a_1_by_dtheta_A_m = 1.7e-4; % dtheta_A_m > 0
-des.df_a_3_by_dtheta_A_m = 1.25e-4; % dtheta_A_m > 0
 wt = 0; % weight, wt > 0.5 is unstable?
 
 rng default;

@@ -23,15 +23,17 @@ T=N_period/WK.f;
 ix_d = (N-1)/N_period;
 t=linspace(0,T,N);
 dt = T/(N-1);
-epsilon = 1e-1;
+epsilon = 1e-8;
 
 % n is the number of perturbation states 
 % n = 3; % for nominal hover with @eom_hover_vel if position is not periodic
 % [delta_mat, F_linear] = sim_pert(@eom_hover_vel, n, INSECT, WK, X0, N, t, epsilon);
-n = 6; % for nominal hover with @eom_hover; attitude stability with @eom_hover_attitude
-[delta_mat, F_linear] = sim_pert(@eom_hover, n, INSECT, WK, X0, N, t, epsilon);
+% n = 6; % for nominal hover with @eom_hover
+% [delta_mat, F_linear] = sim_pert(@eom_hover, n, INSECT, WK, X0, N, t, epsilon);
 % n = 9; % for controlled hover with @eom_hover_control
 % [delta_mat, F_linear] = sim_pert(@eom_hover_control, n, INSECT, WK, X0, N, t, epsilon, gains);
+n = 12; % attitude stability with @eom_hover_attitude
+[delta_mat, F_linear] = sim_pert(@eom_hover_attitude, n, INSECT, WK, X0, N, t, epsilon);
 
 B = zeros(n, n, 1+ix_d);
 start_ix = max(1, round((N_period-2)/N_period * N));
@@ -181,14 +183,18 @@ X = X(1:6);
 delta_mat_dot = zeros(n, n);
 x_ddot = X_dot(4:6);
 xi_dot = [x_ddot; W_dot; W_R_dot; W_L_dot; W_A_dot;];
-for j=1:size(delta_mat, 2)
+parfor j=1:size(delta_mat, 2)
     [JJ, euler_rhs] = EL_equation_terms(INSECT, x, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A, W_R_dot, W_L_dot, tau, f_tau);
-    dx = delta_mat(1:3, j); dx_dot = delta_mat(4:6, j);
-    [JJ_new, euler_rhs_new] = EL_equation_terms(INSECT, x, R*expmso3(dx), Q_R, Q_L, Q_A, x_dot, W+dx_dot, W_R, W_L, W_A, W_R_dot, W_L_dot, tau, f_tau);
+    dx = delta_mat(1:3, j); dx_dot = delta_mat(4:6, j); dR = delta_mat(7:9, j); dW = delta_mat(10:12, j);
+    [JJ_new, euler_rhs_new] = EL_equation_terms(INSECT, x+dx, R*expmso3(dR), Q_R, Q_L, Q_A, x_dot+dx_dot, W+dW, W_R, W_L, W_A, W_R_dot, W_L_dot, tau, f_tau);
     dx_ddot = ((euler_rhs_new - euler_rhs) - (JJ_new - JJ)*xi_dot);
-    dx_ddot = JJ(4:6, 4:6) \ dx_ddot(4:6);
-    delta_mat_dot(1:3, j) = -hat(W)*dx + dx_dot;
-    delta_mat_dot(4:6, j) = dx_ddot;
+    dx_ddot = JJ(1:6, 1:6) \ dx_ddot(1:6);
+    d_mat = zeros(n, 1);
+    d_mat(1:3) = dx_dot;
+    d_mat(4:6) = dx_ddot(1:3);
+    d_mat(7:9) = -hat(W)*dR + dW;
+    d_mat(10:12) = dx_ddot(4:6);
+    delta_mat_dot(:, j) = d_mat;
 end
 F_linear = delta_mat_dot / delta_mat;
 X_dot = [X_dot; reshape(delta_mat_dot, n^2, 1);];
