@@ -17,8 +17,9 @@ U_L = -mg_L*e3' * (x + R*tmp_L);
 U_A = -mg_A*e3' * (x + R*tmp_A);
 U = U_B + U_R + U_L + U_A;
 
+hat_RT_e3 = hat(R'*e3);
 dU = [-(INSECT.m_B + INSECT.m_R + INSECT.m_L + INSECT.m_A) * INSECT.g * e3;
-    mg_R*hat(R'*e3)*tmp_R + mg_L*hat(R'*e3)*tmp_L + mg_A*hat(R'*e3)*tmp_A;
+    mg_R*hat_RT_e3*tmp_R + mg_L*hat_RT_e3*tmp_L + mg_A*hat_RT_e3*tmp_A;
     mg_R*hat(Q_R'*R'*e3)*INSECT.nu_R;
     mg_L*hat(Q_L'*R'*e3)*INSECT.nu_L;
     mg_A*hat(Q_A'*R'*e3)*INSECT.nu_A];

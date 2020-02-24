@@ -46,7 +46,10 @@ xi_2_dot=[W_dot; W_R_dot; W_L_dot; W_A_dot];
 
 [JJ, KK] = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
 LL = KK - 0.5*KK';
-co_ad=blkdiag(zeros(3,3), -hat(W), -hat(W_R), -hat(W_L), -hat(W_A));
+% co_ad=blkdiag(zeros(3,3), -hat(W), -hat(W_R), -hat(W_L), -hat(W_A));
+co_ad=zeros(15, 15);
+co_ad(4:6, 4:6) = -hat(W); co_ad(7:9, 7:9) = -hat(W_R);
+co_ad(10:12, 10:12) = -hat(W_L); co_ad(13:15, 13:15) = -hat(W_A);
 
 [JJ_11, JJ_12, JJ_21, JJ_22] = inertia_sub_decompose_3_12(JJ);
 [LL_11, LL_12, LL_21, LL_22] = inertia_sub_decompose_3_12(LL);
@@ -57,7 +60,10 @@ xi_1_dot = JJ_11\( -JJ_12*xi_2_dot -LL_11*xi_1 - LL_12*xi_2 + f_a_1 + f_g_1);
 f_tau_2 = JJ_21*xi_1_dot + JJ_22*xi_2_dot - co_ad_22*(JJ_21*xi_1 + JJ_22*xi_2) ...
     + LL_21*xi_1 + LL_22*xi_2 - f_a_2 - f_g_2;
 f_tau = [zeros(3,1); f_tau_2];
-tau = blkdiag(zeros(3), Q_R, Q_L, Q_A)*f_tau_2;
+% tau = blkdiag(zeros(3), Q_R, Q_L, Q_A)*f_tau_2;
+tau = zeros(12, 12);
+tau(4:6, 4:6) = Q_R; tau(7:9, 7:9) = Q_L; tau(10:12, 10:12) = Q_A;
+tau = tau*f_tau_2;
 
 X_dot=[xi_1; xi_1_dot];
 

@@ -53,7 +53,7 @@ switch WK.bo_type
         theta = A * cos( a*t + b ) + WK.theta_B_0;
         theta_dot  = A * -a * sin(a*t+b);
         theta_ddot = A * -a^2 * cos(a*t+b);  
-        R=expm(theta*hat(e2));
+        R=expmhat(theta*e2);
         W=theta_dot*e2;
         W_dot=theta_ddot*e2;
 end

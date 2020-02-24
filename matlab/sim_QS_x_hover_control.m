@@ -42,6 +42,12 @@ N_period = 10;
 N_single = round((N-1)/N_period);
 T = N_period/WK.f;
 t = linspace(0,T,N);
+
+des.x_fit_t = zeros(3, N); des.x_dot_fit_t = zeros(3, N);
+for j=1:3
+    des.x_fit_t(j, :) = des.x_fit{j}(t);
+    des.x_dot_fit_t(j, :) = des.x_dot_fit{j}(t);
+end
 % Optimized gs = [427.1529   15.6076  13.4983];
 
 %% Simulation
@@ -163,13 +169,13 @@ x_dot=X(4:6);
 int_d_x=X(7:9);
 
 % Control design
-d_x = zeros(3, 1); d_x_dot = zeros(3, 1);
-for j=1:3
+% d_x = zeros(3, 1); d_x_dot = zeros(3, 1);
+% for j=1:3
 %     d_x(j) = des.x_fit{j}(t) - (x(j) - x0(j)); % Trying to make the
 %     position periodic first while using this expression
-    d_x(j) = des.x_fit{j}(t) - x(j);
-    d_x_dot(j) = des.x_dot_fit{j}(t) - x_dot(j);
-end
+% end
+d_x = des.x_fit_t(:, i) - x;
+d_x_dot = des.x_dot_fit_t(:, i) - x_dot;
 pos_err = INSECT.m*(gains.Kp_pos * d_x + gains.Kd_pos * d_x_dot + gains.Ki_pos * int_d_x);
 
 dtheta_A_m = sign(f_a_im1(6)) * wt * pos_err(3) / des.df_a_3_by_dtheta_A_m;

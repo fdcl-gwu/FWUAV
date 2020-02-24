@@ -1,11 +1,12 @@
 function R = expmhat(W)
 % Exponential of an element in Lie algebra of SO(3) dentified by R^{3}
-% using Rodrigues formula.
+% using Rodrigues formula. This is faster than using {expm}.
     theta = norm(W);
-    if theta == 0
-        R = eye(3);
-    else
+    if theta ~= 0
         W = W / theta;
-        R = eye(3) + sin(theta) * hat(W) + (1 - cos(theta)) * (hat(W)^2);
+        hat_W = hat(W);
+        R = eye(3) + sin(theta) * hat_W + (1 - cos(theta)) * (hat_W * hat_W);
+    else
+        R = eye(3);
     end
 end

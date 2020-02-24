@@ -29,12 +29,12 @@ end
 phi_R=Euler_R(1);
 theta_R=Euler_R(2);
 psi_R=Euler_R(3);
-Q_R=expmso3(beta*e2)*expmso3(phi_R*e1)*expmso3(-psi_R*e3)*expmso3(theta_R*e2);
+Q_R=expmhat(beta*e2)*expmhat(phi_R*e1)*expmhat(-psi_R*e3)*expmhat(theta_R*e2);
 
 phi_L=Euler_L(1);
 theta_L=Euler_L(2);
 psi_L=Euler_L(3);
-Q_L=expmso3(beta*e2)*expmso3(-phi_L*e1)*expmso3(psi_L*e3)*expmso3(theta_L*e2);
+Q_L=expmhat(beta*e2)*expmhat(-phi_L*e1)*expmhat(psi_L*e3)*expmhat(theta_L*e2);
 
 if nargin > 3
     Euler_R_dot = varargin{2};

@@ -2,9 +2,11 @@
 addpath('../modules', '../sim_data', '../');
 
 %% Monte carlo study
-load('sim_QS_x_hover_control_monte_carlo_pos_longitudinal.mat')
-x_no_ab = x_pert(:, abs(err_pos(:, :, 1)) < squeeze(vecnorm(x_pert, 2, 1)));
-x_with_ab = x_pert(:, abs(err_pos(:, :, 2)) < squeeze(vecnorm(x_pert, 2, 1)));
+load('sim_QS_x_hover_control_monte_carlo_pos_longitudinal.mat');
+% err_bound = 1e-1;
+err_bound = squeeze(vecnorm(x_pert, 2, 1));
+x_no_ab = x_pert(:, abs(err_pos(:, :, 1)) < err_bound);
+x_with_ab = x_pert(:, abs(err_pos(:, :, 2)) < err_bound);
 cov_no_ab = diag(cov(x_no_ab'));
 x_cov = linspace(-cov_no_ab(1), cov_no_ab(1), 50);
 y_cov = cov_no_ab(3) * sqrt(1 - (x_cov/cov_no_ab(1)).^2);
@@ -27,7 +29,7 @@ hold on;
 plot(x_cov_ab, y_cov_ab, 'b', 'LineWidth', 2);
 hold on;
 plot(x_cov_ab, -y_cov_ab, 'b', 'LineWidth', 2);
-legend('without abdomen effect', 'with abdomen effect');
+legend({'without abdomen effect, $ w = 0 $', 'with abdomen effect, $ w = 0.1 $'},'interpreter','latex');
 xlabel('$x$','interpreter','latex');
 ylabel('$z$','interpreter','latex');
 axis tight;
