@@ -21,7 +21,7 @@ WK.psi_N = 2; % or 1
 N=1001;
 x0=[0 0 0]';
 final_pos = [0; 0; 0;];
-% final_pos = [0.1; 0; -0.1/3;]; % Sample experimental trajectory
+% final_pos = [0.1; 0; -0.1/3;]; % Experimental trajectory
 
 %% The optimization algorithm
 A = []; b = []; Aeq = []; beq = [];
@@ -41,7 +41,7 @@ rng default; % For reproducibility
 % [WK_arr, fval, exitflag, output] = fmincon(@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0, final_pos),...
 %     WK_arr0,A,b,Aeq,beq,lb,ub,nonlcon,options);
 
-% % MULTISTART, GA, PARTICLESWARM
+% % MULTISTART, PARTICLESWARM
 ptmatrix(1, :) = [0.2641    pi/2    0.1576    -1.2217   0.5227    1.9579   -0.0186    0.0893    8*pi/180    0.7783    5*pi/180 0 0 0 0 15*pi/180 0 10*pi/180  0 0 WK.f];
 ptmatrix(2, :) = [-0.2799    0.7425    0.6669    0.5665    0.6981    3.0000    0.3914   -0.2456    0.0000   -2.8879    0.0524   -0.1000   -0.0000   -0.1000 0.1745    1.0472    1.5708    0.2094   -0.1669    1.5707   11.7584];
 ptmatrix(3, :) = [-0.4324    1.4397-0.6658    0.3889    0.6658    0.1137    1.7289   -0.5236    1.5708    8*pi/180   -1.0691    5*pi/180   -0.0441    0.0137 -0.0783 0 15*pi/180 0 10*pi/180  0 0 WK.f];

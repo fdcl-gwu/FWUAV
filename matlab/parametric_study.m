@@ -36,7 +36,7 @@ parfor i=1:N_params
     f_a_m_temp(:, :, 1, 2) = mean(f_aero2, 3);
     f_a_m(:, :, i, :) = f_a_m_temp;
 end
-f_a_m = abs(f_a_m);
+% f_a_m = abs(f_a_m);
 
 %%
 % Get a list of all variables
@@ -56,20 +56,20 @@ function f_aero = param_study(INSECT, WK, eps, i, t, X0, N, R, F_R)
     WK_R = WK;  WK_L = WK;
     WK_R.phi_m = WK_R.phi_m + eps(i);
     WK_L.phi_m = WK_L.phi_m + eps(i);
-    [~, ~, f_aero(1, :, :)] = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N, R, F_R);
+    f_aero(1, :, :) = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N, R, F_R);
     %
     WK_R = WK;  WK_L = WK;
 %     WK_R.phi_0 = WK_R.phi_0 + eps(i);
 %     WK_L.phi_0 = WK_L.phi_0 + eps(i);
-    WK_R.theta_m = WK_R.theta_m + eps(i);
-    WK_L.theta_m = WK_L.theta_m + eps(i);
-    [~, ~, ~, f_aero(2, :, :)] = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N, R, F_R);
+    WK_R.theta_0 = WK_R.theta_0 + eps(i);
+    WK_L.theta_0 = WK_L.theta_0 + eps(i);
+    f_aero(2, :, :) = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N, R, F_R);
     %
     WK_R = WK;  WK_L = WK;
-%     WK_R.psi_0 = WK_R.psi_0 + eps(i);
-%     WK_L.psi_0 = WK_L.psi_0 - eps(i);
-    WK_R.phi_m = WK_R.phi_m + eps(i);
-    WK_L.phi_m = WK_L.phi_m - eps(i);
+    WK_R.psi_m = WK_R.psi_m + eps(i);
+    WK_L.psi_m = WK_L.psi_m - eps(i);
+%     WK_R.phi_m = WK_R.phi_m + eps(i);
+%     WK_L.phi_m = WK_L.phi_m - eps(i);
     f_aero(3, :, :) = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N, R, F_R);
     %
     WK_R = WK;  WK_L = WK;
@@ -84,7 +84,6 @@ function [f_aero, f_abd, F_R, f_aero_att] = aerodynamic_force(INSECT, WK_R, WK_L
     f_a = zeros(15, N); f_abd = zeros(3, N); F_R = zeros(3, N); f_aero_att = zeros(3, N);
     for k=1:N    
         [~, R, Q_R, ~, Q_A, ~, ~, W, ~, ~, ~, ~, ~, W_A, W_A_dot, F_R(:, k), ~, ~, ~, f_a(:,k)]= eom_QS_x(INSECT, WK_R, WK_L, t(k), X(k,:)');
-        % study for abdomen
         [JJ_A, KK_A] = inertia_wing_sub(INSECT.m_A, INSECT.mu_A, INSECT.nu_A, INSECT.J_A, R, Q_A, X(k, 4:6)', W, W_A);
         f_abd(:, k) = -(JJ_A(1:3, 7:9)*W_A_dot + KK_A(1:3, 7:9)*W_A);
         f_aero_att(:, k) = R_id(:, :, k) * Q_R * F_R_id(:, k);
