@@ -26,10 +26,10 @@ INSECT.mu_A=0.3*rand(3,1);
 INSECT.nu_A=0.5*rand(3,1);
 INSECT.J_A=rand_spd;
 
-R0=expmso3(rand(3,1));
-Q_R0=expmso3(rand(3,1));
-Q_L0=expmso3(rand(3,1));
-Q_A0=expmso3(rand(3,1));
+R0=expmhat(rand(3,1));
+Q_R0=expmhat(rand(3,1));
+Q_L0=expmhat(rand(3,1));
+Q_A0=expmhat(rand(3,1));
 W0=rand(3,1);
 W_R0=rand(3,1);
 W_L0=rand(3,1);

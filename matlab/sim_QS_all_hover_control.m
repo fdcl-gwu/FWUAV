@@ -29,10 +29,10 @@ gains.Kd_att = 0;
 
 eps = 0;
 x0 = des.x0 + rand(3,1)*eps;
-R0 = des.R(:, :, 1)*expmso3(rand(3,1)*eps);
-Q_R0 = des.Q_R(:, :, 1)*expmso3(rand(3,1)*eps);
-Q_L0 = des.Q_L(:, :, 1)*expmso3(rand(3,1)*eps);
-Q_A0 = des.Q_A(:, :, 1)*expmso3(rand(3,1)*eps);
+R0 = des.R(:, :, 1)*expmhat(rand(3,1)*eps);
+Q_R0 = des.Q_R(:, :, 1)*expmhat(rand(3,1)*eps);
+Q_L0 = des.Q_L(:, :, 1)*expmhat(rand(3,1)*eps);
+Q_A0 = des.Q_A(:, :, 1)*expmhat(rand(3,1)*eps);
 x_dot0 = des.x_dot0 + rand(3,1)*eps;
 W0 = des.W(:, 1) + rand(3,1)*eps;
 W_R0 = des.W_R(:, 1) + rand(3,1)*eps;
@@ -162,10 +162,10 @@ xi_dot=JJ\(-LL*xi + co_ad*JJ*xi - dU + f_a + f_tau);
 % Q_L_dot = Q_L*hat(W_L) - ke*Q_L*(Q_L'*Q_L - I);
 % Q_A_dot = Q_A*hat(W_A) - ke*Q_A*(Q_A'*Q_A - I);
 
-R_dot = R*expmso3(W*dt);
-Q_R_dot = Q_R*expmso3(W_R*dt);
-Q_L_dot = Q_L*expmso3(W_L*dt);
-Q_A_dot = Q_A*expmso3(W_A*dt);
+R_dot = R*expmhat(W*dt);
+Q_R_dot = Q_R*expmhat(W_R*dt);
+Q_L_dot = Q_L*expmhat(W_L*dt);
+Q_A_dot = Q_A*expmhat(W_A*dt);
 
 X_dot=[x_dot; reshape(R_dot,9,1); reshape(Q_R_dot,9,1); reshape(Q_L_dot,9,1); reshape(Q_A_dot,9,1); xi_dot];
 end

@@ -316,7 +316,7 @@ II=eye(3);
 %% body-fixed frame
 h_FB=figure('color','w');
 x=100*[-1.5 1 -1]';
-R=expmso3(-pi/12*e3)*expmso3(pi/6*e2)*expmso3(-pi/12*e1);
+R=expmhat(-pi/12*e3)*expmhat(pi/6*e2)*expmhat(-pi/12*e1);
 Q_R=eye(3);
 Q_L=eye(3);
 [h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[1,0,0]);
@@ -361,8 +361,8 @@ beta=15*pi/180;
 h_FS=figure('color','w');
 mu_R=[12 8 -3]';
 x=[0 0 0]';
-R=expmso3(pi/6*e2);
-patch_circle(R*mu_R, R*expmso3(beta*e2)*e1, 170);
+R=expmhat(pi/6*e2);
+patch_circle(R*mu_R, R*expmhat(beta*e2)*e1, 170);
 
 [Q_R Q_L]=wing_attitude(beta,[-pi/6,0,0]);
 [h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, [1 0 0]);
@@ -373,14 +373,14 @@ camlight;
 
 x0=R*[mu_R(1) 0 0]'; % origin of the unit vector normal to the stroke plane
 for i=1:3
-    patch_arrow(x0, x0 + 100*R*expmso3(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
+    patch_arrow(x0, x0 + 100*R*expmhat(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
 end
-plot_arc(x0, R*expmso3(beta*e2)*e1, R*e1, 70);
+plot_arc(x0, R*expmhat(beta*e2)*e1, R*e1, 70);
 
 %% flapping angle
 h_FR_phi=figure('color','w');
 x=[0 0 0]';
-R=expmso3(pi/6*e2);
+R=expmhat(pi/6*e2);
 beta=15*pi/180;
 
 [Q_R Q_L]=wing_attitude(beta,[pi/3,0,0]);
@@ -395,14 +395,14 @@ axis auto;
 x0=R*mu_R;
 for i=2
     patch_arrow(x0, x0 + 100*R*Q_R*II(:,i), [1 0 0], lwidth, alength, awidth);
-    patch_arrow(x0, x0 + 100*R*expmso3(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
-    plot_arc(x0, R*Q_R*II(:,i), R*expmso3(beta*e2)*II(:,i), 40);
+    patch_arrow(x0, x0 + 100*R*expmhat(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
+    plot_arc(x0, R*Q_R*II(:,i), R*expmhat(beta*e2)*II(:,i), 40);
 end
 
 %% pitch angle
 h_FR_theta=figure('color','w');
 x=[0 0 0]';
-R=expmso3(pi/6*e2);
+R=expmhat(pi/6*e2);
 beta=15*pi/180;
 
 [Q_R Q_L]=wing_attitude(beta,[0,pi/6,0]);
@@ -417,15 +417,15 @@ axis auto;
 x0=R*[0 mu_R(2) mu_R(3)]';
 for i=1
     patch_arrow(x0, x0 + 100*R*Q_R*II(:,i), [1 0 0], lwidth, alength, awidth);
-    patch_arrow(x0, x0 + 100*R*expmso3(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
-    plot_arc(x0, R*Q_R*II(:,i), R*expmso3(beta*e2)*II(:,i), 40);
+    patch_arrow(x0, x0 + 100*R*expmhat(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
+    plot_arc(x0, R*Q_R*II(:,i), R*expmhat(beta*e2)*II(:,i), 40);
 end
 
 
 %% devitation angle
 h_FR_psi=figure('color','w');
 x=[0 0 0]';
-R=expmso3(pi/6*e2);
+R=expmhat(pi/6*e2);
 beta=15*pi/180;
 
 [Q_R Q_L]=wing_attitude(beta,[0,0,pi/9]);
@@ -439,8 +439,8 @@ axis auto;
 x0=R*[mu_R(1) mu_R(2) -20]';
 for i=2
     patch_arrow(x0, x0 + 100*R*Q_R*II(:,i), [1 0 0], lwidth, alength, awidth);
-    patch_arrow(x0, x0 + 100*R*expmso3(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
-    plot_arc(x0, R*Q_R*II(:,i), R*expmso3(beta*e2)*II(:,i), 40);
+    patch_arrow(x0, x0 + 100*R*expmhat(beta*e2)*II(:,i), [0 1 0], lwidth, alength, awidth);
+    plot_arc(x0, R*Q_R*II(:,i), R*expmhat(beta*e2)*II(:,i), 40);
 end
 
 if bool_print

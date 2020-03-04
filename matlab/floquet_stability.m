@@ -186,7 +186,7 @@ xi_dot = [x_ddot; W_dot; W_R_dot; W_L_dot; W_A_dot;];
 parfor j=1:size(delta_mat, 2)
     [JJ, euler_rhs] = EL_equation_terms(INSECT, x, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A, W_R_dot, W_L_dot, tau, f_tau);
     dx = delta_mat(1:3, j); dx_dot = delta_mat(4:6, j); dR = delta_mat(7:9, j); dW = delta_mat(10:12, j);
-    [JJ_new, euler_rhs_new] = EL_equation_terms(INSECT, x+dx, R*expmso3(dR), Q_R, Q_L, Q_A, x_dot+dx_dot, W+dW, W_R, W_L, W_A, W_R_dot, W_L_dot, tau, f_tau);
+    [JJ_new, euler_rhs_new] = EL_equation_terms(INSECT, x+dx, R*expmhat(dR), Q_R, Q_L, Q_A, x_dot+dx_dot, W+dW, W_R, W_L, W_A, W_R_dot, W_L_dot, tau, f_tau);
     dx_ddot = ((euler_rhs_new - euler_rhs) - (JJ_new - JJ)*xi_dot);
     dx_ddot = JJ(1:6, 1:6) \ dx_ddot(1:6);
     d_mat = zeros(n, 1);

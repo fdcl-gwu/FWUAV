@@ -107,7 +107,7 @@ for i=1:length(fv_wr.faces)
 end
 R=[-e2 -e1 -e3];
 x_shift=20;
-Q=expmso3(5*pi/180*e1);
+Q=expmhat(5*pi/180*e1);
 for i=1:length(fv_wr.vertices)    
     fv_wr.vertices(i,:)=scale_factor*((Q*R*fv_wr.vertices(i,:)')'+[20 0 0]);
 end

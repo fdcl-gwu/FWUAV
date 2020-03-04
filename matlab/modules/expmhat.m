@@ -1,5 +1,5 @@
 function R = expmhat(W)
-% Exponential of an element in Lie algebra of SO(3) dentified by R^{3}
+% Exponential of an element in Lie algebra of SO(3) identified by R^{3}
 % using Rodrigues formula. This is faster than using {expm}.
     theta = norm(W);
     if theta ~= 0
