@@ -26,7 +26,6 @@ subplot(nr,nc,ic+nc);
 plot(eps, squeeze(f_a_m(ic,ir,:,1)));
 ylabel('mean $f_a(2)$','interpreter','latex');
 hold on;
-yyaxis right;
 plot(eps, squeeze(f_a_m(ic,ir,:,2)), 'r');
 title(sprintf('$m_p$ = %0.3e \n $m_n$ = %0.3e', get_slope(eps', squeeze(f_a_m(ic,ir,:,1))), ...
     get_slope(eps', squeeze(f_a_m(ic,ir,:,2)))),'interpreter','latex');
@@ -56,7 +55,6 @@ ir = 2;
 subplot(nr,nc,ic+nc);
 plot(eps, squeeze(f_a_m(ic,ir,:,1)));
 hold on;
-yyaxis right;
 plot(eps, squeeze(f_a_m(ic,ir,:,2)), 'r');
 title(sprintf('$m_p$ = %0.3e \n $m_n$ = %0.3e', get_slope(eps', squeeze(f_a_m(ic,ir,:,1))), ...
     get_slope(eps', squeeze(f_a_m(ic,ir,:,2)))),'interpreter','latex');
@@ -74,7 +72,6 @@ ir = 1;
 subplot(nr,nc,ic);
 plot(eps, squeeze(f_a_m(ic,ir,:,1)));
 hold on;
-yyaxis right;
 plot(eps, squeeze(f_a_m(ic,ir,:,2)), 'r');
 title(sprintf('$m_p$ = %0.3e \n $m_n$ = %0.3e', get_slope(eps', squeeze(f_a_m(ic,ir,:,1))), ...
     get_slope(eps', squeeze(f_a_m(ic,ir,:,2)))),'interpreter','latex');
@@ -83,7 +80,6 @@ ir = 2;
 subplot(nr,nc,ic+nc);
 plot(eps, squeeze(f_a_m(ic,ir,:,1)));
 hold on;
-yyaxis right;
 plot(eps, squeeze(f_a_m(ic,ir,:,2)), 'r');
 title(sprintf('$m_p$ = %0.3e \n $m_n$ = %0.3e', get_slope(eps(eps'>0)', squeeze(f_a_m(ic,ir,eps'>0,1))), ...
     get_slope(eps(eps'<0)', squeeze(f_a_m(ic,ir,eps'<0,1)))),'interpreter','latex');

@@ -5,8 +5,7 @@ function parametric_study
 evalin('base','clear all');
 close all;
 addpath('./modules', './sim_data', './plotting');
-load('sim_QS_x_hover.mat',...
-    'INSECT', 'WK', 'X0');
+load('sim_QS_x_hover.mat', 'INSECT', 'WK', 'X0');
 filename='parametric_study';
 
 N=501;
@@ -15,7 +14,6 @@ t=linspace(0,T,N);
 
 N_params = 50;
 N_study = 4;
-% eps = logspace(log10(0.0001), log10(0.1), N_params);
 eps = linspace(-0.1, 0.1, N_params);
 f_aero = zeros(N_study, 3, N, N_params);
 f_a_m = zeros(N_study, 3, N_params, 2);
@@ -59,17 +57,15 @@ function f_aero = param_study(INSECT, WK, eps, i, t, X0, N, R, F_R)
     f_aero(1, :, :) = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N, R, F_R);
     %
     WK_R = WK;  WK_L = WK;
-%     WK_R.phi_0 = WK_R.phi_0 + eps(i);
-%     WK_L.phi_0 = WK_L.phi_0 + eps(i);
     WK_R.theta_0 = WK_R.theta_0 + eps(i);
     WK_L.theta_0 = WK_L.theta_0 + eps(i);
     f_aero(2, :, :) = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N, R, F_R);
     %
     WK_R = WK;  WK_L = WK;
-    WK_R.psi_m = WK_R.psi_m + eps(i);
-    WK_L.psi_m = WK_L.psi_m - eps(i);
-%     WK_R.phi_m = WK_R.phi_m + eps(i);
-%     WK_L.phi_m = WK_L.phi_m - eps(i);
+%     WK_R.psi_m = WK_R.psi_m + eps(i);
+%     WK_L.psi_m = WK_L.psi_m - eps(i);
+    WK_R.phi_m = WK_R.phi_m + eps(i);
+    WK_L.phi_m = WK_L.phi_m - eps(i);
     f_aero(3, :, :) = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N, R, F_R);
     %
     WK_R = WK;  WK_L = WK;

@@ -15,13 +15,12 @@ x_cov_ab = linspace(-cov_with_ab(1), cov_with_ab(1), 50);
 z_cov_ab = cov_with_ab(3) * sqrt(1 - (x_cov_ab/cov_with_ab(1)).^2);
 
 fac = 2;
-fac = Inf;
 h_err = figure;
 plot_ix = abs(x_no_ab(1, :)) < fac*cov_no_ab(1) & abs(x_no_ab(3, :)) < fac*cov_no_ab(3);
-scatter(x_no_ab(1, plot_ix), x_no_ab(3, plot_ix), 20, 'r', 'x');
+scatter(x_no_ab(1, :), x_no_ab(3, :), 20, 'r', 'x');
 hold on;
 plot_ix = abs(x_with_ab(1, :)) < fac*cov_with_ab(1) & abs(x_with_ab(3, :)) < fac*cov_with_ab(3);
-scatter(x_with_ab(1, plot_ix), x_with_ab(3, plot_ix), 10, 'b', 'filled');
+scatter(x_with_ab(1, :), x_with_ab(3, :), 10, 'b', 'filled');
 % hold on;
 % plot(x_cov, z_cov, 'r', 'LineWidth', 2);
 % hold on;

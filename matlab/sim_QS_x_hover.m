@@ -42,28 +42,28 @@ rng default; % For reproducibility
 %     WK_arr0,A,b,Aeq,beq,lb,ub,nonlcon,options);
 
 % % MULTISTART, PARTICLESWARM
-ptmatrix(1, :) = [0.2641    pi/2    0.1576    -1.2217   0.5227    1.9579   -0.0186    0.0893    8*pi/180    0.7783    5*pi/180 0 0 0 0 15*pi/180 0 10*pi/180  0 0 WK.f];
+ptmatrix(1, :) = [0.2950    0.8865    0.7242   -0.3732    0.5625    0.6328   -0.0129    0.3241    0.0419    0.2634   -0.0000    0.6994    0.0000   -0.6685 0.1102    0.4683   -0.1631    0.1648    0.0433    3.1416    9.3263];
 ptmatrix(2, :) = [-0.2799    0.7425    0.6669    0.5665    0.6981    3.0000    0.3914   -0.2456    0.0000   -2.8879    0.0524   -0.1000   -0.0000   -0.1000 0.1745    1.0472    1.5708    0.2094   -0.1669    1.5707   11.7584];
 ptmatrix(3, :) = [-0.4324    1.4397-0.6658    0.3889    0.6658    0.1137    1.7289   -0.5236    1.5708    8*pi/180   -1.0691    5*pi/180   -0.0441    0.0137 -0.0783 0 15*pi/180 0 10*pi/180  0 0 WK.f];
 ptmatrix(4, :) = [0.0577    pi/2-1.2217    0.3587    1.2217  0.5233    2.7760    0.2207    0.0059    8*pi/180    0.9429    0.0291 0 0 0 0 15*pi/180 0 10*pi/180  0 0 WK.f];
 ptmatrix(5, :) = [-1.1117    0.8052    0.9530    0.3491    0.0039    1.5236    0.5158    0.8012    0.1344   -1.5344    0.0771    0.0981    0.0000   -0.0814  0  0.3219 0 0.2869   -0.3374    1.5438   11.8923];
 ptmatrix(6, :) = [0.1815    pi/2-1.2217   0.3218    -1.2217    0.5196    2.9411    0.1942    0.0157    8*pi/180    0.9508   -0.0505 0 0 0 0 15*pi/180 0 10*pi/180  0 0 WK.f];
 
-% tpoints = CustomStartPointSet(ptmatrix);
-% ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf);
-% options = optimoptions(@fmincon,'Algorithm','interior-point',...
-%     'UseParallel',true);%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
-% problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0, final_pos),...
-%     'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
-% [WK_arr, fval, exitflag, output, solutions] = run(ms, problem, tpoints);
+ptmatrix(7:26, :) = lb + rand(20, length(WK_arr0)) .* (ub - lb);
+tpoints = CustomStartPointSet(ptmatrix);
+ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf,'MaxTime',12*3600);
+options = optimoptions(@fmincon,'Algorithm','interior-point',...
+    'UseParallel',true);%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
+problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0, final_pos),...
+    'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
+[WK_arr, fval, exitflag, output, solutions] = run(ms, problem, tpoints);
 
 % hybridoptions = optimoptions('fmincon','MaxFunctionEvaluations',5000,'UseParallel',true);
-%
-options = optimoptions('particleswarm','PlotFcn',@pswplotbestf,...
-    'UseParallel',true,'InitialSwarmMatrix',ptmatrix,'MaxTime',60);
-%     'HybridFcn',{@fmincon,hybridoptions});
-[WK_arr, fval, exitflag, output] = particleswarm(@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0, final_pos),...
-    length(WK_arr0), lb, ub, options);
+% options = optimoptions('particleswarm','PlotFcn',@pswplotbestf,...
+%     'UseParallel',true,'InitialSwarmMatrix',ptmatrix,'MaxTime',12*3600);
+% %     'HybridFcn',{@fmincon,hybridoptions});
+% [WK_arr, fval, exitflag, output] = particleswarm(@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0, final_pos),...
+%     length(WK_arr0), lb, ub, options);
 
 fprintf('Optimization has been completed\n');
 disp(output);
@@ -77,15 +77,17 @@ N=1001;
 T=3/WK.f;
 t=linspace(0,T,N);
 
-[t X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+[t, X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
-x=X(:,1:3)';
-x_dot=X(:,4:6)';
+x = X(:,1:3)';
+x_dot = X(:,4:6)';
 
-R=zeros(3,3,N);
 for k=1:N    
-    [X_dot(:,k), R(:,:,k) Q_R(:,:,k) Q_L(:,:,k) Q_A(:,:,k) theta_B(k) theta_A(k) W(:,k) W_dot(:,k) W_R(:,k) W_R_dot(:,k) W_L(:,k) W_L_dot(:,k) W_A(:,k) W_A_dot(:,k) F_R(:,k) F_L(:,k) M_R(:,k) M_L(:,k) f_a(:,k) f_g(:,k) f_tau(:,k) tau(:,k)]= eom_QS_x(INSECT, WK, WK, t(k), X(k,:)');
-    F_B(:,k)=Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);    
+    [X_dot(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), theta_B(k),...
+        theta_A(k), W(:,k), W_dot(:,k), W_R(:,k), W_R_dot(:,k), W_L(:,k),...
+        W_L_dot(:,k), W_A(:,k), W_A_dot(:,k), F_R(:,k), F_L(:,k), M_R(:,k),...
+        M_L(:,k), f_a(:,k), f_g(:,k), f_tau(:,k), tau(:,k)]= eom_QS_x(INSECT, WK, WK, t(k), X(k,:)');
+    F_B(:,k) = Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);    
     [Euler_R(:,k), Euler_R_dot(:,k), Euler_R_ddot(:,k)] = wing_kinematics(t(k),WK);
 end
 
@@ -140,19 +142,19 @@ del = 1e4;
 J = gam * trapz(t, abs(E_dot)) + del * trapz(t, abs(E));
 
 % % Augmentation of constraints
-c(1) = abs(WK.phi_0) + WK.phi_m - WK.phi_max;
-c(2) = abs(WK.psi_0) + WK.psi_m - WK.psi_max;
-ceq(1:3) = x(:, 1) - (x(:, end) -final_pos);
-ceq(4:6) = 0.1*(x_dot(:, 1) - x_dot(:, end));
-w_c = 1; w_ceq = 1e6;
-for k=1:length(c)
-    if c(k) >= 0
-        J = 1/eps;
-    else
-        J = J - w_c*log(-c(k));
-    end
-end
-J = J + w_ceq * (exp(norm(ceq)) - 1);
+% c(1) = abs(WK.phi_0) + WK.phi_m - WK.phi_max;
+% c(2) = abs(WK.psi_0) + WK.psi_m - WK.psi_max;
+% ceq(1:3) = x(:, 1) - (x(:, end) -final_pos);
+% ceq(4:6) = 0.1*(x_dot(:, 1) - x_dot(:, end));
+% w_c = 1; w_ceq = 1e6;
+% for k=1:length(c)
+%     if c(k) >= 0
+%         J = 1/eps;
+%     else
+%         J = J - w_c*log(-c(k));
+%     end
+% end
+% J = J + w_ceq * (exp(norm(ceq)) - 1);
 
 if isnan(J)
     J = 1/eps;
