@@ -34,11 +34,11 @@ wt = 0; % weight, wt > 0.5 is unstable?
 rng default;
 eps1 = 1e-3; eps2 = 1e-1;
 dx0 = [rand(1); 0; rand(1);]*eps1;
-dx_dot0 = zeros(3, 1)*eps2;
+dx_dot0 = zeros(3, 1)*0;
 x0 = des.x0 + dx0;
 % Unstable ICs
-x0 = [-0.0052; 0; -0.0144];
-% x0 = [-0.0052; 0; 0.0144];
+x0 = [0.0036969; 0; -0.0723];
+% x0 = [-0.0052; 0; -0.0144];
 % x0 = [0; -0.01; 0];
 x_dot0 = des.x_dot0 + dx_dot0;
 X0 = [x0; x_dot0;];
@@ -62,6 +62,7 @@ for j=1:3
     des.x_fit_t(j, :) = des.x_fit{j}(t);
     des.x_dot_fit_t(j, :) = des.x_dot_fit{j}(t);
 end
+des = rmfield(des, {'WK', 'INSECT', 't', 'x', 'x_dot', 'x_fit', 'x_dot_fit', 'f_tau'});
 
 %% Simulation
 pol = poly([-7.8 + 19i, -7.8 - 19i, -0.003]);
@@ -76,7 +77,8 @@ gains.Kp_pos = pol(3); gains.Kd_pos = pol(2); gains.Ki_pos = pol(4);
     Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, N_single, N_period, t, wt);
 
 %% Monte Carlo
-% [x_pert, err_pos] = monte_carlo(gains, WK, ...
+% N_sims = 100000;
+% [x_pert, err_pos] = monte_carlo(N_sims, gains, WK, ...
 %             INSECT, des, N, N_single, N_period, t);
 
 %%
@@ -91,10 +93,9 @@ evalin('base',['load ' filename]);
 
 end
 
-function [x_pert, err_pos] = monte_carlo(gains, WK, ...
+function [x_pert, err_pos] = monte_carlo(N_sims, gains, WK, ...
             INSECT, des, N, N_single, N_period, t)
 %%
-N_sims = 100000;
 eps_pos = 1e-1;
 eps_vel = 1e0;
 wts = [0, 0.1]; N_wts = length(wts);
@@ -210,7 +211,7 @@ mul_theta_A = [des.df_a_1_by_dtheta_A_m(round((3 - sign(f_abd(1)))/2)); 0; ...
     des.df_a_3_by_dtheta_A_m(round((3 - sign(f_abd(3)))/2))];
 temp_A = [mul_phi(1), mul_theta(1), mul_theta_A(1);
           mul_phi(3), mul_theta(3), mul_theta_A(3);
-          wt * mul_phi(1), 0, -(1-wt) * mul_theta_A(1)];
+          wt * mul_phi(1), wt * mul_theta(1), -(1-wt) * mul_theta_A(1)];
 rhs = [pos_err(1); pos_err(3); 0];
 dang = zeros(5, 1);
 dang(1:3) = temp_A \ (rhs);

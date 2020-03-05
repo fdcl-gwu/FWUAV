@@ -7,7 +7,7 @@ for ii=1:3
     subplot(3,1,ii);
     plot(t*WK.f,x(ii,:));
     hold on;
-    plot(t*WK.f,des.x_fit{ii}(t), 'k');
+    plot(t*WK.f,des.x_fit_t(ii, :), 'k');
     patch_downstroke(h_x,t*WK.f,Euler_R_dot);
 end
 xlabel('$t/T$','interpreter','latex');
@@ -20,7 +20,7 @@ for ii=1:3
     subplot(3,1,ii);
     plot(t*WK.f,x_dot(ii,:));
     hold on;
-    plot(t*WK.f,des.x_dot_fit{ii}(t), 'k');
+    plot(t*WK.f,des.x_dot_fit_t(ii, :), 'k');
     patch_downstroke(h_x_dot,t*WK.f,Euler_R_dot);
 end
 xlabel('$t/T$','interpreter','latex');
