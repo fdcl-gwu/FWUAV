@@ -30,20 +30,20 @@ des.df_a_3_by_dtheta_0 = 2.59e-3; % dtheta_0 > 0
 % des.df_r_1_by_dphi_m = [1.7e-4, -2.74e-4]; % dphi_m_R > 0, dphi_m_L > 0
 % des.df_r_3_by_dphi_m = [1.97e-3, -4.31e-3]; % dphi_m_R > 0, dphi_m_L > 0
 wt = 0; % weight, wt > 0.5 is unstable?
+bound_param = 0.1; % Use 0.25?
 
 rng default;
 eps1 = 1e-3; eps2 = 1e-1;
 dx0 = [rand(1); 0; rand(1);]*eps1;
-dx_dot0 = zeros(3, 1)*0;
+dx_dot0 = zeros(3, 1)*eps2;
 x0 = des.x0 + dx0;
 % Unstable ICs
-x0 = [0.0036969; 0; -0.0723];
-% x0 = [-0.0052; 0; -0.0144];
+% x0 = [-0.42610; 0 ;-0.00064];
 % x0 = [0; -0.01; 0];
 x_dot0 = des.x_dot0 + dx_dot0;
 X0 = [x0; x_dot0;];
-N = 1001;
-N_period = 10;
+N = 10001;
+N_period = 100;
 N_single = round((N-1)/N_period);
 T = N_period/WK.f;
 t = linspace(0,T,N);
@@ -72,14 +72,16 @@ end
 % Optimized gs = [427.1529   15.6076  13.4983];
 gains.Kp_pos = pol(3); gains.Kd_pos = pol(2); gains.Ki_pos = pol(4);
 
-[err_pos, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
-    W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
-    Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, N_single, N_period, t, wt);
+% [err_pos, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
+%     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
+%     Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, N_single, N_period, t, wt, bound_param);
 
 %% Monte Carlo
-% N_sims = 100000;
-% [x_pert, err_pos] = monte_carlo(N_sims, gains, WK, ...
-%             INSECT, des, N, N_single, N_period, t);
+N_sims = 10000;
+eps = 1e0;
+wts = [0, 0.1];
+[x_pert, err_pos] = monte_carlo(N_sims, eps, wts, gains, WK, ...
+            INSECT, des, N, N_single, N_period, t, bound_param);
 
 %%
 % Get a list of all variables
@@ -93,12 +95,10 @@ evalin('base',['load ' filename]);
 
 end
 
-function [x_pert, err_pos] = monte_carlo(N_sims, gains, WK, ...
-            INSECT, des, N, N_single, N_period, t)
+function [x_pert, err_pos] = monte_carlo(N_sims, eps, wts, gains, WK, ...
+            INSECT, des, N, N_single, N_period, t, bound_param)
 %%
-eps_pos = 1e-1;
-eps_vel = 1e0;
-wts = [0, 0.1]; N_wts = length(wts);
+N_wts = length(wts);
 err_pos = zeros(N_sims, N_wts);
 x_pert = zeros(3, N_sims);
 des_x0 = des.x0;
@@ -108,20 +108,22 @@ x_dot0 = des_x_dot0;
 tic;
 par_pool = gcp;
 nWorkers = par_pool.NumWorkers;
-for l = 1:N_wts
-    wt = wts(l);
-    parfor n=1:nWorkers
-        rng(n);
-    end
-    parfor i = 1:N_sims
-        r = rand(1);
-        theta = rand(1) * 2*pi;
-        dx = [r*cos(theta); 0; r*sin(theta);]*eps_pos;
-        x_pert(:, i) = dx;
-        x0 = des_x0 + dx;
-        X0 = [x0; x_dot0;];
+parfor n=1:nWorkers
+    rng(n);
+end
+pause(1);
+parfor i = 1:N_sims
+    r = rand(1);
+    theta = rand(1) * 2*pi;
+    dx = [r*cos(theta); 0; r*sin(theta);]*eps;
+    x_pert(:, i) = dx;
+    x0 = des_x0 + dx;
+    X0 = [x0; x_dot0;];
+    for l = 1:N_wts
+        wt = wts(l);
         err_pos(i, l) =  simulate_control(gains, WK, ...
-        INSECT, des, X0, N, N_single, N_period, t, wt);
+        INSECT, des, X0, N, N_single, N_period, t, wt, bound_param);
+%         fprintf('%d, %d\n', l, i);
     end
 end
 toc;
@@ -130,7 +132,7 @@ end
 
 function [err_pos, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
-    Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, N_single, N_period, t, wt)
+    Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, N_single, N_period, t, wt, bound_param)
 %%
 X = zeros(N, 9);
 X(1, :) = [X0; zeros(3, 1)];
@@ -145,7 +147,7 @@ for i=1:(N-1)
         W(:,i) W_dot(:,i) W_R(:,i) W_R_dot(:,i) W_L(:,i) W_L_dot(:,i) W_A(:,i) ...
         W_A_dot(:,i) F_R(:,i) F_L(:,i) M_R(:,i) M_L(:,i) f_a(:,i) f_g(:,i) ...
         f_tau(:,i) tau(:,i) Euler_R(:,i) Euler_R_dot(:,i) pos_err(:, i)]... 
-        = eom_control(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, X0(1:3), wt);
+        = eom_control(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, X0(1:3), wt, bound_param);
     X(i+1, :) = X(i, :) + dt * X_dot(:, i)';
 end
 i = i + 1;
@@ -153,13 +155,13 @@ i = i + 1;
         W(:,i) W_dot(:,i) W_R(:,i) W_R_dot(:,i) W_L(:,i) W_L_dot(:,i) W_A(:,i) ...
         W_A_dot(:,i) F_R(:,i) F_L(:,i) M_R(:,i) M_L(:,i) f_a(:,i) f_g(:,i) ...
         f_tau(:,i) tau(:,i) Euler_R(:,i) Euler_R_dot(:,i) pos_err(:, i)]... 
-        = eom_control(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, X0(1:3), wt);
+        = eom_control(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, X0(1:3), wt, bound_param);
 % [t, X]=ode45(@(t,X) eom_control(INSECT, WK, WK, t, X, des, gains, i, X0(1:3), wt), t, X0, ...
 %         odeset('AbsTol',1e-6,'RelTol',1e-6));
     
-% err_pos = vecnorm(pos_err, 2, 1);
-% err_pos = trapz(t(N-N_single:N)', err_pos(N-N_single:N)) / max(t/N_period);
-err_pos = norm(pos_err(:, end));
+err_pos = vecnorm(pos_err(:, N-N_single:N), 2, 1);
+err_pos = (sum(err_pos) * dt) / (max(t)/N_period);
+% err_pos = norm(pos_err(:, end));
 
 x=X(:,1:3)';
 x_dot=X(:,4:6)';
@@ -168,7 +170,7 @@ end
 
 function [X_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
-    Euler_R_dot, pos_err]= eom_control(INSECT, WK_R, WK_L, t, X, des, gains, i, x0, wt)
+    Euler_R_dot, pos_err]= eom_control(INSECT, WK_R, WK_L, t, X, des, gains, i, x0, wt, bound_param)
 %% Dynamics along with the designed control
 x=X(1:3);
 x_dot=X(4:6);
@@ -218,9 +220,8 @@ dang(1:3) = temp_A \ (rhs);
 % dang(4) = pos_err(2) / des.df_a_2_by_dphi_m(round((3 - sign(pos_err(2)+des.f_a(2, i)))/2));
 dang(4) = pos_err(2) / des.df_a_2_by_dphi_m(1);
 % dang(5) = pos_err(2) / des.df_a_2_by_dpsi_m(1);
-bound = 0.25;
-idx = abs(dang) > bound;
-dang(idx) = bound * sign(dang(idx));
+idx = abs(dang) > bound_param;
+dang(idx) = bound_param * sign(dang(idx));
 dphi_m_R = dang(1) + dang(4);
 dphi_m_L = dang(1) - dang(4);
 dtheta_0 = dang(2);
