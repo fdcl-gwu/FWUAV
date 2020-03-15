@@ -5,35 +5,32 @@ addpath('../modules', '../sim_data', '../');
 load('sim_QS_x_hover_control_monte_carlo_pos_longitudinal.mat');
 err_bound = 5e-4;
 % err_bound = squeeze(vecnorm(x_pert, 2, 1))';
-x_no_ab = x_pert(:, abs(err_pos(:, 1)) > err_bound);
-x_with_ab = x_pert(:, abs(err_pos(:, 2)) > err_bound);
-% cov_no_ab = diag(cov(x_no_ab'));
-% x_cov = linspace(-cov_no_ab(1), cov_no_ab(1), 50);
-% z_cov = cov_no_ab(3) * sqrt(1 - (x_cov/cov_no_ab(1)).^2);
-% cov_with_ab = diag(cov(x_with_ab'));
-% x_cov_ab = linspace(-cov_with_ab(1), cov_with_ab(1), 50);
-% z_cov_ab = cov_with_ab(3) * sqrt(1 - (x_cov_ab/cov_with_ab(1)).^2);
+x_no_ab = x_pert(:, (abs(err_pos(:, 1)) < err_bound));
+bound_ix_no_ab = boundary(x_no_ab(1, :)', x_no_ab(3, :)');
+x_with_ab = x_pert(:, (abs(err_pos(:, 2)) < err_bound));
+bound_ix_with_ab = boundary(x_with_ab(1, :)', x_with_ab(3, :)');
+x_with_ab_only = x_pert(:, (abs(err_pos(:, 2)) < err_bound) & (abs(err_pos(:, 1)) > err_bound));
 
 % fac = 2;
-h_err = figure;
 % plot_ix = abs(x_no_ab(1, :)) < fac*cov_no_ab(1) & abs(x_no_ab(3, :)) < fac*cov_no_ab(3);
+h_err = figure;
+
+% % y perturbation
+% scatter(x_no_ab(1, :), x_no_ab(2, :), 20, 'r', 'x');
+% hold on;
+% scatter(x_with_ab(1, :), x_with_ab(2, :), 10, 'b', 'filled');
+
+% % x-z perturbation
 scatter(x_no_ab(1, :), x_no_ab(3, :), 20, 'r', 'x');
 hold on;
-% plot_ix = abs(x_with_ab(1, :)) < fac*cov_with_ab(1) & abs(x_with_ab(3, :)) < fac*cov_with_ab(3);
-scatter(x_with_ab(1, :), x_with_ab(3, :), 10, 'b', 'filled');
-% hold on;
-% plot(x_cov, z_cov, 'r', 'LineWidth', 2);
-% hold on;
-% plot(x_cov, -z_cov, 'r', 'LineWidth', 2);
-% hold on;
-% plot(x_cov_ab, z_cov_ab, 'b', 'LineWidth', 2);
-% hold on;
-% plot(x_cov_ab, -z_cov_ab, 'b', 'LineWidth', 2);
+scatter(x_with_ab_only(1, :), x_with_ab_only(3, :), 10, 'b', 'filled');
+plot(x_no_ab(1, bound_ix_no_ab), x_no_ab(3, bound_ix_no_ab), 'r', 'LineWidth', 2);
+plot(x_with_ab(1, bound_ix_with_ab), x_with_ab(3, bound_ix_with_ab), 'b', 'LineWidth', 2);
 legend({'without abdomen effect, $ w = 0 $', 'with abdomen effect, $ w = 0.1 $'},'interpreter','latex');
 xlabel('$x$','interpreter','latex');
 ylabel('$z$','interpreter','latex');
 axis tight;
-% print(h_err, 'hover_monte_carlo', '-depsc');
+print(h_err, 'hover_monte_carlo', '-depsc');
 
 %% Power and energy
 % Without abdomen oscillation

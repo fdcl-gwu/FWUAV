@@ -29,7 +29,13 @@ des.df_a_1_by_dtheta_0 = [-2e-3, -2.5e-3]; % dtheta_0 > 0
 des.df_a_3_by_dtheta_0 = 2.59e-3; % dtheta_0 > 0
 % des.df_r_1_by_dphi_m = [1.7e-4, -2.74e-4]; % dphi_m_R > 0, dphi_m_L > 0
 % des.df_r_3_by_dphi_m = [1.97e-3, -4.31e-3]; % dphi_m_R > 0, dphi_m_L > 0
-wt = 0; % weight, wt > 0.5 is unstable?
+
+N = 10001;
+N_period = 100;
+err_bound = 5e-4; % Convergence criterion is a f(N, N_period)
+N_single = round((N-1)/N_period);
+T = N_period/WK.f;
+t = linspace(0,T,N);
 bound_param = 0.1; % Use 0.25?
 
 rng default;
@@ -42,11 +48,7 @@ x0 = des.x0 + dx0;
 % x0 = [0; -0.01; 0];
 x_dot0 = des.x_dot0 + dx_dot0;
 X0 = [x0; x_dot0;];
-N = 10001;
-N_period = 100;
-N_single = round((N-1)/N_period);
-T = N_period/WK.f;
-t = linspace(0,T,N);
+wt = 0; % weight, wt > 0.5 is unstable?
 
 % [t, X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 % for i=1:N
@@ -72,16 +74,17 @@ end
 % Optimized gs = [427.1529   15.6076  13.4983];
 gains.Kp_pos = pol(3); gains.Kd_pos = pol(2); gains.Ki_pos = pol(4);
 
-% [err_pos, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
+% [err_pos, N_conv, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
 %     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
-%     Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, N_single, N_period, t, wt, bound_param);
+%     Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, ...
+%     N_single, N_period, t, wt, bound_param, err_bound);
 
 %% Monte Carlo
 N_sims = 10000;
-eps = 1e0;
+eps = 5e0;
 wts = [0, 0.1];
-[x_pert, err_pos] = monte_carlo(N_sims, eps, wts, gains, WK, ...
-            INSECT, des, N, N_single, N_period, t, bound_param);
+[x_pert, err_pos, N_conv] = monte_carlo(N_sims, eps, wts, gains, WK, ...
+            INSECT, des, N, N_single, N_period, t, bound_param, err_bound);
 
 %%
 % Get a list of all variables
@@ -95,11 +98,12 @@ evalin('base',['load ' filename]);
 
 end
 
-function [x_pert, err_pos] = monte_carlo(N_sims, eps, wts, gains, WK, ...
-            INSECT, des, N, N_single, N_period, t, bound_param)
+function [x_pert, err_pos, N_conv] = monte_carlo(N_sims, eps, wts, gains, WK, ...
+            INSECT, des, N, N_single, N_period, t, bound_param, err_bound)
 %%
 N_wts = length(wts);
 err_pos = zeros(N_sims, N_wts);
+N_conv = zeros(N_sims, N_wts);
 x_pert = zeros(3, N_sims);
 des_x0 = des.x0;
 des_x_dot0 = des.x_dot0;
@@ -108,31 +112,38 @@ x_dot0 = des_x_dot0;
 tic;
 par_pool = gcp;
 nWorkers = par_pool.NumWorkers;
+ticBytes(par_pool);
 parfor n=1:nWorkers
     rng(n);
 end
 pause(1);
 parfor i = 1:N_sims
+    % % x-z perturbation
     r = rand(1);
     theta = rand(1) * 2*pi;
     dx = [r*cos(theta); 0; r*sin(theta);]*eps;
+    % % y perturbation
+%     y = rand(1) - 0.5;
+%     dx = [0; y; 0;]*eps;
+    %
     x_pert(:, i) = dx;
     x0 = des_x0 + dx;
     X0 = [x0; x_dot0;];
     for l = 1:N_wts
         wt = wts(l);
-        err_pos(i, l) =  simulate_control(gains, WK, ...
-        INSECT, des, X0, N, N_single, N_period, t, wt, bound_param);
+        [err_pos(i, l), N_conv(i, l)] =  simulate_control(gains, WK, ...
+        INSECT, des, X0, N, N_single, N_period, t, wt, bound_param, err_bound);
 %         fprintf('%d, %d\n', l, i);
     end
 end
+tocBytes(par_pool);
 toc;
 
 end
 
-function [err_pos, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
+function [err_pos, N_conv, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
-    Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, N_single, N_period, t, wt, bound_param)
+    Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, N_single, N_period, t, wt, bound_param, err_bound)
 %%
 X = zeros(N, 9);
 X(1, :) = [X0; zeros(3, 1)];
@@ -158,9 +169,18 @@ i = i + 1;
         = eom_control(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, X0(1:3), wt, bound_param);
 % [t, X]=ode45(@(t,X) eom_control(INSECT, WK, WK, t, X, des, gains, i, X0(1:3), wt), t, X0, ...
 %         odeset('AbsTol',1e-6,'RelTol',1e-6));
-    
-err_pos = vecnorm(pos_err(:, N-N_single:N), 2, 1);
-err_pos = (sum(err_pos) * dt) / (max(t)/N_period);
+
+t_single = (max(t)/N_period);
+err = vecnorm(pos_err, 2, 1);
+N_conv = Inf;
+for j = 1:N_single:(N-N_single)
+    err_pos = sum(err(j:(j+N_single))) * dt / t_single;
+    if err_pos <= err_bound
+        N_conv = (j-1)/N_single + 1;
+        break;
+    end
+end
+err_pos = sum(err(:, N-N_single:N)) * dt / t_single;
 % err_pos = norm(pos_err(:, end));
 
 x=X(:,1:3)';
