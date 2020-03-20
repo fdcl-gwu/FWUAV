@@ -12,9 +12,9 @@ load STLRead/fv_monarch;
 
 load('morp_MONARCH');
 bool_video=true;
-file_to_save = 'sim_QS_x_hover_move.avi';
+file_to_save = 'sim_QS_x_hover_control_temp.avi';
 
-load('sim_QS_x_hover_move.mat','x','R','Q_R','Q_L','Q_A', 'N','F_R','F_L');
+load('sim_QS_x_hover_control_temp.mat','x','R','Q_R','Q_L','Q_A', 'N','F_R','F_L');
 
 %% generate the initial object when k=1
 k=1;

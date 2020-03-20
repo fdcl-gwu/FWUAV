@@ -36,6 +36,21 @@ parfor i=1:N_params
 end
 % f_a_m = abs(f_a_m);
 
+params.df_a_1_by_dphi_m = [lin_reg(eps', squeeze(f_a_m(1,1,:,1))), ...
+    lin_reg(eps', squeeze(f_a_m(1,1,:,2)))]; % dphi_m_R > 0, dphi_m_L > 0
+params.df_a_3_by_dphi_m = lin_reg(eps', squeeze(f_a_m(1,3,:,2))); % dphi_m_R > 0, dphi_m_L > 0
+params.df_a_1_by_dtheta_0 = [lin_reg(eps', squeeze(f_a_m(2,1,:,1))), ...
+    lin_reg(eps', squeeze(f_a_m(2,1,:,2)))]; % dtheta_0 > 0
+params.df_a_3_by_dtheta_0 = lin_reg(eps', squeeze(f_a_m(2,3,:,2))); % dtheta_0 > 0
+params.df_a_2_by_dphi_m = [lin_reg(eps(eps'>0)', squeeze(f_a_m(3,2,eps'>0,1))), ...
+    lin_reg(eps(eps'<0)', squeeze(f_a_m(3,2,eps'<0,1)))]; % dphi_m_R > 0, dphi_m_L < 0;
+% But which one to use is undecided - depends on the stroke probably;
+% downstroke : use +ve value, upstroke : use -ve value
+params.df_a_1_by_dtheta_A_m = [lin_reg(eps', squeeze(f_a_m(4,1,:,1))), ...
+    lin_reg(eps', squeeze(f_a_m(4,1,:,2)))]; % dtheta_A_m > 0
+params.df_a_3_by_dtheta_A_m = [lin_reg(eps', squeeze(f_a_m(4,3,:,1))), ...
+    lin_reg(eps', squeeze(f_a_m(4,3,:,2)))]; % dtheta_A_m > 0
+
 %%
 % Get a list of all variables
 allvars = whos;

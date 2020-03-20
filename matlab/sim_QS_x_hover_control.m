@@ -5,10 +5,10 @@ function sim_QS_x_hover_control
 evalin('base','clear all');
 close all;
 addpath('./modules', './sim_data', './plotting');
-des=load('sim_QS_x_hover.mat', 'INSECT', 't', 'x', 'x_dot',...
+des = load('sim_QS_x_hover.mat', 'INSECT', 't', 'x', 'x_dot',...
     'f_tau', 'x0', 'x_dot0', 'WK');
 
-filename='sim_QS_x_hover_control_temp';
+filename = 'sim_QS_x_hover_control_temp';
 INSECT = des.INSECT;
 WK = des.WK;
 des.x_fit = cell(3, 1); des.x_dot_fit = cell(3, 1);
@@ -19,33 +19,27 @@ for i=1:3
 end
 
 % Values obtained from parametric study
-des.df_a_1_by_dphi_m = [3.25e-3, -3.26e-3]; % dphi_m_R > 0, dphi_m_L > 0
-des.df_a_3_by_dphi_m = -6.16e-3; % dphi_m_R > 0, dphi_m_L > 0
-des.df_a_2_by_dphi_m = [4.718e-3, -2.394e-3]; % dphi_m_R > 0, dphi_m_L < 0; can use either of these values
-des.df_a_2_by_dpsi_m = [1.663e-3, -1.444e-3]; % dpsi_m_R > 0, dpsi_m_L < 0; can use either of these values
-des.df_a_1_by_dtheta_A_m = [1.37e-3, -1.37e-3]; % dtheta_A_m > 0
-des.df_a_3_by_dtheta_A_m = [1.21e-3, -1.21e-3]; % dtheta_A_m > 0
-des.df_a_1_by_dtheta_0 = [-2e-3, -2.5e-3]; % dtheta_0 > 0
-des.df_a_3_by_dtheta_0 = 2.59e-3; % dtheta_0 > 0
-% des.df_r_1_by_dphi_m = [1.7e-4, -2.74e-4]; % dphi_m_R > 0, dphi_m_L > 0
-% des.df_r_3_by_dphi_m = [1.97e-3, -4.31e-3]; % dphi_m_R > 0, dphi_m_L > 0
+load('parametric_study.mat', 'params');
+des.params = params;
+% des.params.df_a_2_by_dpsi_m = [1.663e-3, -1.444e-3]; % dpsi_m_R > 0, dpsi_m_L < 0; can use either of these values
+% des.params.df_r_1_by_dphi_m = [1.7e-4, -2.74e-4]; % dphi_m_R > 0, dphi_m_L > 0
+% des.params.df_r_3_by_dphi_m = [1.97e-3, -4.31e-3]; % dphi_m_R > 0, dphi_m_L > 0
 
 N = 10001;
 N_period = 100;
-err_bound = 5e-4; % Convergence criterion is a f(N, N_period)
+err_bound = 1e-4; % Convergence criterion is a f(N, N_period, WK)
 N_single = round((N-1)/N_period);
 T = N_period/WK.f;
 t = linspace(0,T,N);
 bound_param = 0.1; % Use 0.25?
 
-rng default;
+% rng default;
 eps1 = 1e-3; eps2 = 1e-1;
 dx0 = [rand(1); 0; rand(1);]*eps1;
 dx_dot0 = zeros(3, 1)*eps2;
 x0 = des.x0 + dx0;
-% Unstable ICs
 % x0 = [-0.42610; 0 ;-0.00064];
-% x0 = [0; -0.01; 0];
+% x0 = [0; 0.1; 0];
 x_dot0 = des.x_dot0 + dx_dot0;
 X0 = [x0; x_dot0;];
 wt = 0; % weight, wt > 0.5 is unstable?
@@ -74,17 +68,17 @@ end
 % Optimized gs = [427.1529   15.6076  13.4983];
 gains.Kp_pos = pol(3); gains.Kd_pos = pol(2); gains.Ki_pos = pol(4);
 
-% [err_pos, N_conv, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
-%     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
-%     Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, ...
-%     N_single, N_period, t, wt, bound_param, err_bound);
+[err_pos, N_conv, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
+    W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
+    Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, ...
+    N_single, N_period, t, wt, bound_param, err_bound);
 
 %% Monte Carlo
-N_sims = 10000;
-eps = 5e0;
-wts = [0, 0.1];
-[x_pert, err_pos, N_conv] = monte_carlo(N_sims, eps, wts, gains, WK, ...
-            INSECT, des, N, N_single, N_period, t, bound_param, err_bound);
+% N_sims = 10000;
+% eps = 3e0;
+% wts = [0, 0.1];
+% [x_pert, err_pos, N_conv] = monte_carlo(N_sims, eps, wts, gains, WK, ...
+%             INSECT, des, N, N_single, N_period, t, bound_param, err_bound);
 
 %%
 % Get a list of all variables
@@ -225,21 +219,21 @@ d_x_dot = des.x_dot_fit_t(:, i) - x_dot;
 pos_err = INSECT.m*(gains.Kp_pos * d_x + gains.Kd_pos * d_x_dot + gains.Ki_pos * int_d_x);
 
 % mul_phi = R * Q_R * [get_m(sign(F_R(1)), des.df_r_1_by_dphi_m); 0; get_m(sign(F_R(3)), des.df_r_3_by_dphi_m)];
-mul_phi = [des.df_a_1_by_dphi_m(round((3 - sign(f_a(1)))/2)); 0; des.df_a_3_by_dphi_m];
+mul_phi = [des.params.df_a_1_by_dphi_m(round((3 - sign(f_a(1)))/2)); 0; des.params.df_a_3_by_dphi_m];
 % e2 = [0; 1; 0];
 % mul_theta = 2 * R * Q_R * hat(e2) * F_R;
-mul_theta = [des.df_a_1_by_dtheta_0(round((3 - sign(f_a(1)))/2)); 0; des.df_a_3_by_dtheta_0];
-mul_theta_A = [des.df_a_1_by_dtheta_A_m(round((3 - sign(f_abd(1)))/2)); 0; ...
-    des.df_a_3_by_dtheta_A_m(round((3 - sign(f_abd(3)))/2))];
+mul_theta = [des.params.df_a_1_by_dtheta_0(round((3 - sign(f_a(1)))/2)); 0; des.params.df_a_3_by_dtheta_0];
+mul_theta_A = [des.params.df_a_1_by_dtheta_A_m(round((3 - sign(f_abd(1)))/2)); 0; ...
+    des.params.df_a_3_by_dtheta_A_m(round((3 - sign(f_abd(3)))/2))];
 temp_A = [mul_phi(1), mul_theta(1), mul_theta_A(1);
           mul_phi(3), mul_theta(3), mul_theta_A(3);
           wt * mul_phi(1), wt * mul_theta(1), -(1-wt) * mul_theta_A(1)];
 rhs = [pos_err(1); pos_err(3); 0];
 dang = zeros(5, 1);
 dang(1:3) = temp_A \ (rhs);
-% dang(4) = pos_err(2) / des.df_a_2_by_dphi_m(round((3 - sign(pos_err(2)+des.f_a(2, i)))/2));
-dang(4) = pos_err(2) / des.df_a_2_by_dphi_m(1);
-% dang(5) = pos_err(2) / des.df_a_2_by_dpsi_m(1);
+% dang(4) = pos_err(2) / des.params.df_a_2_by_dphi_m(round((3 - sign(pos_err(2)+des.f_a(2, i)))/2));
+dang(4) = pos_err(2) / des.params.df_a_2_by_dphi_m(2);
+% dang(5) = pos_err(2) / des.params.df_a_2_by_dpsi_m(1);
 idx = abs(dang) > bound_param;
 dang(idx) = bound_param * sign(dang(idx));
 dphi_m_R = dang(1) + dang(4);
@@ -265,20 +259,3 @@ X = X(1:6);
 X_dot=[X_dot; d_x;];
 
 end
-
-%% 2nd strategy
-% dtheta_A_m = sign(f_a_im1(6)) * wt * pos_err(3) / des.df_a_3_by_dtheta_A_m;
-% dphi_m_R = sign(f_a_im1(3)) * (1-wt) * pos_err(3) / des.df_a_3_by_dphi_m + ...
-%     sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dphi_m;
-% dphi_m_L = sign(f_a_im1(3)) * (1-wt) * pos_err(3) / des.df_a_3_by_dphi_m - ...
-%     sign(f_a_im1(2)) * pos_err(2) / des.df_a_2_by_dphi_m;
-% dtheta_m = sign(f_a_im1(1)) * (pos_err(1) - ...
-%     sign(f_a_im1(1)) * (dphi_m_R+dphi_m_L)/2 * des.df_a_1_by_dphi_m -...
-%     sign(f_a_im1(4)) * dtheta_A_m * des.df_a_1_by_dtheta_A_m) / des.df_a_1_by_dtheta_m;
-% dpsi_m = 0;
-
-% if abs(det(temp_A)) < 1e-16
-%     dang = zeros(4, 1);
-% else
-%     dang = temp_A \ (rhs);
-% end

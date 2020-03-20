@@ -1,5 +1,7 @@
 %% Figures for controlled hover
 addpath('../modules', '../sim_data', '../');
+set(0,'DefaultAxesFontName','times');
+set(0,'DefaultAxesFontSize',16);
 % load('sim_QS_x_hover_control.mat');
 
 h_x=figure;

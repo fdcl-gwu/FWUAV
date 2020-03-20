@@ -1,9 +1,11 @@
 %% File to plot the data
 addpath('../modules', '../sim_data', '../');
+set(0,'DefaultAxesFontName','times');
+set(0,'DefaultAxesFontSize',16);
 
 h_x3=figure;
 plot3(x(1,:),x(2,:),x(3,:));
-set(gca,'YDir','reverse','ZDir','reverse');
+% set(gca,'YDir','reverse');
 xlabel('$x_1$','interpreter','latex');
 ylabel('$x_2$','interpreter','latex');
 zlabel('$x_3$','interpreter','latex');
