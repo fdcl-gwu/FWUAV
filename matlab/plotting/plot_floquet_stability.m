@@ -1,7 +1,7 @@
 %% Plot sample perturbations and charecteristic solutions
 addpath('../modules', '../sim_data', '../');
 set(0,'DefaultAxesFontName','times');
-set(0,'DefaultAxesFontSize',16);
+set(0,'DefaultAxesFontSize',20);
 
 % time=t*WK.f;
 % figure;

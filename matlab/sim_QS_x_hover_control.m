@@ -8,7 +8,7 @@ addpath('./modules', './sim_data', './plotting');
 des = load('sim_QS_x_hover.mat', 'INSECT', 't', 'x', 'x_dot',...
     'f_tau', 'x0', 'x_dot0', 'WK');
 
-filename = 'sim_QS_x_hover_control_temp';
+filename = 'sim_QS_x_hover_control';
 INSECT = des.INSECT;
 WK = des.WK;
 des.x_fit = cell(3, 1); des.x_dot_fit = cell(3, 1);
@@ -25,16 +25,16 @@ des.params = params;
 % des.params.df_r_1_by_dphi_m = [1.7e-4, -2.74e-4]; % dphi_m_R > 0, dphi_m_L > 0
 % des.params.df_r_3_by_dphi_m = [1.97e-3, -4.31e-3]; % dphi_m_R > 0, dphi_m_L > 0
 
-N = 10001;
-N_period = 100;
+N = 1001;
+N_period = 10;
 err_bound = 1e-4; % Convergence criterion is a f(N, N_period, WK)
 N_single = round((N-1)/N_period);
 T = N_period/WK.f;
 t = linspace(0,T,N);
 bound_param = 0.1; % Use 0.25?
 
-% rng default;
-eps1 = 1e-3; eps2 = 1e-1;
+rng default;
+eps1 = 1e-1/2; eps2 = 1e-1/2;
 dx0 = [rand(1); 0; rand(1);]*eps1;
 dx_dot0 = zeros(3, 1)*eps2;
 x0 = des.x0 + dx0;
@@ -70,7 +70,7 @@ gains.Kp_pos = pol(3); gains.Kd_pos = pol(2); gains.Ki_pos = pol(4);
 
 [err_pos, N_conv, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
-    Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, ...
+    Euler_R_dot, pos_err, dang] =  simulate_control(gains, WK, INSECT, des, X0, N, ...
     N_single, N_period, t, wt, bound_param, err_bound);
 
 %% Monte Carlo
@@ -137,7 +137,7 @@ end
 
 function [err_pos, N_conv, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
-    Euler_R_dot, pos_err] =  simulate_control(gains, WK, INSECT, des, X0, N, N_single, N_period, t, wt, bound_param, err_bound)
+    Euler_R_dot, pos_err, dang] =  simulate_control(gains, WK, INSECT, des, X0, N, N_single, N_period, t, wt, bound_param, err_bound)
 %%
 X = zeros(N, 9);
 X(1, :) = [X0; zeros(3, 1)];
@@ -151,7 +151,7 @@ for i=1:(N-1)
     [X_dot(:,i), R(:,:,i) Q_R(:,:,i) Q_L(:,:,i) Q_A(:,:,i) theta_B(i) theta_A(i) ...
         W(:,i) W_dot(:,i) W_R(:,i) W_R_dot(:,i) W_L(:,i) W_L_dot(:,i) W_A(:,i) ...
         W_A_dot(:,i) F_R(:,i) F_L(:,i) M_R(:,i) M_L(:,i) f_a(:,i) f_g(:,i) ...
-        f_tau(:,i) tau(:,i) Euler_R(:,i) Euler_R_dot(:,i) pos_err(:, i)]... 
+        f_tau(:,i) tau(:,i) Euler_R(:,i) Euler_R_dot(:,i) pos_err(:, i) dang(:, i)]... 
         = eom_control(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, X0(1:3), wt, bound_param);
     X(i+1, :) = X(i, :) + dt * X_dot(:, i)';
 end
@@ -159,7 +159,7 @@ i = i + 1;
 [X_dot(:,i), R(:,:,i) Q_R(:,:,i) Q_L(:,:,i) Q_A(:,:,i) theta_B(i) theta_A(i) ...
         W(:,i) W_dot(:,i) W_R(:,i) W_R_dot(:,i) W_L(:,i) W_L_dot(:,i) W_A(:,i) ...
         W_A_dot(:,i) F_R(:,i) F_L(:,i) M_R(:,i) M_L(:,i) f_a(:,i) f_g(:,i) ...
-        f_tau(:,i) tau(:,i) Euler_R(:,i) Euler_R_dot(:,i) pos_err(:, i)]... 
+        f_tau(:,i) tau(:,i) Euler_R(:,i) Euler_R_dot(:,i) pos_err(:, i) dang(:, i)]... 
         = eom_control(INSECT, WK, WK, t(i), X(i,:)', des, gains, i, X0(1:3), wt, bound_param);
 % [t, X]=ode45(@(t,X) eom_control(INSECT, WK, WK, t, X, des, gains, i, X0(1:3), wt), t, X0, ...
 %         odeset('AbsTol',1e-6,'RelTol',1e-6));
@@ -184,7 +184,7 @@ end
 
 function [X_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
-    Euler_R_dot, pos_err]= eom_control(INSECT, WK_R, WK_L, t, X, des, gains, i, x0, wt, bound_param)
+    Euler_R_dot, pos_err, dang]= eom_control(INSECT, WK_R, WK_L, t, X, des, gains, i, x0, wt, bound_param)
 %% Dynamics along with the designed control
 x=X(1:3);
 x_dot=X(4:6);

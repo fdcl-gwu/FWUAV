@@ -1,7 +1,7 @@
 %% File to plot the data
 addpath('../modules', '../sim_data', '../');
 set(0,'DefaultAxesFontName','times');
-set(0,'DefaultAxesFontSize',16);
+set(0,'DefaultAxesFontSize',18);
 
 h_x3=figure;
 plot3(x(1,:),x(2,:),x(3,:));
@@ -84,7 +84,7 @@ ylabel('$\theta_A$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
 % print(h_ab, 'hover_abd_body', '-depsc');
 
-[pow, E, E_dot, eff] = compute_power(INSECT.m, t, x, x_dot, tau, Q_R, Q_L, Q_A, W_R, W_L, W_A);
+[pow, E, E_dot, eff] = compute_power(INSECT.m, t, x, x_dot, tau, Q_R, Q_L, Q_A, W_R, W_L, W_A, W, f_a, f_tau);
 
 h_pow = figure;
 sgtitle('Power');
