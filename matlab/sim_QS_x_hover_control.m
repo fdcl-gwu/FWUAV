@@ -24,6 +24,7 @@ des.params = params;
 % des.params.df_a_2_by_dpsi_m = [1.663e-3, -1.444e-3]; % dpsi_m_R > 0, dpsi_m_L < 0; can use either of these values
 % des.params.df_r_1_by_dphi_m = [1.7e-4, -2.74e-4]; % dphi_m_R > 0, dphi_m_L > 0
 % des.params.df_r_3_by_dphi_m = [1.97e-3, -4.31e-3]; % dphi_m_R > 0, dphi_m_L > 0
+%     des.f_abd(:, i) = -(JJ_A(1:3, 7:9)*W_A_dot + KK_A(1:3, 7:9)*W_A);
 
 N = 1001;
 N_period = 10;
@@ -33,6 +34,22 @@ T = N_period/WK.f;
 t = linspace(0,T,N);
 bound_param = 0.1; % Use 0.25?
 
+des.x_fit_t = zeros(3, N); des.x_dot_fit_t = zeros(3, N);
+for j=1:3
+    des.x_fit_t(j, :) = des.x_fit{j}(t);
+    des.x_dot_fit_t(j, :) = des.x_dot_fit{j}(t);
+end
+des = rmfield(des, {'WK', 'INSECT', 't', 'x', 'x_dot', 'f_tau'}); % 'x_fit', 'x_dot_fit'
+
+%% Gains
+pol = poly([-7.8 + 19i, -7.8 - 19i, -0.003]);
+if ~all(real(roots(pol)) < 0)
+    error('The chosen gains are not suitable');
+end
+% Optimized gs = [427.1529   15.6076  13.4983];
+gains.Kp_pos = pol(3); gains.Kd_pos = pol(2); gains.Ki_pos = pol(4);
+
+%% Single simulation
 rng default;
 eps1 = 1e-1/2; eps2 = 1e-1/2;
 dx0 = [rand(1); 0; rand(1);]*eps1;
@@ -41,34 +58,11 @@ x0 = des.x0 + dx0;
 % x0 = [-0.42610; 0 ;-0.00064];
 % x0 = [0; 0.1; 0];
 x_dot0 = des.x_dot0 + dx_dot0;
-X0 = [x0; x_dot0;];
+int_d_x0 = zeros(3, 1);
+X0 = [x0; x_dot0; int_d_x0];
 wt = 0; % weight, wt > 0.5 is unstable?
 
-% [t, X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
-% for i=1:N
-%     [~, R, ~, ~, Q_A, ~, ~, W, ~, ~, ...
-%         ~, ~, ~, W_A, W_A_dot, ~, ~, ~, ~, des.f_a(:, i), ~, ...
-%         ~, ~, ~, ~] = eom_QS_x(INSECT, WK, WK, t(i), X(i, :)');
-%     [JJ_A, KK_A] = inertia_wing_sub(INSECT.m_A, INSECT.mu_A, INSECT.nu_A, INSECT.J_A, R, Q_A, X(i, 4:6)', W, W_A);
-%     des.f_abd(:, i) = -(JJ_A(1:3, 7:9)*W_A_dot + KK_A(1:3, 7:9)*W_A);
-% end
-
-des.x_fit_t = zeros(3, N); des.x_dot_fit_t = zeros(3, N);
-for j=1:3
-    des.x_fit_t(j, :) = des.x_fit{j}(t);
-    des.x_dot_fit_t(j, :) = des.x_dot_fit{j}(t);
-end
-des = rmfield(des, {'WK', 'INSECT', 't', 'x', 'x_dot', 'x_fit', 'x_dot_fit', 'f_tau'});
-
-%% Simulation
-pol = poly([-7.8 + 19i, -7.8 - 19i, -0.003]);
-if ~all(real(roots(pol)) < 0)
-    error('The chosen gains are not suitable');
-end
-% Optimized gs = [427.1529   15.6076  13.4983];
-gains.Kp_pos = pol(3); gains.Kd_pos = pol(2); gains.Ki_pos = pol(4);
-
-[err_pos, N_conv, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
+[err_pos, N_conv, x, x_dot, int_d_x, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
     Euler_R_dot, pos_err, dang] =  simulate_control(gains, WK, INSECT, des, X0, N, ...
     N_single, N_period, t, wt, bound_param, err_bound);
@@ -102,6 +96,7 @@ x_pert = zeros(3, N_sims);
 des_x0 = des.x0;
 des_x_dot0 = des.x_dot0;
 x_dot0 = des_x_dot0;
+int_d_x0 = zeros(3, 1);
 
 tic;
 par_pool = gcp;
@@ -122,7 +117,7 @@ parfor i = 1:N_sims
     %
     x_pert(:, i) = dx;
     x0 = des_x0 + dx;
-    X0 = [x0; x_dot0;];
+    X0 = [x0; x_dot0; int_d_x0;];
     for l = 1:N_wts
         wt = wts(l);
         [err_pos(i, l), N_conv(i, l)] =  simulate_control(gains, WK, ...
@@ -135,14 +130,14 @@ toc;
 
 end
 
-function [err_pos, N_conv, x, x_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
+function [err_pos, N_conv, x, x_dot, int_d_x, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
     Euler_R_dot, pos_err, dang] =  simulate_control(gains, WK, INSECT, des, X0, N, N_single, N_period, t, wt, bound_param, err_bound)
 %%
 X = zeros(N, 9);
-X(1, :) = [X0; zeros(3, 1)];
+X(1, :) = X0;
 dt = t(2) - t(1);
-% % Explicit RK4
+% % Euler Method
 for i=1:(N-1)
 %     if mod(i-1, N_single/100) == 0
 %         x0 = X(i, 1:3)';
@@ -179,6 +174,7 @@ err_pos = sum(err(:, N-N_single:N)) * dt / t_single;
 
 x=X(:,1:3)';
 x_dot=X(:,4:6)';
+int_d_x=X(:,7:9)';
 
 end
 
@@ -200,14 +196,14 @@ X = X(1:6);
 [Q_A, W_A, W_A_dot] = abdomen_attitude(t, WK_R.f, WK_R); % abdomen
 [JJ_A, KK_A] = inertia_wing_sub(INSECT.m_A, INSECT.mu_A, INSECT.nu_A, INSECT.J_A, R, Q_A, X(4:6), W, W_A);
 f_abd = -(JJ_A(1:3, 7:9)*W_A_dot + KK_A(1:3, 7:9)*W_A);
-f_abd(isnan(f_abd)) = 0;
+% f_abd(isnan(f_abd)) = 0;
 
 [L_R, L_L, D_R, D_L]=wing_QS_aerodynamics(INSECT, ...
     W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);
 F_R = L_R + D_R;
 F_L = L_L + D_L;
 f_a = R*Q_R*F_R + R*Q_L*F_L;
-f_a(isnan(f_a)) = 0;
+% f_a(isnan(f_a)) = 0;
 
 %% Control design
 % d_x = zeros(3, 1); d_x_dot = zeros(3, 1);
@@ -219,9 +215,8 @@ d_x_dot = des.x_dot_fit_t(:, i) - x_dot;
 pos_err = INSECT.m*(gains.Kp_pos * d_x + gains.Kd_pos * d_x_dot + gains.Ki_pos * int_d_x);
 
 % mul_phi = R * Q_R * [get_m(sign(F_R(1)), des.df_r_1_by_dphi_m); 0; get_m(sign(F_R(3)), des.df_r_3_by_dphi_m)];
+% e2 = [0; 1; 0]; mul_theta = 2 * R * Q_R * hat(e2) * F_R;
 mul_phi = [des.params.df_a_1_by_dphi_m(round((3 - sign(f_a(1)))/2)); 0; des.params.df_a_3_by_dphi_m];
-% e2 = [0; 1; 0];
-% mul_theta = 2 * R * Q_R * hat(e2) * F_R;
 mul_theta = [des.params.df_a_1_by_dtheta_0(round((3 - sign(f_a(1)))/2)); 0; des.params.df_a_3_by_dtheta_0];
 mul_theta_A = [des.params.df_a_1_by_dtheta_A_m(round((3 - sign(f_abd(1)))/2)); 0; ...
     des.params.df_a_3_by_dtheta_A_m(round((3 - sign(f_abd(3)))/2))];

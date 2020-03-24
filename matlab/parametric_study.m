@@ -89,15 +89,15 @@ function f_aero = param_study(INSECT, WK, eps, i, t, X0, N, R, F_R)
     [~, f_aero(4, :, :)] = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N, R, F_R);
 end
 
-function [f_aero, f_abd, F_R, f_aero_att] = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N, R_id, F_R_id)
+function [f_aero, f_abd, f_total, F_R] = aerodynamic_force(INSECT, WK_R, WK_L, t, X0, N, R_id, F_R_id)
 %%
     [t,X]=ode45(@(t,X) eom_QS_x(INSECT, WK_R, WK_L, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
-    f_a = zeros(15, N); f_abd = zeros(3, N); F_R = zeros(3, N); f_aero_att = zeros(3, N);
+    f_a = zeros(15, N); f_abd = zeros(3, N); F_R = zeros(3, N); f_total = zeros(3, N);
     for k=1:N    
         [~, R, Q_R, ~, Q_A, ~, ~, W, ~, ~, ~, ~, ~, W_A, W_A_dot, F_R(:, k), ~, ~, ~, f_a(:,k)]= eom_QS_x(INSECT, WK_R, WK_L, t(k), X(k,:)');
         [JJ_A, KK_A] = inertia_wing_sub(INSECT.m_A, INSECT.mu_A, INSECT.nu_A, INSECT.J_A, R, Q_A, X(k, 4:6)', W, W_A);
         f_abd(:, k) = -(JJ_A(1:3, 7:9)*W_A_dot + KK_A(1:3, 7:9)*W_A);
-        f_aero_att(:, k) = R_id(:, :, k) * Q_R * F_R_id(:, k);
     end
     f_aero = f_a(1:3, :);
+    f_total = f_aero + f_abd;
 end
