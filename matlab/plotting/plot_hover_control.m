@@ -15,7 +15,19 @@ end
 xlabel('$t/T$','interpreter','latex');
 subplot(3,1,2);
 ylabel('$x$','interpreter','latex');
-print(h_x, 'hover_control_pos', '-depsc');
+print(h_x, 'hover_control_pos', '-depsc', '-r0');
+
+h_x3=figure;
+plot3(x(1,:),x(2,:),x(3,:));
+hold on;
+plot3(des.x_fit_t(1,:),des.x_fit_t(2,:),des.x_fit_t(3,:), 'k');
+xlabel('$x_1$','interpreter','latex');
+ylabel('$x_2$','interpreter','latex');
+zlabel('$x_3$','interpreter','latex');
+axis equal;
+xlim([-0.01, 0.01]);
+zlim([-0.005, 0.005]);
+print(h_x3, 'hover_control_pos_3d', '-depsc', '-r0');
 
 h_x_dot=figure;
 for ii=1:3 
@@ -28,7 +40,7 @@ end
 xlabel('$t/T$','interpreter','latex');
 subplot(3,1,2);
 ylabel('$\dot x$','interpreter','latex');
-print(h_x_dot, 'hover_control_vel', '-depsc');
+print(h_x_dot, 'hover_control_vel', '-depsc', '-r0');
 
 h_err = figure;
 subplot(3,1,1);
@@ -76,24 +88,24 @@ plot(t*WK.f, des.theta_A_fit_t * 180/pi, 'k');
 patch_downstroke(h_wk,t*WK.f,Euler_R_dot);
 ylabel('$\theta_A$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
-print(h_wk, 'hover_control_wk', '-depsc');
+% print(h_wk, 'hover_control_wk', '-depsc', '-r0');
 
 h_control = figure;
-subplot(4,1,1);
+subplot(3,1,1);
 plot(t*WK.f, dang(1,:));
 patch_downstroke(h_control,t*WK.f,Euler_R_dot);
 ylabel('$\Delta \phi_{m_s}$','interpreter','latex');
-subplot(4,1,2);
+subplot(3,1,2);
 plot(t*WK.f, dang(4,:));
 patch_downstroke(h_control,t*WK.f,Euler_R_dot);
 ylabel('$\Delta \phi_{m_k}$','interpreter','latex');
-subplot(4,1,3);
+subplot(3,1,3);
 plot(t*WK.f, dang(2,:));
 patch_downstroke(h_control,t*WK.f,Euler_R_dot);
 ylabel('$\Delta \theta_0$','interpreter','latex');
-subplot(4,1,4);
-plot(t*WK.f, dang(3,:));
-patch_downstroke(h_control,t*WK.f,Euler_R_dot);
-ylabel('$\Delta \theta_{A_m}$','interpreter','latex');
+% subplot(4,1,4);
+% plot(t*WK.f, dang(3,:));
+% patch_downstroke(h_control,t*WK.f,Euler_R_dot);
+% ylabel('$\Delta \theta_{A_m}$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
-print(h_control, 'hover_control_input', '-depsc');
+print(h_control, 'hover_control_input', '-depsc', '-r0');
