@@ -8,7 +8,7 @@ addpath('./modules', './sim_data', './plotting');
 des = load('sim_QS_x_hover.mat', 'INSECT', 't', 'x', 'x_dot',...
     'f_tau', 'x0', 'x_dot0', 'WK');
 
-filename = 'sim_QS_x_hover_control';
+filename = 'sim_QS_x_hover_control_temp';
 INSECT = des.INSECT;
 WK = des.WK;
 des.x_fit = cell(3, 1); des.x_dot_fit = cell(3, 1);
@@ -32,7 +32,7 @@ err_bound = 1e-4; % Convergence criterion is a f(N, N_period, WK)
 N_single = round((N-1)/N_period);
 T = N_period/WK.f;
 t = linspace(0,T,N);
-bound_param = 0.1; % Use 0.25?
+bound_param = 0.1; % Parameter bound; Use 0.25?
 
 des.x_fit_t = zeros(3, N); des.x_dot_fit_t = zeros(3, N);
 for j=1:3
@@ -55,8 +55,8 @@ eps1 = 1e-1/2; eps2 = 1e-1/2;
 dx0 = [rand(1); 0; rand(1);]*eps1;
 dx_dot0 = zeros(3, 1)*eps2;
 x0 = des.x0 + dx0;
-% x0 = [-0.42610; 0 ;-0.00064];
-% x0 = [0; 0.1; 0];
+% x0 = [-2.5; 0 ;-2.5];
+% x0 = [0; 0.8; 0];
 x_dot0 = des.x_dot0 + dx_dot0;
 int_d_x0 = zeros(3, 1);
 X0 = [x0; x_dot0; int_d_x0];
@@ -204,6 +204,7 @@ F_R = L_R + D_R;
 F_L = L_L + D_L;
 f_a = R*Q_R*F_R + R*Q_L*F_L;
 % f_a(isnan(f_a)) = 0;
+f_total = f_a + f_abd; % Use this for gettings signs
 
 %% Control design
 % d_x = zeros(3, 1); d_x_dot = zeros(3, 1);
@@ -226,9 +227,19 @@ temp_A = [mul_phi(1), mul_theta(1), mul_theta_A(1);
 rhs = [pos_err(1); pos_err(3); 0];
 dang = zeros(5, 1);
 dang(1:3) = temp_A \ (rhs);
+%
+% if wt == 0
+%     dang(1:2) = temp_A(1:2,1:2) \ rhs(1:2);
+% else
+%     % Minimum norm solution
+%     temp_A = temp_A(1:2,:);
+%     dang(1:3) = temp_A' * ((temp_A*temp_A') \ rhs(1:2));
+% end
+%
 % dang(4) = pos_err(2) / des.params.df_a_2_by_dphi_m(round((3 - sign(pos_err(2)+des.f_a(2, i)))/2));
 dang(4) = pos_err(2) / des.params.df_a_2_by_dphi_m(2);
 % dang(5) = pos_err(2) / des.params.df_a_2_by_dpsi_m(1);
+
 idx = abs(dang) > bound_param;
 dang(idx) = bound_param * sign(dang(idx));
 dphi_m_R = dang(1) + dang(4);

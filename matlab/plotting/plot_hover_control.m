@@ -2,7 +2,7 @@
 addpath('../modules', '../sim_data', '../');
 set(0,'DefaultAxesFontName','times');
 set(0,'DefaultAxesFontSize',18);
-load('sim_QS_x_hover_control.mat');
+% load('sim_QS_x_hover_control.mat');
 
 h_x=figure;
 for ii=1:3 
@@ -91,21 +91,23 @@ xlabel('$t/T$','interpreter','latex');
 % print(h_wk, 'hover_control_wk', '-depsc', '-r0');
 
 h_control = figure;
-subplot(3,1,1);
+h_control.PaperUnits = 'inches';
+h_control.PaperPosition = [0 0 6 5];
+subplot(4,1,1);
 plot(t*WK.f, dang(1,:));
 patch_downstroke(h_control,t*WK.f,Euler_R_dot);
 ylabel('$\Delta \phi_{m_s}$','interpreter','latex');
-subplot(3,1,2);
+subplot(4,1,2);
 plot(t*WK.f, dang(4,:));
 patch_downstroke(h_control,t*WK.f,Euler_R_dot);
 ylabel('$\Delta \phi_{m_k}$','interpreter','latex');
-subplot(3,1,3);
+subplot(4,1,3);
 plot(t*WK.f, dang(2,:));
 patch_downstroke(h_control,t*WK.f,Euler_R_dot);
 ylabel('$\Delta \theta_0$','interpreter','latex');
-% subplot(4,1,4);
-% plot(t*WK.f, dang(3,:));
-% patch_downstroke(h_control,t*WK.f,Euler_R_dot);
-% ylabel('$\Delta \theta_{A_m}$','interpreter','latex');
+subplot(4,1,4);
+plot(t*WK.f, dang(3,:));
+patch_downstroke(h_control,t*WK.f,Euler_R_dot);
+ylabel('$\Delta \theta_{A_m}$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
 print(h_control, 'hover_control_input', '-depsc', '-r0');

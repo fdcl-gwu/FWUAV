@@ -23,7 +23,9 @@ h_err = figure;
 scatter(x_no_ab(1, :), x_no_ab(3, :), 20, 'r', 'x');
 hold on;
 scatter(x_with_ab_only(1, :), x_with_ab_only(3, :), 10, 'b', 'filled');
+hold on;
 plot(x_no_ab(1, bound_ix_no_ab), x_no_ab(3, bound_ix_no_ab), 'r', 'LineWidth', 2);
+hold on;
 plot(x_with_ab(1, bound_ix_with_ab), x_with_ab(3, bound_ix_with_ab), 'b', 'LineWidth', 2);
 legend({'without abdomen effect, $ w = 0 $', 'with abdomen effect, $ w = 0.1 $'},...
     'interpreter','latex');
@@ -44,14 +46,14 @@ xlabel('Norm of x-z perturbation');
 ylabel('Change in number of cycles to convergence');
 print(h_Nconv, 'hover_mc_perf', '-depsc', '-r0');
 
-idx_no_ab_line = (abs(err_pos(:, 1)) < err_bound) & (abs(x_pert(3, :)) < 1e-2)';
-x_no_ab_line = x_pert(:, idx_no_ab_line);
-N_no_ab_line = N_conv(idx_no_ab_line, 1);
-N_with_ab_line = N_conv(idx_no_ab_line, 2);
-[~, sort_idx] = sort(x_no_ab_line(1, :));
-x_no_ab_line = x_no_ab_line(:, sort_idx);
-N_no_ab_line = N_no_ab_line(sort_idx);
-N_with_ab_line = N_with_ab_line(sort_idx);
+% idx_no_ab_line = (abs(err_pos(:, 1)) < err_bound) & (abs(x_pert(3, :)) < 1e-2)';
+% x_no_ab_line = x_pert(:, idx_no_ab_line);
+% N_no_ab_line = N_conv(idx_no_ab_line, 1);
+% N_with_ab_line = N_conv(idx_no_ab_line, 2);
+% [~, sort_idx] = sort(x_no_ab_line(1, :));
+% x_no_ab_line = x_no_ab_line(:, sort_idx);
+% N_no_ab_line = N_no_ab_line(sort_idx);
+% N_with_ab_line = N_with_ab_line(sort_idx);
 %
 % h_Nconv_line = figure;
 % plot(x_no_ab_line(1,:), N_no_ab_line, 'r');

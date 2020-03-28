@@ -1,6 +1,6 @@
 %% File to plot the data
 addpath('../modules', '../sim_data', '../');
-% set(0,'DefaultAxesFontName','times');
+set(0,'DefaultAxesFontName','times');
 set(0,'DefaultAxesFontSize',18);
 
 h_x3=figure;
