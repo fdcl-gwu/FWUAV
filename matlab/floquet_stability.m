@@ -44,7 +44,7 @@ for i=start_ix:(start_ix+ix_d)
     d_F = (F_linear(:, :, i) - F_linear(:, :, i+ix_d))./ F_linear(:, :, i);
     %
     max_F = min(max(F_linear(:,:,i), [], 'all'), max(F_linear(:,:,i+ix_d), [], 'all'));
-    d_F(max(abs(F_linear(:, :, i+ix_d)/max_F), abs(F_linear(:, :, i)/max_F)) < 1e-5) = 0; % Insignificant values
+    d_F(max(abs(F_linear(:, :, i+ix_d)/max_F), abs(F_linear(:, :, i)/max_F)) < 1e-4) = 0; % Insignificant values
     idx_small = max(abs(F_linear(:, :, i+ix_d)/max_F), abs(F_linear(:, :, i)/max_F)) < 1e-1;
     d_F(d_F(idx_small) < 0.25) = 0; % Small values
     %
@@ -232,6 +232,15 @@ function [dang, WK_R, WK_L] = position_controller(pos_err, WK_R_des, WK_L_des, d
     rhs = [pos_err(1); pos_err(3); 0];
     dang = zeros(5, 1);
     dang(1:3) = temp_A \ (rhs);
+    %
+%     if wt == 0
+%         dang(1:2) = temp_A(1:2,1:2) \ rhs(1:2);
+%     else
+%         % Minimum norm solution
+%         temp_A = temp_A(1:2,:);
+%         dang(1:3) = temp_A' * ((temp_A*temp_A') \ rhs(1:2));
+%     end
+    %
     dang(4) = pos_err(2) / des.params.df_a_2_by_dphi_m(2);
     idx = abs(dang) > bound_param;
     dang(idx) = bound_param * sign(dang(idx));
