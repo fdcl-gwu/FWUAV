@@ -8,7 +8,7 @@ addpath('./modules', './sim_data', './plotting');
 des = load('sim_QS_x_hover.mat', 'INSECT', 't', 'x', 'x_dot',...
     'f_tau', 'x0', 'x_dot0', 'WK');
 
-filename = 'sim_QS_x_hover_control_temp';
+filename = 'sim_QS_x_hover_control';
 INSECT = des.INSECT;
 WK = des.WK;
 des.x_fit = cell(3, 1); des.x_dot_fit = cell(3, 1);
@@ -27,7 +27,7 @@ des.params = params;
 %     des.f_abd(:, i) = -(JJ_A(1:3, 7:9)*W_A_dot + KK_A(1:3, 7:9)*W_A);
 
 N = 1001;
-N_period = 10;
+N_period = 20;
 err_bound = 1e-4; % Convergence criterion is a f(N, N_period, WK)
 N_single = round((N-1)/N_period);
 T = N_period/WK.f;
@@ -53,6 +53,7 @@ gains.Kp_pos = pol(3); gains.Kd_pos = pol(2); gains.Ki_pos = pol(4);
 rng default;
 eps1 = 1e-1/2; eps2 = 1e-1/2;
 dx0 = [rand(1); 0; rand(1);]*eps1;
+dx0 = [-0.2037; 0; 0.2264];
 dx_dot0 = zeros(3, 1)*eps2;
 x0 = des.x0 + dx0;
 % x0 = [-2.5; 0 ;-2.5];
@@ -60,7 +61,7 @@ x0 = des.x0 + dx0;
 x_dot0 = des.x_dot0 + dx_dot0;
 int_d_x0 = zeros(3, 1);
 X0 = [x0; x_dot0; int_d_x0];
-wt = 0; % weight, wt > 0.5 is unstable?
+wt = 0.1;
 
 [err_pos, N_conv, x, x_dot, int_d_x, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, W_R_dot, W_L, ...
     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
@@ -226,15 +227,15 @@ temp_A = [mul_phi(1), mul_theta(1), mul_theta_A(1);
           wt * mul_phi(1), wt * mul_theta(1), -(1-wt) * mul_theta_A(1)];
 rhs = [pos_err(1); pos_err(3); 0];
 dang = zeros(5, 1);
-dang(1:3) = temp_A \ (rhs);
+% dang(1:3) = temp_A \ (rhs);
 %
-% if wt == 0
-%     dang(1:2) = temp_A(1:2,1:2) \ rhs(1:2);
-% else
-%     % Minimum norm solution
-%     temp_A = temp_A(1:2,:);
-%     dang(1:3) = temp_A' * ((temp_A*temp_A') \ rhs(1:2));
-% end
+if wt == 0
+    dang(1:2) = temp_A(1:2,1:2) \ rhs(1:2);
+else
+    % Minimum norm solution
+    temp_A = temp_A(1:2,:);
+    dang(1:3) = temp_A' * ((temp_A*temp_A') \ rhs(1:2));
+end
 %
 % dang(4) = pos_err(2) / des.params.df_a_2_by_dphi_m(round((3 - sign(pos_err(2)+des.f_a(2, i)))/2));
 dang(4) = pos_err(2) / des.params.df_a_2_by_dphi_m(2);

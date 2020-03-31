@@ -12,16 +12,17 @@ load STLRead/fv_monarch;
 
 load('morp_MONARCH');
 bool_video=true;
-file_to_save = 'sim_QS_x_hover_control_temp.avi';
+file_to_save = 'sim_QS_x_hover_control.avi';
 
-load('sim_QS_x_hover_control_temp.mat','x','R','Q_R','Q_L','Q_A', 'N','F_R','F_L');
+load('sim_QS_x_hover_control.mat','x','R','Q_R','Q_L','Q_A', 'N','F_R','F_L','des');
 
 %% generate the initial object when k=1
 k=1;
 
 h_fig=figure('color','w','Unit','normalized','Position',[0.2 0.2 0.6 0.6]);
 [h_body, h_wr, h_wl, h_ab]=patch_monarch(fv_body, fv_wr, fv_wl, fv_abdomen, x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), [0 0 0]);
-axis([0 0.8 -0.1 0.1 -0.3 0.1]);
+axis([min(x(1,:)), max(x(1,:)), min(x(2,:)), max(x(2,:)), min(x(3,:)), max(x(3,:))] + ...
+    0.05*[-1, 1, -1, 1, -1, 1]);
 D_R=zeros(3,1);
 D_L=zeros(3,1);
 M_R=zeros(3,1);
@@ -31,27 +32,35 @@ F_rot_L=zeros(3,1);
 M_rot_R=zeros(3,1);
 M_rot_L=zeros(3,1);
 
-[h_F_R h_F_L]=patch_force(x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k),F_R(:,k),F_L(:,k),D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L,[0 0 0 0 1]);
-axis([-0.1 0.9 -0.1 0.1 -0.3 0.1]);
-h_x=line(x(1,1:k),x(2,1:k),x(3,1:k),'color','k');
+[h_F_R, h_F_L]=patch_force(x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k),F_R(:,k),F_L(:,k),D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L,[0 0 0 0 1]);
+axis([min(x(1,:)), max(x(1,:)), min(x(2,:)), max(x(2,:)), min(x(3,:)), max(x(3,:))] + ...
+    0.05*[-1, 1, -1, 1, -1, 1]);
+h_x=line(x(1,1:k),x(2,1:k),x(3,1:k),'color','k','LineWidth',2);
+plot3(des.x_fit_t(1,:),des.x_fit_t(2,:),des.x_fit_t(3,:),'b','LineWidth',2);
 
 %% animation
 
 if bool_video
     vidObj = VideoWriter(file_to_save);
+    vidObj.FrameRate = 30; % To decrease the speed of video
     open(vidObj);
 end
 
-for k=floor(linspace(1,(N-2)/2, (N-2)/10))
+for k=floor(linspace(1, N, round(N/2)))
     disp(k);
     update_monarch(h_fig,[h_body, h_wr, h_wl, h_ab], fv_body, fv_wr, fv_wl, fv_abdomen, x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k));
-    update_force(h_F_R,h_F_L,  x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), F_R(:,k), F_L(:,k),D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L,[0 0 0 0 1]);
+    update_force(h_F_R, h_F_L, x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), F_R(:,k), F_L(:,k),D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L,[0 0 0 0 1]);
     drawnow;
     set(h_x,'XData',x(1,1:k),'YData', x(2,1:k), 'ZData', x(3,1:k));
     
-    axis([-0.1 0.9 -0.1 0.1 -0.3 0.1]);
+    axis([min(x(1,:)), max(x(1,:)), min(x(2,:)), max(x(2,:)), min(x(3,:)), max(x(3,:))] + ...
+    0.05*[-1, 1, -1, 1, -1, 1]);
     if bool_video
-        writeVideo(vidObj,getframe(gcf));
+        ax = gca;
+        ax.Units = 'pixels';
+        pos = ax.Position;
+        rect = [pos(3)*0.375, pos(4)*0.125, pos(3)*0.6, pos(4)]; % Region of the frame to capture
+        writeVideo(vidObj,getframe(gcf,rect));
     end
 end
 
@@ -254,7 +263,8 @@ view(180+10,30);
 % view(250,30);
 
 set(gca,'Zdir','reverse','YDir','reverse');
-axis(0.1*[-1 1 -1 1 -1 1]);
+axis([min(x(1,:)), max(x(1,:)), min(x(2,:)), max(x(2,:)), min(x(3,:)), max(x(3,:))] + ...
+    0.05*[-1, 1, -1, 1, -1, 1]);
 %axis([0 1.0 -0.1 0.1 -0.3 0.1]);
 axis equal;
 camlight headlight;
