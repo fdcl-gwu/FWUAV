@@ -127,7 +127,7 @@ alpha(idx) = acos(abs(u(1, :)));
 
 end
 
-function [C_L, C_D] = wing_QS_LD_coeff(~, alpha)
+function [C_L, C_D] = wing_QS_LD_coeff(INSECT, alpha)
 %wing_QS_LD_coeff: compute C_L and C_D
 %[C_L C_D] = trans_force_coeff(alpha) computes the lift coefficient and the
 %drag coefficient for a given angle of attack, alpha in RADIAN
@@ -139,17 +139,16 @@ function [C_L, C_D] = wing_QS_LD_coeff(~, alpha)
 % Berman, Gordon J., and Z. Jane Wang. "Energy-minimizing kinematics in
 % hovering insect flight." Journal of Fluid Mechanics 582 (2007): 153-168.
 
-% convert radian to degree
-alpha_deg=alpha*180/pi;
-
-% switch INSECT.name
-%     case 'MONARCH'
-C_L = 0.225 + 1.58 * sind(2.13*alpha_deg -7.2);
-C_D = 1.92 - 1.55 * cosd(2.04*alpha_deg-9.82);
-%     otherwise
-%         C_L = INSECT.C_T * sin(2*alpha);
-%         C_D = INSECT.C_D_0 * cos(alpha)^2 + INSECT.C_D_pi2 * sin(alpha)^2;
-% end
+switch INSECT.name
+    case 'MONARCH'
+        % convert radian to degree
+        alpha_deg = alpha*180/pi;
+        C_L = 0.225 + 1.58 * sind(2.13*alpha_deg -7.2);
+        C_D = 1.92 - 1.55 * cosd(2.04*alpha_deg-9.82);
+    otherwise
+        C_L = INSECT.C_T * sin(2*alpha);
+        C_D = INSECT.C_D_0 * cos(alpha).^2 + INSECT.C_D_pi2 * sin(alpha).^2;
+end
 
 end
 

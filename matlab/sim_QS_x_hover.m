@@ -5,12 +5,11 @@ function sim_QS_x_hover
 evalin('base','clear all');
 close all;
 addpath('./modules', './sim_data', './plotting');
-load('morp_MONARCH', 'MONARCH');
-INSECT=MONARCH;
-filename='sim_QS_x_hover_temp';
+load('./sim_data/other_insects/morp_bumb', 'BUMBLEBEE');
+INSECT=BUMBLEBEE;
+filename='sim_QS_x_hover_bumb';
 
-WK.f=10.2247;
-% WK.beta=25.4292*pi/180;
+WK.f=INSECT.f;
 WK.type='BermanWang';
 WK.ab_type='varying';
 WK.bo_type='varying';
