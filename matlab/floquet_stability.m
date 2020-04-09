@@ -8,12 +8,7 @@ filename='floquet_stability';
 
 %% Linearized dynamics
 load('sim_QS_x_hover.mat', 'INSECT', 'WK', 'X0');
-% INSECT.scale=1e-2;
-% INSECT.name='MONARCH';
-% WK.ab_type='varying';
-% WK.bo_type='varying';
-% load('sim_QS_x_hover_hawkmoth.mat');
-% INSECT.name='NOT_MONARCH';
+% load('sim_QS_x_hover_hawk.mat');
 
 N = 1001;
 N_period = 2;
@@ -26,16 +21,16 @@ epsilon = 1e-8;
 % n is #perturbation states; n_vars is #actual states
 % n = 3; n_vars = 6; % for nominal hover with @eom_hover_vel if position is not periodic
 % [delta_mat, F_linear] = sim_pert(@eom_hover_vel, n, n_vars, INSECT, WK, X0, N, t, epsilon);
-% n = 6; n_vars = 6; % for nominal hover with @eom_hover
-% [delta_mat, F_linear] = sim_pert(@eom_hover, n, n_vars, INSECT, WK, X0, N, t, epsilon);
+n = 6; n_vars = 6; % for nominal hover with @eom_hover
+[delta_mat, F_linear] = sim_pert(@eom_hover, n, n_vars, INSECT, WK, X0, N, t, epsilon);
 % n = 12; n_vars = 6; % attitude stability with @eom_hover_attitude
 % [delta_mat, F_linear] = sim_pert(@eom_hover_attitude, n, n_vars, INSECT, WK, X0, N, t, epsilon);
 
-load('sim_QS_x_hover_control.mat', 'des', 'gains', 'wt', 'bound_param');
-int_d_x0 = zeros(3,1);
-X0 = [X0; int_d_x0;];
-n = 9; n_vars = 9; % for controlled hover with @eom_hover_control
-[delta_mat, F_linear] = sim_pert(@eom_hover_control, n, n_vars, INSECT, WK, X0, N, t, epsilon, des, gains, wt, bound_param);
+% load('sim_QS_x_hover_control.mat', 'des', 'gains', 'wt', 'bound_param');
+% int_d_x0 = zeros(3,1);
+% X0 = [X0; int_d_x0;];
+% n = 9; n_vars = 9; % for controlled hover with @eom_hover_control
+% [delta_mat, F_linear] = sim_pert(@eom_hover_control, n, n_vars, INSECT, WK, X0, N, t, epsilon, des, gains, wt, bound_param);
 
 B = zeros(n, n, 1+ix_d);
 start_ix = max(1, round((N_period-2)/N_period * N));
@@ -68,15 +63,12 @@ end
 
 %% Study for various insects
 % stop_idx = N;
-% N_sims = 10;
-% conv_rate_osc = zeros(N_sims, 6);
-% var_name_to_save = 'conv_rate_osc';
 % for c_ix=4:6 % Column index for perturbation direction
-% %     delta_g_mag = vecnorm(reshape(delta_mat(1:3, c_ix, :), 3, N));
-% %     delta_xi_mag = vecnorm(reshape(delta_mat(4:6, c_ix, :), 3, N));
-%     conv_rate_osc(:, c_ix) = repmat(mus(c_ix), [N_sims, 1]);
+%     delta_g_mag = vecnorm(reshape(delta_mat(1:3, c_ix, :), 3, N));
+%     delta_xi_mag = vecnorm(reshape(delta_mat(4:6, c_ix, :), 3, N));
 % end
-% % save('sim_QS_x_hover_conv_rate', var_name_to_save, '-append');
+conv_rate_mona = mus;
+save('sim_QS_x_hover_conv_rate', 'conv_rate_mona', '-append');
 
 %%
 % Get a list of all variables
