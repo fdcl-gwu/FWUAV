@@ -8,12 +8,6 @@ filename='floquet_stability';
 
 %% Linearized dynamics
 load('sim_QS_x_hover.mat', 'INSECT', 'WK', 'X0');
-% INSECT.scale=1e-2;
-% INSECT.name='MONARCH';
-% WK.ab_type='varying';
-% WK.bo_type='varying';
-% load('sim_QS_x_hover_hawkmoth.mat');
-% INSECT.name='NOT_MONARCH';
 
 N = 1001;
 N_period = 2;
@@ -65,18 +59,6 @@ for i=1:N
     Y_0 = diag(exp(mus*t(i)));
     per_val_mat(:, :, i) = char_soln_mat(:, :, i) / Y_0;
 end
-
-%% Study for various insects
-% stop_idx = N;
-% N_sims = 10;
-% conv_rate_osc = zeros(N_sims, 6);
-% var_name_to_save = 'conv_rate_osc';
-% for c_ix=4:6 % Column index for perturbation direction
-% %     delta_g_mag = vecnorm(reshape(delta_mat(1:3, c_ix, :), 3, N));
-% %     delta_xi_mag = vecnorm(reshape(delta_mat(4:6, c_ix, :), 3, N));
-%     conv_rate_osc(:, c_ix) = repmat(mus(c_ix), [N_sims, 1]);
-% end
-% % save('sim_QS_x_hover_conv_rate', var_name_to_save, '-append');
 
 %%
 % Get a list of all variables

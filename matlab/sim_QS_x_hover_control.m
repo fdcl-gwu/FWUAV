@@ -27,7 +27,7 @@ des.params = params;
 %     des.f_abd(:, i) = -(JJ_A(1:3, 7:9)*W_A_dot + KK_A(1:3, 7:9)*W_A);
 
 N = 1001;
-N_period = 20;
+N_period = 15;
 err_bound = 1e-4; % Convergence criterion is a f(N, N_period, WK)
 N_single = round((N-1)/N_period);
 T = N_period/WK.f;

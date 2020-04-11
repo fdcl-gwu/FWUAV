@@ -15,11 +15,8 @@ f.PaperPosition = [0 0 7 6];
 
 for c_ix=4:6
     for i=1:N
-    %     sigma = 0.25 * (INSECT{i}.limits(1) - INSECT{i}.limits(2)); % 95 percent confidence
-    %     damp_coeff(:, i) = normrnd(INSECT{i}.mu, sigma, [N_rand, 1]);
         conv_rate(:, i) = conv_rates{i}(:, c_ix);
     end
-%     boxplot(ax, conv_rate, labels);
     ax.XTick = 1:N;
     scatter(ax, ax.XTick, conv_rate(end, :), 75, 'filled');
     ax.XTickLabel = labels;
@@ -31,4 +28,4 @@ xlabel('Insect and its flapping frequency (in Hz)');
 ylabel('Characteristic exponents of perturbed dynamics');
 xlim auto;
 ylim auto;
-% print('hover_conv_insects', '-depsc', '-r0');
+print('hover_conv_insects', '-depsc', '-r0');

@@ -27,6 +27,7 @@ zlabel('$x_3$','interpreter','latex');
 axis equal;
 xlim([-0.01, 0.01]);
 zlim([-0.005, 0.005]);
+set(gca,'Zdir','reverse','Xdir','reverse');
 print(h_x3, 'hover_control_pos_3d', '-depsc', '-r0');
 
 h_x_dot=figure;
