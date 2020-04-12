@@ -1,27 +1,32 @@
-clear all;
+evalin('base','clear all');
 close all;
 
-scale = 1e-2;
+addpath('../');
+load('morp_params.mat');
+ins = hawk;
+NAME = 'HAWKMOTH';
 
-m_total = 1648*1e-6;
-m_R = 47*1e-6;
-R = 51.9*1e-3 / scale;
-c_bar = 18.26*1e-3 / scale;
+scale = ins.scale;
+M_total = ins.M;
+M_w = ins.M_w;
+R = ins.R / scale;
+c_bar = ins.c_b / scale;
+freq = ins.f;
+C_T = ins.C_T;
+C_D_0 = ins.C_D_0;
+C_D_pi2 = ins.C_D_pi2;
 
-freq = 26.3;
-C_T = 1.678;
-C_D_0 = 0.07;
-C_D_pi2 = 3.06;
+load('morp_MONARCH.mat','MONARCH');
+M_monarch = MONARCH.m;
+len_ratio = (M_total / M_monarch)^(1/3);
+ratio = 0.6; % body and abdomen ratio ~ MONARCH.m_B / (MONARCH.m_B + MONARCH.m_A)
 
-m_monarch = 3.0790e-04;
-len_ratio = (m_total / m_monarch)^(1/3);
-
-m_B = 3/5 * (m_total - 2*m_R);
-h_B = 1.463e-2 * len_ratio;
-w_B = 5.680e-3 * len_ratio;
-m_A = 2/5 * (m_total - 2*m_R);
-h_A = 1.738e-2 * len_ratio; 
-w_A = 3.710e-3 * len_ratio;
+m_B = ratio * (M_total - 2*M_w);
+h_B = MONARCH.h_B * len_ratio;
+w_B = MONARCH.w_B * len_ratio;
+m_A = (1-ratio) * (M_total - 2*M_w);
+h_A = MONARCH.h_A * len_ratio; 
+w_A = MONARCH.w_A * len_ratio;
 
 N = 15;
 span_wholewing = linspace(0, R, N);
@@ -66,13 +71,13 @@ disp(polyint_def( conv(conv(cr_poly,cr_poly),[1 0 0]), [0 l]) /l^3 /c_bar^2 /til
 
 %% compute momnet of inertia
 
-J_R_xx = m_R/S * polyint_def( conv(cr_LE_poly-cr_TE_poly,[1 0 0]), [0 l]) * scale^2;
+J_R_xx = M_w/S * polyint_def( conv(cr_LE_poly-cr_TE_poly,[1 0 0]), [0 l]) * scale^2;
 cr_LE_poly_pow2 = conv(cr_LE_poly,cr_LE_poly);
 cr_TE_poly_pow2 = conv(cr_TE_poly,cr_TE_poly);
-J_R_xy = - m_R/S * polyint_def( 0.5* conv(cr_LE_poly_pow2 - cr_TE_poly_pow2, [1 0]), [0 l])* scale^2;
+J_R_xy = - M_w/S * polyint_def( 0.5* conv(cr_LE_poly_pow2 - cr_TE_poly_pow2, [1 0]), [0 l])* scale^2;
 cr_LE_poly_pow3 = conv(cr_LE_poly_pow2,cr_LE_poly);
 cr_TE_poly_pow3 = conv(cr_TE_poly_pow2,cr_TE_poly);
-J_R_yy = m_R/S * polyint_def( 1/3* (cr_LE_poly_pow3 - cr_TE_poly_pow3), [0 l])* scale^2;
+J_R_yy = M_w/S * polyint_def( 1/3* (cr_LE_poly_pow3 - cr_TE_poly_pow3), [0 l])* scale^2;
 J_R_zz = J_R_xx + J_R_yy;
 
 nu_R_x = 1/S * polyint_def( 0.5* (cr_LE_poly_pow2 - cr_TE_poly_pow2), [0 l])* scale
@@ -145,56 +150,56 @@ end
 
 %% save the computed morphological parameters into a structure variable
 
-HAWKMOTH.name = 'HAWKMOTH';
-HAWKMOTH.scale = scale;
-HAWKMOTH.f = freq;
-HAWKMOTH.C_T = C_T;
-HAWKMOTH.C_D_0 = C_D_0;
-HAWKMOTH.C_D_pi2 = C_D_pi2;
+INSECT.name = NAME;
+INSECT.scale = scale;
+INSECT.f = freq;
+INSECT.C_T = C_T;
+INSECT.C_D_0 = C_D_0;
+INSECT.C_D_pi2 = C_D_pi2;
 
-HAWKMOTH.rho = 1.225; % air density (kg/m^3)
-HAWKMOTH.g = 9.81; % air density (kg/m^3)
-HAWKMOTH.l = l*scale; % span of the right wing (m)
-HAWKMOTH.S = S*scale^2; % area of the right wing (m^2)
-HAWKMOTH.c_bar = HAWKMOTH.S / HAWKMOTH.l; % mean chord (m)
-HAWKMOTH.AR = AR;
+INSECT.rho = 1.225; % air density (kg/m^3)
+INSECT.g = 9.81; % air density (kg/m^3)
+INSECT.l = l*scale; % span of the right wing (m)
+INSECT.S = S*scale^2; % area of the right wing (m^2)
+INSECT.c_bar = INSECT.S / INSECT.l; % mean chord (m)
+INSECT.AR = AR;
 
-HAWKMOTH.m_B = m_B; % mass of body/thorax
-HAWKMOTH.h_B = h_B; % height of body/thorax
-HAWKMOTH.w_B = w_B; % width of body/thorax
-HAWKMOTH.m_A = m_A; % mass of abdomen
-HAWKMOTH.h_A = h_A; % height of abdomen
-HAWKMOTH.w_A = w_A; % width of abdomen
-HAWKMOTH.m_R = m_R; % mass of right wing
-HAWKMOTH.m_L = m_R; % mass of left wing
-HAWKMOTH.m = m_B + m_A + 2*m_R;
+INSECT.m_B = m_B; % mass of body/thorax
+INSECT.h_B = h_B; % height of body/thorax
+INSECT.w_B = w_B; % width of body/thorax
+INSECT.m_A = m_A; % mass of abdomen
+INSECT.h_A = h_A; % height of abdomen
+INSECT.w_A = w_A; % width of abdomen
+INSECT.m_R = M_w; % mass of right wing
+INSECT.m_L = M_w; % mass of left wing
+INSECT.m = m_B + m_A + 2*M_w;
 
-HAWKMOTH.J_B = J_B;
-HAWKMOTH.J_R = J_R;
-HAWKMOTH.J_A = J_A;
-HAWKMOTH.J_L = J_L;
+INSECT.J_B = J_B;
+INSECT.J_R = J_R;
+INSECT.J_A = J_A;
+INSECT.J_L = J_L;
 
-HAWKMOTH.nu_R = nu_R;
-HAWKMOTH.nu_A = nu_A;
-HAWKMOTH.nu_L = nu_L;
+INSECT.nu_R = nu_R;
+INSECT.nu_A = nu_A;
+INSECT.nu_L = nu_L;
 
-HAWKMOTH.mu_R = [0, w_B/2, 0]';
-HAWKMOTH.mu_L = [0, -w_B/2, 0]';
-HAWKMOTH.mu_A = [-h_B/2, 0, 0]';
+INSECT.mu_R = [0, w_B/2, 0]';
+INSECT.mu_L = [0, -w_B/2, 0]';
+INSECT.mu_A = [-h_B/2, 0, 0]';
 
-HAWKMOTH.tilde_r_1 = tilde_r_1; % non-dimensional radius of the first moment of wing area
-HAWKMOTH.tilde_r_2 = tilde_r_2; % non-dimensional radius of the second moment of wing area
-HAWKMOTH.tilde_r_3 = tilde_r_3; % non-dimensional radius of the thrid moment of wing area 
-HAWKMOTH.r_cp = HAWKMOTH.l * HAWKMOTH.tilde_r_3 / HAWKMOTH.tilde_r_2; % CP of the translational force (lift and drag) (m)
+INSECT.tilde_r_1 = tilde_r_1; % non-dimensional radius of the first moment of wing area
+INSECT.tilde_r_2 = tilde_r_2; % non-dimensional radius of the second moment of wing area
+INSECT.tilde_r_3 = tilde_r_3; % non-dimensional radius of the thrid moment of wing area 
+INSECT.r_cp = INSECT.l * INSECT.tilde_r_3 / INSECT.tilde_r_2; % CP of the translational force (lift and drag) (m)
 
-HAWKMOTH.tilde_v = tilde_v; % non-dimensional virtual mass 
-HAWKMOTH.tilde_r_v_1 = tilde_r_v_1; % non-dimensional radius of the first moment of wing volume 
-HAWKMOTH.tilde_r_v_2 = tilde_r_v_2; % non-dimensional radius of the second moment of wing volume 
-HAWKMOTH.r_rot = HAWKMOTH.l * HAWKMOTH.tilde_r_v_2^2 / HAWKMOTH.tilde_r_v_1; % CP of the rotational force (m)
+INSECT.tilde_v = tilde_v; % non-dimensional virtual mass 
+INSECT.tilde_r_v_1 = tilde_r_v_1; % non-dimensional radius of the first moment of wing volume 
+INSECT.tilde_r_v_2 = tilde_r_v_2; % non-dimensional radius of the second moment of wing volume 
+INSECT.r_rot = INSECT.l * INSECT.tilde_r_v_2^2 / INSECT.tilde_r_v_1; % CP of the rotational force (m)
 
-HAWKMOTH.cr_poly = cr_poly;
-HAWKMOTH.cr_LE_poly = cr_LE_poly;
-HAWKMOTH.cr_TE_poly = cr_TE_poly;
-disp(HAWKMOTH);
+INSECT.cr_poly = cr_poly;
+INSECT.cr_LE_poly = cr_LE_poly;
+INSECT.cr_TE_poly = cr_TE_poly;
+disp(INSECT);
 
-save('morp_others','HAWKMOTH');
+save('morp_'+string(NAME), 'INSECT');

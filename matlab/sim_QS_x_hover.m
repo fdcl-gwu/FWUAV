@@ -5,8 +5,7 @@ function sim_QS_x_hover
 evalin('base','clear all');
 close all;
 addpath('./modules', './sim_data', './plotting');
-load('./sim_data/other_insects/morp_hawk', 'HAWKMOTH');
-INSECT=HAWKMOTH;
+load('./sim_data/other_insects/morp_hawk', 'INSECT');
 filename='sim_QS_x_hover_hawk';
 
 WK.f=INSECT.f;

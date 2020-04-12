@@ -1,12 +1,18 @@
 %% Evaluates the convergence rate for various insects
+addpath('../');
 load('sim_QS_x_hover_conv_rate.mat');
+mona = load('sim_QS_x_hover.mat', 'WK');
+hawk = load('sim_QS_x_hover_hawk.mat', 'WK');
+bumb = load('sim_QS_x_hover_bumb.mat', 'WK');
+fruit = load('sim_QS_x_hover_fruit.mat', 'WK');
 set(0,'DefaultAxesFontName','times');
 set(0,'DefaultAxesFontSize',14);
 
 conv_rates = [conv_rate_mona, conv_rate_hawk, conv_rate_bumb, conv_rate_fruit];
 N = size(conv_rates, 2);
 
-labels = [{'MONARCH, f=10.2'}, {'HAWKMOTH, f=26.3'}, {'BUMBLEBEE, f=116'}, {'FRUITFLY, f=254'}];
+labels = [{'MONARCH, f='+string(round(mona.WK.f,1))}, {'HAWKMOTH, f='+string(round(hawk.WK.f,1))}, ...
+    {'BUMBLEBEE, f='+string(round(bumb.WK.f,1))}, {'FRUITFLY, f='+string(round(fruit.WK.f,1))}];
 
 f = figure;
 ax = gca;
