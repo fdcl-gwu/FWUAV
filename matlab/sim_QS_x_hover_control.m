@@ -234,6 +234,8 @@ if wt == 0
 else
     % Minimum norm solution
     temp_A = temp_A(1:2,:);
+%     pos_err = tanh(pos_err) * 1e-2; %(norm(temp_A, 'fro') * bound_param);
+%     rhs = [pos_err(1); pos_err(3); 0];
     dang(1:3) = temp_A' * ((temp_A*temp_A') \ rhs(1:2));
 end
 %

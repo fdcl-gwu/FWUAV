@@ -6,66 +6,8 @@ close all;
 addpath('./modules', './sim_data', './plotting');
 filename='sim_QS_xR';
 
-% INSECT.g=9.81;
-% INSECT.m_B=rand;
-% INSECT.J_B=rand_spd;
-% 
-% INSECT.m_R=rand;
-% INSECT.mu_R=0.3*rand(3,1);
-% INSECT.nu_R=0.5*rand(3,1);
-% INSECT.J_R=rand_spd;
-% 
-% INSECT.m_L=rand;
-% INSECT.mu_L=0.3*rand(3,1);
-% INSECT.nu_L=0.5*rand(3,1);
-% INSECT.J_L=rand_spd;
-% 
-% INSECT.m_A=rand;
-% INSECT.mu_A=0.3*rand(3,1);
-% INSECT.nu_A=0.5*rand(3,1);
-% INSECT.J_A=rand_spd;
-% 
-% INSECT.rho= 1.2250;
-% INSECT.l = 0.0610;
-% INSECT.S = 0.0013;
-% INSECT.c_bar = 0.0209;
-% INSECT.AR = 2.9178;
-% INSECT.tilde_r_1 = 0.4976;
-% INSECT.tilde_r_2 = 0.5433;
-% INSECT.tilde_r_3 = 0.5803;
-% INSECT.r_cp = 0.0651;
-% INSECT.tilde_v = 1.2496;
-% INSECT.tilde_r_v_1 = 0.4875;
-% INSECT.tilde_r_v_2 = 0.5165;
-% INSECT.r_rot = 0.0334;
-% 
 load('morp_MONARCH');
 INSECT=MONARCH;
-% INSECT.mu_A=zeros(3,1);
-% INSECT.nu_A=zeros(3,1);
-% INSECT.nu_R(1)=0;
-% INSECT.nu_L(1)=0;
-% INSECT.J_R(1,2)=0;
-% INSECT.J_R(2,1)=0;
-% INSECT.J_L(1,2)=0;
-% INSECT.J_L(2,1)=0;
-% INSECT.J_A=zeros(3,3);
-
-% WK.type='BermanWang';
-% WK.beta=0;
-% WK.phi_m=00*pi/180;
-% WK.phi_K=0.4;
-% WK.phi_0=0*pi/180;
-% 
-% WK.theta_m=40*pi/180;
-% WK.theta_C=0.1;
-% WK.theta_0=0;
-% WK.theta_a=0;
-% 
-% WK.psi_m=0*pi/180;
-% WK.psi_N=2;
-% WK.psi_a=0;
-% WK.psi_0=0;
 
 WK.f=10.2;
 WK.beta=30*pi/180;
