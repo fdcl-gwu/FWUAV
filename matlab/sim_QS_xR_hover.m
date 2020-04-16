@@ -18,7 +18,7 @@ WK.psi_max=3*pi/180;
 WK.psi_N = 2; % or 1
 
 N=1001;
-x0=[0 0 0]';
+x0=[0; 0; 0;];
 final_pos = [0; 0; 0;];
 % final_pos = [0.1; 0; -0.1/3;]; % Experimental trajectory
 
@@ -63,24 +63,24 @@ toc;
 
 %%
 [WK, x_dot0, R0, W0] = get_WK(WK, WK_arr);
-X0=[x0; x_dot0];
+X0=[x0; reshape(R0,9,1); x_dot0; W0];
 
 N=1001;
 T=3/WK.f;
 t=linspace(0,T,N);
 
-[t, X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+[t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
 x = X(:,1:3)';
 x_dot = X(:,4:6)';
 
 for k=1:N    
-    [X_dot(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), theta_B(k),...
-        theta_A(k), W(:,k), W_dot(:,k), W_R(:,k), W_R_dot(:,k), W_L(:,k),...
+    [X_dot(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k),...
+        theta_A(k), W(:,k), W_R(:,k), W_R_dot(:,k), W_L(:,k),...
         W_L_dot(:,k), W_A(:,k), W_A_dot(:,k), F_R(:,k), F_L(:,k), M_R(:,k),...
-        M_L(:,k), f_a(:,k), f_g(:,k), f_tau(:,k), tau(:,k)]= eom_QS_x(INSECT, WK, WK, t(k), X(k,:)');
+        M_L(:,k), f_a(:,k), f_g(:,k), f_tau(:,k), tau(:,k), ...
+        Euler_R(:,k), Euler_R_dot(:,k)]= eom_QS_xR(INSECT, WK, WK, t(k), X(k,:)');
     F_B(:,k) = Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);    
-    [Euler_R(:,k), Euler_R_dot(:,k), Euler_R_ddot(:,k)] = wing_kinematics(t(k),WK);
 end
 
 x_ddot = X_dot(4:6,:);
@@ -99,11 +99,11 @@ end
 function [c,ceq] = traj_condition(WK_arr, WK, INSECT, N, x0, final_pos)
 %% Nonlinear constraint
 [WK, x_dot0, R0, W0] = get_WK(WK, WK_arr);
-X0=[x0; x_dot0];
+X0=[x0; reshape(R0,9,1); x_dot0; W0];
 
 T=1/WK.f;
 t=linspace(0,T,N);
-[t, X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+[t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 c(1) = abs(WK.phi_0) + WK.phi_m - WK.phi_max;
 c(2) = abs(WK.psi_0) + WK.psi_m - WK.psi_max;
 ceq(1:3) = X(1,1:3)' - (X(end,1:3)' -final_pos);
@@ -116,11 +116,11 @@ end
 function [J] = objective_func(WK_arr, WK, INSECT, N, x0, final_pos)
 %% Objective function
 [WK, x_dot0, R0, W0] = get_WK(WK, WK_arr);
-X0=[x0; x_dot0];
+X0=[x0; reshape(R0,9,1); x_dot0; W0];
 
 T=1/WK.f;
 t=linspace(0,T,N);
-[t, X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+[t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
 x=X(:,1:3)';
 x_dot=X(:,4:6)';
