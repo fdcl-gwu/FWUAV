@@ -34,7 +34,7 @@ tic;
 rng default; % For reproducibility
 
 % % FMINCON
-% WK_arr0 = [ 0.2950    0.8865    0.7242   -0.3732    0.5625    0.6328   -0.0129    0.3241    0.0419    0.2634   -0.0000    0.6994    0.0000   -0.6685 0.1648    0.0433    3.1416    9.3263 0 0];
+% WK_arr0 = [0.7782    0.6355    0.2866   -0.6599    0.6893    2.1703    0.0098   -0.1410    0.0196    0.2506   -0.0003 -0.2458   -0.0000    0.0230    0.1970    0.4696    1.4270   11.6689  0.8319    1.4862];
 % options = optimoptions(@fmincon,'Algorithm','interior-point','Display','iter',...
 %     'MaxFunctionEvaluations',5000,'PlotFcn',@optimplotfval,'UseParallel',true);
 % [WK_arr, fval, exitflag, output] = fmincon(@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0, final_pos),...
@@ -45,17 +45,18 @@ ptmatrix(1, :) = [0.2950    0.8865    0.7242   -0.3732    0.5625    0.6328   -0.
 ptmatrix(2, :) = [-0.2799    0.7425    0.6669    0.5665    0.6981    3.0000    0.3914   -0.2456    0.0000   -2.8879    0.0524   -0.1000   -0.0000   -0.1000 0.2094   -0.1669    1.5707   11.7584 0 0];
 ptmatrix(3, :) = [-0.4324    1.4397-0.6658    0.3889    0.6658    0.1137    1.7289   -0.5236    1.5708    8*pi/180   -1.0691    5*pi/180   -0.0441    0.0137 -0.0783 0 0 0 WK.f 0 0];
 ptmatrix(4, :) = [0.0577    pi/2-1.2217    0.3587    1.2217  0.5233    2.7760    0.2207    0.0059    8*pi/180    0.9429    0.0291 0 0 0 10*pi/180  0 0 WK.f 0 0];
-ptmatrix(5, :) = [-1.1117    0.8052    0.9530    0.3491    0.0039    1.5236    0.5158    0.8012    0.1344   -1.5344    0.0771    0.0981    0.0000   -0.0814 0.2869   -0.3374    1.5438   11.8923 0 0];
-ptmatrix(6, :) = [0.1815    pi/2-1.2217   0.3218    -1.2217    0.5196    2.9411    0.1942    0.0157    8*pi/180    0.9508   -0.0505 0 0 0 10*pi/180  0 0 WK.f 0 0];
+ptmatrix(5, :) = [0.7782    0.6355    0.2866   -0.6599    0.6893    2.1703    0.0098   -0.1410    0.0196    0.2506   -0.0003 -0.2458   -0.0000    0.0230    0.1970    0.4696    1.4270   11.6689  0.8319    1.4862];
+ptmatrix(6, :) = [0.3273    0.7399    0.9091    0.5642    0.0000    0.2846   -0.5236    1.1408    0.0244    2.2337    0.0278 0.2275    0.0000    0.1058    0.2093    0.0778    1.8785   10.9897   -1.3069    1.8056];
 N_points = 26;
 ptmatrix(7:N_points, :) = lb + rand(N_points-6, length(WK_arr0)) .* (ub - lb);
 tpoints = CustomStartPointSet(ptmatrix);
 ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf,'MaxTime',12*3600);
 options = optimoptions(@fmincon,'Algorithm','interior-point',...
-    'UseParallel',true);%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
+    'UseParallel',true,'MaxIterations',2000,'MaxFunctionEvaluations',6000);%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
 problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0, final_pos),...
     'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
 [WK_arr, fval, exitflag, output, solutions] = run(ms, problem, tpoints);
+% WK_arr = [0.3273    0.7399    0.9091    0.5642    0.0000    0.2846   -0.5236    1.1408    0.0244    2.2337    0.0278 0.2275    0.0000    0.1058    0.2093    0.0778    1.8785   10.9897   -1.3069    1.8056];
 
 fprintf('Optimization has been completed\n');
 disp(output);
@@ -72,7 +73,7 @@ t=linspace(0,T,N);
 [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
 x = X(:,1:3)';
-x_dot = X(:,4:6)';
+x_dot = X(:,13:15)';
 
 for k=1:N    
     [X_dot(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k),...
@@ -83,7 +84,7 @@ for k=1:N
     F_B(:,k) = Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);    
 end
 
-x_ddot = X_dot(4:6,:);
+x_ddot = X_dot(13:15,:);
 
 % Get a list of all variables
 allvars = whos;
@@ -106,10 +107,12 @@ t=linspace(0,T,N);
 [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 c(1) = abs(WK.phi_0) + WK.phi_m - WK.phi_max;
 c(2) = abs(WK.psi_0) + WK.psi_m - WK.psi_max;
-ceq(1:3) = X(1,1:3)' - (X(end,1:3)' -final_pos);
-ceq(4:6) = 0.1*(X(1,4:6)' - X(end,4:6)');
+ceq(1:3) = X(1,1:3)' - (X(end,1:3)' -final_pos); % x
+ceq(4:12) = 1e-2*(X(1,4:12)' - X(end,4:12)'); % R
+ceq(13:15) = 1e-1*(X(1,13:15)' - X(end,13:15)'); % x_dot
+ceq(16:18) = 1e-3*(X(1,16:18)' - X(end,16:18)'); % W
 if any(isnan(ceq), 'all')
-    ceq(1:6) = 1/eps;
+    ceq(1:18) = 1/eps;
 end
 end
 
@@ -123,7 +126,7 @@ t=linspace(0,T,N);
 [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
 x=X(:,1:3)';
-x_dot=X(:,4:6)';
+x_dot=X(:,13:15)';
 m=INSECT.m;
 E = 0.5*m*(vecnorm(x_dot).^2) - m*9.81*x(3,:);
 E_dot = diff(E')./diff(t);
