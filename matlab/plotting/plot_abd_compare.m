@@ -76,14 +76,14 @@ print(h_Nconv, 'hover_mc_perf', '-depsc', '-r0');
 %% Power and energy
 set(0,'DefaultAxesFontSize',16);
 % Without abdomen oscillation
-load('sim_QS_x_hover_no_ab.mat')
+load('sim_QS_x_hover_forw_no_ab.mat')
 tau_no = tau(4:12,:);
 [pow_no, E_no, E_dot_no, eff_no, P_in_no, P_out_no] = compute_power(...
     INSECT.m, t, x, x_dot, tau, Q_R, Q_L, Q_A, W_R, W_L, W_A, W, f_a, f_tau);
 
 % With abdomen oscillation
 % load('sim_QS_x_hover.mat')
-load('sim_QS_x_hover.mat')
+load('sim_QS_x_hover_forw.mat')
 tau_ab = tau(4:12,:);
 [pow_ab, E_ab, E_dot_ab, eff_ab, P_in_ab, P_out_ab] = compute_power(...
     INSECT.m, t, x, x_dot, tau, Q_R, Q_L, Q_A, W_R, W_L, W_A, W, f_a, f_tau);

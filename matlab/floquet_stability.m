@@ -7,8 +7,10 @@ addpath('./modules', './sim_data', './plotting');
 filename='floquet_stability';
 
 %% Linearized dynamics
-load('sim_QS_x_hover.mat', 'INSECT', 'WK', 'X0');
-% load('sim_QS_x_hover_hawk.mat');
+addpath('./sim_data/other_insects');
+load('sim_QS_x_hover_mona.mat', 'INSECT', 'WK', 'X0');
+conv_name='conv_rate_mona';
+save_rate=true;
 
 N = 1001;
 N_period = 2;
@@ -67,8 +69,22 @@ end
 %     delta_g_mag = vecnorm(reshape(delta_mat(1:3, c_ix, :), 3, N));
 %     delta_xi_mag = vecnorm(reshape(delta_mat(4:6, c_ix, :), 3, N));
 % end
-conv_rate_mona = mus;
-save('sim_QS_x_hover_conv_rate', 'conv_rate_mona', '-append');
+
+% temp_var.(conv_name) = mus;
+% assignin('base', conv_name, mus);
+[mus, idx] = sort(mus);
+e_vecs = e_vecs(:,idx);
+mus_sort = mus;
+for i=1:3
+    if all(abs(e_vecs([1,3,4,6],i) - 0) < 2*eps)
+        mus_sort(3) = mus(i);
+        mus_sort(i) = mus(3);
+    end
+end
+if save_rate
+    eval(conv_name+"=mus_sort;");
+    save('sim_QS_x_hover_conv_rate', conv_name, '-append');
+end
 
 %%
 % Get a list of all variables
