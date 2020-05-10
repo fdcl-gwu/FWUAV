@@ -5,8 +5,8 @@ function sim_QS_x_hover
 evalin('base','clear all');
 close all;
 addpath('./modules', './sim_data', './plotting');
-load('./sim_data/other_insects/morp_BUMBLEBEE', 'INSECT');
-filename='./sim_data/other_insects/sim_QS_x_hover_bumb';
+load('./sim_data/other_insects/morp_HAWKMOTH.mat', 'INSECT');
+filename='./sim_data/other_insects/sim_QS_x_hover_hawk';
 
 WK.f=INSECT.f;
 WK.type='BermanWang';

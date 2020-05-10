@@ -75,6 +75,7 @@ print(h_Nconv, 'hover_mc_perf', '-depsc', '-r0');
 
 %% Power and energy
 set(0,'DefaultAxesFontSize',16);
+addpath('./sim_data/other_insects');
 % Without abdomen oscillation
 load('sim_QS_x_hover_forw_no_ab.mat')
 tau_no = tau(4:12,:);

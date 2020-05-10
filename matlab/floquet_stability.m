@@ -70,18 +70,22 @@ end
 %     delta_xi_mag = vecnorm(reshape(delta_mat(4:6, c_ix, :), 3, N));
 % end
 
-% temp_var.(conv_name) = mus;
-% assignin('base', conv_name, mus);
-[mus, idx] = sort(mus);
-e_vecs = e_vecs(:,idx);
-mus_sort = mus;
-for i=1:3
-    if all(abs(e_vecs([1,3,4,6],i) - 0) < 2*eps)
-        mus_sort(3) = mus(i);
-        mus_sort(i) = mus(3);
+[mus_s, idx_mus] = sort(mus,'descend');
+e_vecs_s = e_vecs(:,idx_mus);
+mus_sort = mus_s;
+e_vecs_sort = e_vecs_s;
+for i=4:6
+    if all(abs(e_vecs_s([1,3,4,6],i) - 0) < 1e-10)
+        lat_idx = i;
     end
 end
+mus_sort(end) = mus_s(lat_idx); mus_sort(lat_idx) = mus_s(end);
+e_vecs_sort(:,end) = e_vecs_s(:,lat_idx); e_vecs_sort(:,lat_idx) = e_vecs_s(:,end);
+[~, idx_sort] = ismember(mus_sort, mus); % Sort according to modes
+
 if save_rate
+    % temp_var.(conv_name) = mus;
+    % assignin('base', conv_name, mus);
     eval(conv_name+"=mus_sort;");
     save('sim_QS_x_hover_conv_rate', conv_name, '-append');
 end
