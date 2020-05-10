@@ -7,10 +7,17 @@ pow=zeros(3,N);
 P_in=zeros(1,N);
 P_out=zeros(1,N);
 E=zeros(1,N);
+N_tau=size(tau,1);
 for k=1:N
-    pow(1,k) = tau(4:6,k)'*Q_R(:,:,k)*W_R(:,k); 
-    pow(2,k) = tau(7:9,k)'*Q_L(:,:,k)*W_L(:,k); 
-    pow(3,k) = tau(10:12,k)'*Q_A(:,:,k)*W_A(:,k); 
+    if  N_tau > 9
+        pow(1,k) = tau(4:6,k)'*Q_R(:,:,k)*W_R(:,k);
+        pow(2,k) = tau(7:9,k)'*Q_L(:,:,k)*W_L(:,k);
+        pow(3,k) = tau(10:12,k)'*Q_A(:,:,k)*W_A(:,k);
+    else
+        pow(1,k) = tau(1:3,k)'*Q_R(:,:,k)*W_R(:,k);
+        pow(2,k) = tau(4:6,k)'*Q_L(:,:,k)*W_L(:,k);
+        pow(3,k) = tau(7:9,k)'*Q_A(:,:,k)*W_A(:,k);
+    end
     E(k) = 0.5*m*x_dot(:,k)'*x_dot(:,k) - m*9.81*x(3,k);
     xi = [x_dot(:,k); W(:,k); W_R(:,k); W_L(:,k); W_A(:,k)];
     P_in(k) = f_tau(:,k)' * xi;

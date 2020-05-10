@@ -14,7 +14,7 @@ WK.f=10.2247;
 WK.type='BermanWang';
 WK.ab_type='varying';
 WK.phi_max=75*pi/180;
-WK.psi_max=3*pi/180;
+WK.psi_max=5*pi/180;
 WK.psi_N = 2; % or 1
 
 N=1001;
@@ -26,8 +26,8 @@ final_pos = [0; 0; 0;];
 A = []; b = []; Aeq = []; beq = [];
 % Initial value of WK_arr = [beta, phi_m, phi_K, phi_0, theta_m, theta_C, theta_0, theta_a, psi_m, psi_a, psi_0, x_dot1, x_dot2, x_dot3, theta_A_m, theta_A_0, theta_A_a, freq, theta_B02, W_B02]
 WK_arr0 = [-0.2400   0.7806  0.4012   0.7901    0.6981    2.9999    0.2680    0.1050    8*pi/180    0.9757    5*pi/180   -0.1000   -0.0000 -0.1000 0.0937 0 0 WK.f 0 0];
-lb = [-pi/2, 0, 0, -pi/2, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -1, -1, -1, 0, -pi/4, -pi, WK.f*(1-0.15), -75*pi/180, -10];
-ub = [pi/2, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 1, 1, 1, pi/15, pi/4, pi, WK.f*(1+0.15), 75*pi/180, 10];
+lb = [-pi/8, 0, 0, -pi/2, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -1, -1, -1, 0, -pi/4, -pi, WK.f*(1-0.15), -45*pi/180, -5];
+ub = [pi/5, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 1, 1, 1, pi/12, pi/4, pi, WK.f*(1+0.15), 75*pi/180, 5];
 nonlcon = @(WK_arr) traj_condition(WK_arr, WK, INSECT, N, x0, final_pos);
 
 tic;
@@ -47,11 +47,11 @@ ptmatrix(3, :) = [-0.4324    1.4397-0.6658    0.3889    0.6658    0.1137    1.72
 ptmatrix(4, :) = [0.0577    pi/2-1.2217    0.3587    1.2217  0.5233    2.7760    0.2207    0.0059    8*pi/180    0.9429    0.0291 0 0 0 10*pi/180  0 0 WK.f 0 0];
 ptmatrix(5, :) = [0.7782    0.6355    0.2866   -0.6599    0.6893    2.1703    0.0098   -0.1410    0.0196    0.2506   -0.0003 -0.2458   -0.0000    0.0230    0.1970    0.4696    1.4270   11.6689  0.8319    1.4862];
 ptmatrix(6, :) = [0.3273    0.7399    0.9091    0.5642    0.0000    0.2846   -0.5236    1.1408    0.0244    2.2337    0.0278 0.2275    0.0000    0.1058    0.2093    0.0778    1.8785   10.9897   -1.3069    1.8056];
-N_points = 26;
+N_points = 50;
 ptmatrix(7:N_points, :) = lb + rand(N_points-6, length(WK_arr0)) .* (ub - lb);
 tpoints = CustomStartPointSet(ptmatrix);
 ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf,'MaxTime',12*3600);
-options = optimoptions(@fmincon,'Algorithm','interior-point',...
+options = optimoptions(@fmincon,'Algorithm','sqp',...
     'UseParallel',true,'MaxIterations',2000,'MaxFunctionEvaluations',6000);%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
 problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0, final_pos),...
     'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
@@ -81,7 +81,8 @@ for k=1:N
         W_L_dot(:,k), W_A(:,k), W_A_dot(:,k), F_R(:,k), F_L(:,k), M_R(:,k),...
         M_L(:,k), f_a(:,k), f_g(:,k), f_tau(:,k), tau(:,k), ...
         Euler_R(:,k), Euler_R_dot(:,k)]= eom_QS_xR(INSECT, WK, WK, t(k), X(k,:)');
-    F_B(:,k) = Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);    
+    F_B(:,k) = Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);
+    theta_B(k) = R2axang(R(:,:,k));
 end
 
 x_ddot = X_dot(13:15,:);
@@ -107,6 +108,12 @@ t=linspace(0,T,N);
 [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 c(1) = abs(WK.phi_0) + WK.phi_m - WK.phi_max;
 c(2) = abs(WK.psi_0) + WK.psi_m - WK.psi_max;
+% R=reshape(X(:,4:12)',3,3,N);
+% for k=1:N
+%     theta_B(k) = acos((trace(R(:,:,k))-1)/2);
+% end
+% theta_B_max = max(theta_B);
+% c(3) = theta_B_max - WK.theta_B_max;
 ceq(1:3) = X(1,1:3)' - (X(end,1:3)' -final_pos); % x
 ceq(4:12) = 1e-2*(X(1,4:12)' - X(end,4:12)'); % R
 ceq(13:15) = 1e-1*(X(1,13:15)' - X(end,13:15)'); % x_dot
@@ -136,6 +143,23 @@ gam = 1e3;
 del = 1e4;
 J = gam * trapz(t, abs(E_dot)) + del * trapz(t, abs(E));
 
+% % Augmentation of constraints
+% c(1) = abs(WK.phi_0) + WK.phi_m - WK.phi_max;
+% c(2) = abs(WK.psi_0) + WK.psi_m - WK.psi_max;
+% ceq(1:3) = X(1,1:3)' - (X(end,1:3)' -final_pos); % x
+% ceq(4:12) = 1e-2*(X(1,4:12)' - X(end,4:12)'); % R
+% ceq(13:15) = 1e-1*(X(1,13:15)' - X(end,13:15)'); % x_dot
+% ceq(16:18) = 1e-3*(X(1,16:18)' - X(end,16:18)'); % W
+% w_c = 1; w_ceq = 1e6;
+% for k=1:length(c)
+%     if c(k) >= 0
+%         J = 1/eps;
+%     else
+%         J = J - w_c*log(-c(k));
+%     end
+% end
+% J = J + w_ceq * (exp(norm(ceq)) - 1);
+
 if isnan(J)
     J = 1/eps;
 end
@@ -162,8 +186,9 @@ x_dot0=[WK_arr(12), WK_arr(13), WK_arr(14)]';
 WK.theta_A_m = WK_arr(15);
 WK.theta_A_0 = WK_arr(16);
 WK.theta_A_a = WK_arr(17);
+WK.f = WK_arr(18);
 
 e2 = [0; 1; 0];
-R0 = expmhat(WK_arr(18)*e2);
-W0 = [0; WK_arr(19); 0];
+R0 = expmhat(WK_arr(19)*e2);
+W0 = [0; WK_arr(20); 0];
 end
