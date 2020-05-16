@@ -138,7 +138,7 @@ k = m(1); c = m(2);
 h_tau_model = figure;
 plot(t*WK.f, tau_A, 'b');
 hold on;
-plot(t*WK.f, - k*theta_A - c*theta_A_dot + tau0, 'r');
+plot(t*WK.f, - k*theta_A - c*theta_A_dot + tau0, 'k');
 patch_downstroke(h_tau_model,t*WK.f,Euler_R_dot);
 legend('Actual torque', 'Modeled torque');
 title(sprintf('Torsional model as \n $\\tau_A(t) = -k\\theta_A(t) - c\\dot{\\theta}_A(t) + \\tau_0 $'),...
