@@ -76,15 +76,16 @@ print(h_Nconv, 'hover_mc_perf', '-depsc', '-r0');
 %% Power and energy
 set(0,'DefaultAxesFontSize',16);
 addpath('./sim_data/other_insects');
+add_to_save="_mona";
 % Without abdomen oscillation
-load('sim_QS_x_hover_forw_no_ab.mat')
+load('sim_QS_x_hover'+add_to_save + '_no_ab.mat')
 tau_no = tau(4:12,:);
 [pow_no, E_no, E_dot_no, eff_no, P_in_no, P_out_no] = compute_power(...
     INSECT.m, t, x, x_dot, tau, Q_R, Q_L, Q_A, W_R, W_L, W_A, W, f_a, f_tau);
 
 % With abdomen oscillation
 % load('sim_QS_x_hover.mat')
-load('sim_QS_x_hover_forw.mat')
+load('sim_QS_x_hover'+add_to_save + '.mat')
 tau_ab = tau(4:12,:);
 [pow_ab, E_ab, E_dot_ab, eff_ab, P_in_ab, P_out_ab] = compute_power(...
     INSECT.m, t, x, x_dot, tau, Q_R, Q_L, Q_A, W_R, W_L, W_A, W, f_a, f_tau);
@@ -112,7 +113,7 @@ patch_downstroke(h_pow,t*WK.f,Euler_R_dot);
 ylabel('$P_A$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
 sgtitle('Reduction in total mean power is ' + string(round(-change_pow*100, 1)) + ' %');
-print(h_pow, 'hover_power_ab', '-depsc', '-r0');
+print(h_pow, 'hover_power_ab'+add_to_save, '-depsc', '-r0');
 
 h_tau = figure;
 subplot(2,1,1);
@@ -128,13 +129,15 @@ plot(t*WK.f,vecnorm(tau_ab(7:9,:), 2, 1),'b');
 patch_downstroke(h_tau,t*WK.f,Euler_R_dot);
 ylabel('$\|\tau_A\|$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
-print(h_tau, 'hover_torque_ab', '-depsc', '-r0');
+print(h_tau, 'hover_torque_ab'+add_to_save, '-depsc', '-r0');
 
 dt = t(2) - t(1);
 tau_A = tau_ab(8,:);
 theta_A_dot = gradient(theta_A) / dt;
 [m, tau0] = lin_reg([-theta_A; -theta_A_dot]', tau_A');
 k = m(1); c = m(2);
+fprintf('\nLeast squares fit yields,\n');
+fprintf('k = %d, c = %d, tau_0 = %d\n\n', k, c, tau0);
 h_tau_model = figure;
 plot(t*WK.f, tau_A, 'b');
 hold on;
@@ -144,7 +147,7 @@ legend('Actual torque', 'Modeled torque');
 title(sprintf('Torsional model as \n $\\tau_A(t) = -k\\theta_A(t) - c\\dot{\\theta}_A(t) + \\tau_0 $'),...
     'interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
-print(h_tau_model, 'hover_tau_model', '-depsc', '-r0');
+print(h_tau_model, 'hover_tau_model'+add_to_save, '-depsc', '-r0');
 
 mean_E_no = mean(abs(E_no), 2) / N_period;
 mean_E_ab = mean(abs(E_ab), 2) / N_period;
@@ -164,4 +167,4 @@ plot(t*WK.f,E_dot_ab,'b');
 ylabel('$\dot{E}$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
 sgtitle('Reduction in mean energy is ' + string(round(-change_E*100, 1)) + ' %');
-print(h_E, 'hover_energy_ab', '-depsc', '-r0');
+print(h_E, 'hover_energy_ab'+add_to_save, '-depsc', '-r0');

@@ -10,7 +10,7 @@ filename='floquet_stability';
 addpath('./sim_data/other_insects');
 load('sim_QS_x_hover_mona.mat', 'INSECT', 'WK', 'X0');
 conv_name='conv_rate_mona';
-save_rate=true;
+save_rate=false;
 
 N = 1001;
 N_period = 2;
