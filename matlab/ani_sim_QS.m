@@ -12,9 +12,9 @@ load STLRead/fv_monarch;
 
 load('morp_MONARCH');
 bool_video=true;
-file_to_save = 'sim_QS_x_hover_control.avi';
+file_to_save = 'sim_QS_xR_hover.avi';
 
-load('sim_QS_x_hover_control.mat','x','R','Q_R','Q_L','Q_A', 'N','F_R','F_L','des');
+load('sim_QS_xR_hover.mat','x','R','Q_R','Q_L','Q_A', 'N','F_R','F_L','des');
 
 %% generate the initial object when k=1
 k=1;
@@ -36,7 +36,7 @@ M_rot_L=zeros(3,1);
 axis([min(x(1,:)), max(x(1,:)), min(x(2,:)), max(x(2,:)), min(x(3,:)), max(x(3,:))] + ...
     0.05*[-1, 1, -1, 1, -1, 1]);
 h_x=line(x(1,1:k),x(2,1:k),x(3,1:k),'color','k','LineWidth',2);
-plot3(des.x_fit_t(1,:),des.x_fit_t(2,:),des.x_fit_t(3,:),'b','LineWidth',2);
+% plot3(des.x_fit_t(1,:),des.x_fit_t(2,:),des.x_fit_t(3,:),'b','LineWidth',2);
 
 %% animation
 

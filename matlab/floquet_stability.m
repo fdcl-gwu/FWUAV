@@ -8,6 +8,7 @@ filename='floquet_stability';
 
 %% Linearized dynamics
 load('sim_QS_x_hover.mat', 'INSECT', 'WK', 'X0');
+bool_sort_mus=true; % false if n ~= 6
 
 N = 1001;
 N_period = 2;
@@ -61,6 +62,21 @@ for i=1:N
 end
 
 %%
+if bool_sort_mus
+    [mus_s, idx_mus] = sort(mus,'descend');
+    e_vecs_s = e_vecs(:,idx_mus);
+    mus_sort = mus_s;
+    e_vecs_sort = e_vecs_s;
+    for i=4:6
+        if all(abs(e_vecs_s([1,3,4,6],i) - 0) < 1e-10)
+            lat_idx = i;
+        end
+    end
+    mus_sort(end) = mus_s(lat_idx); mus_sort(lat_idx) = mus_s(end);
+    e_vecs_sort(:,end) = e_vecs_s(:,lat_idx); e_vecs_sort(:,lat_idx) = e_vecs_s(:,end);
+    [~, idx_sort] = ismember(mus_sort, mus); % Sort according to modes
+end
+
 % Get a list of all variables
 allvars = whos;
 % Identify the variables that ARE NOT graphics handles. This uses a regular
