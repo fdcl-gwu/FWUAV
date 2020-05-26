@@ -115,6 +115,11 @@ xlabel('$t/T$','interpreter','latex');
 sgtitle('Reduction in total mean power is ' + string(round(-change_pow*100, 1)) + ' %');
 print(h_pow, 'hover_power_ab'+add_to_save, '-depsc', '-r0');
 
+mean_tau_no = (1/3)*mean(vecnorm(tau_no(1:3,:),2,1)+...
+    vecnorm(tau_no(4:6,:),2,1) + vecnorm(tau_no(7:9,:),2,1), 2) / N_period;
+mean_tau_ab = (1/3)*mean(vecnorm(tau_ab(1:3,:),2,1)+...
+    vecnorm(tau_ab(4:6,:),2,1) + vecnorm(tau_ab(7:9,:),2,1), 2) / N_period;
+change_tau = (mean_tau_ab - mean_tau_no) ./ mean_tau_no;
 h_tau = figure;
 subplot(2,1,1);
 plot(t*WK.f,vecnorm(tau_no(1:3,:), 2, 1),'r');
@@ -129,6 +134,7 @@ plot(t*WK.f,vecnorm(tau_ab(7:9,:), 2, 1),'b');
 patch_downstroke(h_tau,t*WK.f,Euler_R_dot);
 ylabel('$\|\tau_A\|$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
+sgtitle('Reduction in total torque magnitude is ' + string(round(-change_tau*100, 1)) + ' %');
 print(h_tau, 'hover_torque_ab'+add_to_save, '-depsc', '-r0');
 
 dt = t(2) - t(1);

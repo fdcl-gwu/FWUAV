@@ -6,7 +6,7 @@ add_to_save="_forw";
 
 h_x3=figure;
 plot3(x(1,:),x(2,:),x(3,:));
-% set(gca,'YDir','reverse');
+set(gca,'ZDir','reverse');
 % set(gca,'fontname','times')
 xlabel('$x_1$','interpreter','latex');
 ylabel('$x_2$','interpreter','latex');
