@@ -10,11 +10,19 @@ II=eye(3);
 
 load STLRead/fv_monarch;
 
+addpath('./modules', './sim_data', './plotting');
 load('morp_MONARCH');
-bool_video=true;
+bool_video=false;
 file_to_save = 'sim_QS_xR_hover.avi';
 
-load('sim_QS_xR_hover.mat','x','R','Q_R','Q_L','Q_A', 'N','F_R','F_L','des');
+load('sim_QS_xR_hover.mat','WK','t','x','R','Q_R','Q_L','Q_A','N','F_R','F_L','des');
+N_period = round(max(t*WK.f));
+ix_d = round((N-1)/N_period);
+ix_to_save = round(linspace(1,ix_d,9));
+bool_save_plot = true;
+
+ixs=ix_to_save; % to save snapshots
+% ixs=floor(linspace(1, N, round(N/2))); % for the whole animation
 
 %% generate the initial object when k=1
 k=1;
@@ -46,7 +54,7 @@ if bool_video
     open(vidObj);
 end
 
-for k=floor(linspace(1, N, round(N/2)))
+for k=ixs
     disp(k);
     update_monarch(h_fig,[h_body, h_wr, h_wl, h_ab], fv_body, fv_wr, fv_wl, fv_abdomen, x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k));
     update_force(h_F_R, h_F_L, x(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), F_R(:,k), F_L(:,k),D_R,D_L,M_R,M_L,F_rot_R,F_rot_L,M_rot_R,M_rot_L,[0 0 0 0 1]);
@@ -55,6 +63,13 @@ for k=floor(linspace(1, N, round(N/2)))
     
     axis([min(x(1,:)), max(x(1,:)), min(x(2,:)), max(x(2,:)), min(x(3,:)), max(x(3,:))] + ...
     0.05*[-1, 1, -1, 1, -1, 1]);
+
+    if bool_save_plot
+        axis([min(x(1,1:ix_d)), max(x(1,1:ix_d)), min(x(2,1:ix_d)), max(x(2,1:ix_d)), min(x(3,1:ix_d)), max(x(3,1:ix_d))] + ...
+        0.05*[-1, 1, -1, 1, -1, 1]);
+        print(gcf, 'snap_shot' + "_" + string(find(ix_to_save==k)), '-depsc', '-r0');
+    end
+
     if bool_video
         ax = gca;
         ax.Units = 'pixels';
@@ -597,5 +612,4 @@ faces=[1:N-1 1:N-1; 2:N 2:N; N+1*ones(1,N-1) N+2*ones(1,N-1)]';
 set(h(1),'Vertices',vertice,'Faces',faces);
 set(h(2),'XData',[p1(1) origin(1)], 'YData', [p1(2) origin(2)], 'ZData', [p1(3) origin(3)]);
 end
-
 
