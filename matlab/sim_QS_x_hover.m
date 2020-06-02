@@ -27,8 +27,8 @@ final_pos = [0; 0; 0;];
 A = []; b = []; Aeq = []; beq = [];
 % Initial value of WK_arr = [beta, phi_m, phi_K, phi_0, theta_m, theta_C, theta_0, theta_a, psi_m, psi_a, psi_0, x_dot1, x_dot2, x_dot3, theta_B_m, theta_B_0, theta_B_a, theta_A_m, theta_A_0, theta_A_a, freq]
 WK_arr0 = [-0.2400   0.7806  0.4012   0.7901    0.6981    2.9999    0.2680    0.1050    8*pi/180    0.9757    5*pi/180   -0.1000   -0.0000 -0.1000 0 0 0 0.0937 0 0 WK.f];
-lb = [-pi/8, 0, 0, -pi/2, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -1, -1, -1, 0, pi/15, -pi, 0, pi/12, -pi, WK.f*(1-0.15)];
-ub = [pi/5, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 1, 1, 1, pi/15, pi/3, pi, pi/15, pi/4, pi, WK.f*(1+0.15)];
+lb = [-pi/8, 0, 0, -pi/2, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/15, -pi, 0, pi/15, -pi, WK.f*(1-0.15)];
+ub = [pi/5, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/3, pi, pi/12, pi/4, pi, WK.f*(1+0.15)];
 nonlcon = @(WK_arr) traj_condition(WK_arr, WK, INSECT, N, x0, final_pos);
 
 tic;
