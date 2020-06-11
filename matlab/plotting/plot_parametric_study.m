@@ -2,7 +2,7 @@
 addpath('../modules', '../sim_data', '../');
 set(0,'DefaultAxesFontName','times');
 set(0,'DefaultAxesFontSize',18);
-load('parametric_study.mat');
+load('parametric_study_xR.mat');
 
 h_f_a_long = figure;
 h_f_a_long.PaperUnits = 'inches';

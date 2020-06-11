@@ -23,7 +23,7 @@ epsilon = 1e-8;
 % [delta_mat, F_linear] = sim_pert(@eom_hover_vel, n, n_vars, INSECT, WK, X0, N, t, epsilon);
 % n = 6; n_vars = 6; % for nominal hover with @eom_hover
 % [delta_mat, F_linear] = sim_pert(@eom_hover, n, n_vars, INSECT, WK, X0, N, t, epsilon);
-n = 12; n_vars = 18; % for (x,R) stability with @eom_hover_xR
+n = 12; n_vars = 18; % for (x,R) stability with @eom_hover_xR; n=8 for just pitch, n=12 for all modes;
 [delta_mat, F_linear] = sim_pert(@eom_hover_xR, n, n_vars, INSECT, WK, X0, N, t, epsilon);
 
 % load('sim_QS_x_hover_control.mat', 'des', 'gains', 'wt', 'bound_param');
@@ -44,6 +44,7 @@ for i=start_ix:(start_ix+ix_d)
     d_F(d_F(idx_small) < 0.25) = 0; % Small values
     %
     if(~all(abs(d_F) < 5e-2, 'all'))
+        disp(i)
         disp(d_F)
     end
     B(:, :, j) = delta_mat(:, :, i) \ delta_mat(:, :, i+ix_d);
@@ -266,31 +267,38 @@ x_dot=X(13:15);
 delta_mat=reshape(X(n_vars+1:(n^2+n_vars)), n, n);
 
 X = X(1:n_vars);
-[X_dot, R, Q_R, Q_L_del, Q_A_del, ~, W, W_R_del, ...
-    W_R_dot, W_L_del, W_L_dot, W_A_del, W_A_dot] = eom_QS_xR(INSECT, WK_R, WK_L, t, X);
+[X_dot, R, Q_R, Q_L, Q_A, ~, W, W_R, ...
+    W_R_dot, W_L, W_L_dot, W_A, W_A_dot] = eom_QS_xR(INSECT, WK_R, WK_L, t, X);
 xi_1_dot = X_dot(13:18);
 
 delta_mat_dot = zeros(n, n);
 xi_dot = [X_dot(13:18); W_R_dot; W_L_dot; W_A_dot;];
-JJ = inertia(INSECT, R, Q_R, Q_L_del, Q_A_del, x_dot, W, W_R_del, W_L_del, W_A_del);
-JJ_11 = inertia_sub_decompose_6_9(JJ);
+JJ = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
 
 parfor j=1:size(delta_mat, 2)
     dx = delta_mat(1:3, j); dR = delta_mat(4:6, j); dx_dot = delta_mat(7:9, j); dW = delta_mat(10:12, j);
     X_del = [X(1:3)+dx; reshape(R*expmhat(dR), 9, 1); X(13:18) + [dx_dot; dW]];
+%     dx = delta_mat(1:3, j); dR = delta_mat(4, j); dx_dot = delta_mat(5:7, j); dW = delta_mat(8, j);
+%     X_del = [X(1:3)+dx; reshape(R*expmhat([0, dR, 0]), 9, 1); X(13:18) + [dx_dot; 0; dW; 0]];
+    %
     [X_dot_del, R_del, Q_R_del, Q_L_del, Q_A_del, ~, W_del, W_R_del, ...
         W_R_dot_del, W_L_del, W_L_dot_del, W_A_del, W_A_dot_del] = eom_QS_xR(INSECT, WK_R, WK_L, t, X_del);
     x_dot_del = X_del(13:15);
     xi_dot_del = [X_dot_del(13:18); W_R_dot_del; W_L_dot_del; W_A_dot_del;];
     JJ_del = inertia(INSECT, R_del, Q_R_del, Q_L_del, Q_A_del, x_dot_del, W_del, W_R_del, W_L_del, W_A_del);
-    JJ_11_del = inertia_sub_decompose_6_9(JJ_del);
-
     dxi_ddot = ((JJ_del*xi_dot_del - JJ*xi_dot) - (JJ_del - JJ)*xi_dot);
     dxi_ddot = JJ(1:6,1:6) \ dxi_ddot(1:6);
+% %     dxi_ddot = JJ \ dxi_ddot;
+% %     dxi_ddot = dxi_ddot(1:6);
+    %
     d_mat = zeros(n, 1);
     d_mat(1:3) = dx_dot;
     d_mat(4:6) = -hat(W)*dR + dW;
     d_mat(7:12) = dxi_ddot(1:6);
+%     d_mat(1:3) = dx_dot;
+%     d_mat(4) = dW;
+%     d_mat(5:7) = dxi_ddot(1:3);
+%     d_mat(8) = dxi_ddot(5);
     delta_mat_dot(:, j) = d_mat;
 end
 F_linear = delta_mat_dot / delta_mat;
