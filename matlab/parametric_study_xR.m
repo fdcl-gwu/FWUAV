@@ -159,6 +159,7 @@ function [f_aero, M_aero, f_abd] = aerodynamic_param(INSECT, WK_R, WK_L, t, X0, 
 end
 
 function out = max_abs(inp)
+%%
 [~, I] = max(abs(inp));
 out = inp(I);
 end
