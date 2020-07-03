@@ -32,17 +32,17 @@ parfor i=1:N_params
     f_aero2(f_aero2 > 0) = 0;
     
     f_a_m_temp = zeros(size(f_a_m(:, :, i, :)));
-    f_a_m_temp(:, :, 1, 1) = mean(f_aero1, 3);
-%     f_a_m_temp(:, :, 1, 1) = mean(f_aero(:,:,:,i), 3);
+%     f_a_m_temp(:, :, 1, 1) = mean(f_aero1, 3);
+    f_a_m_temp(:, :, 1, 1) = mean(f_aero(:,:,:,i), 3);
     f_a_m_temp(:, :, 1, 2) = mean(f_aero2, 3);
     f_a_m(:, :, i, :) = f_a_m_temp;
 
-%     M_a_m(:, :, i, 1) = mean(M_aero(:,:,:,i), 3);
     M_aero1 = M_aero(:, :, :, i); M_aero2 = M_aero(:, :, :, i);
     M_aero1(M_aero1 < 0) = 0;
     M_aero2(M_aero2 > 0) = 0;
     M_a_m_temp = zeros(size(M_a_m(:, :, i, :)));
-    M_a_m_temp(:, :, 1, 1) = mean(M_aero1, 3);
+%     M_a_m_temp(:, :, 1, 1) = mean(M_aero1, 3);
+    M_a_m_temp(:, :, 1, 1) = mean(M_aero(:,:,:,i), 3);
     M_a_m_temp(:, :, 1, 2) = mean(M_aero2, 3);
     M_a_m(:, :, i, :) = M_a_m_temp;
 end
@@ -88,6 +88,14 @@ params.dM_a_1_by_dpsi_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(6,1,eps'
     lin_reg(eps(eps'<0)', squeeze(M_a_m(6,1,eps'<0,1)))]);
 params.dM_a_3_by_dpsi_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(6,3,eps'>0,1))), ...
     lin_reg(eps(eps'<0)', squeeze(M_a_m(6,3,eps'<0,1)))]);
+%
+params.mat_aero = zeros(6);
+for i=1:6
+    for j=1:3
+        params.mat_aero(j, i) = lin_reg(eps', squeeze(f_a_m(i,j,:,1)));
+        params.mat_aero(j+3, i) = lin_reg(eps', squeeze(M_a_m(i,j,:,1)));
+    end
+end
 %%
 % Get a list of all variables
 allvars = whos;

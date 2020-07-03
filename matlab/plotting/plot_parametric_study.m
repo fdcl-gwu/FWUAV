@@ -99,9 +99,9 @@ if strcmp(type, 'xR')
             if ic==1
                 ylabel(ylabels_f{ir},'interpreter','latex');
             end
-            hold on;
-            yyaxis right;
-            plot(eps, squeeze(f_a_m(ic,ir,:,2)), 'r');
+%             hold on;
+%             yyaxis right;
+%             plot(eps, squeeze(f_a_m(ic,ir,:,2)), 'r');
             if ir==3
                 xlabel(xlabels{ic},'interpreter','latex');
             end
@@ -119,9 +119,9 @@ if strcmp(type, 'xR')
             if ic==1
                 ylabel(ylabels_M{ir},'interpreter','latex');
             end
-            hold on;
-            yyaxis right;
-            plot(eps, squeeze(M_a_m(ic,ir,:,2)), 'r');
+%             hold on;
+%             yyaxis right;
+%             plot(eps, squeeze(M_a_m(ic,ir,:,2)), 'r');
             if ir==3
                 xlabel(xlabels{ic},'interpreter','latex');
             end
