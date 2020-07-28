@@ -17,8 +17,8 @@ N_study = 7;
 eps = linspace(-0.1, 0.1, N_params);
 f_aero = zeros(N_study, 3, N, N_params);
 M_aero = zeros(N_study, 3, N, N_params);
-f_a_m = zeros(N_study, 3, N_params, 2);
-M_a_m = zeros(N_study, 3, N_params, 2);
+f_a_m = zeros(N_study, 3, N_params, 3);
+M_a_m = zeros(N_study, 3, N_params, 3);
 
 [t,X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 for k=1:N
@@ -32,70 +32,90 @@ parfor i=1:N_params
     f_aero2(f_aero2 > 0) = 0;
     
     f_a_m_temp = zeros(size(f_a_m(:, :, i, :)));
-%     f_a_m_temp(:, :, 1, 1) = mean(f_aero1, 3);
-    f_a_m_temp(:, :, 1, 1) = mean(f_aero(:,:,:,i), 3);
+    f_a_m_temp(:, :, 1, 1) = mean(f_aero1, 3);
     f_a_m_temp(:, :, 1, 2) = mean(f_aero2, 3);
+    f_a_m_temp(:, :, 1, 3) = mean(f_aero(:,:,:,i), 3);
     f_a_m(:, :, i, :) = f_a_m_temp;
 
     M_aero1 = M_aero(:, :, :, i); M_aero2 = M_aero(:, :, :, i);
     M_aero1(M_aero1 < 0) = 0;
     M_aero2(M_aero2 > 0) = 0;
     M_a_m_temp = zeros(size(M_a_m(:, :, i, :)));
-%     M_a_m_temp(:, :, 1, 1) = mean(M_aero1, 3);
-    M_a_m_temp(:, :, 1, 1) = mean(M_aero(:,:,:,i), 3);
+    M_a_m_temp(:, :, 1, 1) = mean(M_aero1, 3);
     M_a_m_temp(:, :, 1, 2) = mean(M_aero2, 3);
+    M_a_m_temp(:, :, 1, 3) = mean(M_aero(:,:,:,i), 3);
     M_a_m(:, :, i, :) = M_a_m_temp;
 end
 % f_a_m = abs(f_a_m);
 
-params.df_a_1_by_dphi_ms = [lin_reg(eps', squeeze(f_a_m(1,1,:,1))), ...
-    lin_reg(eps', squeeze(f_a_m(1,1,:,2)))];
-params.df_a_3_by_dphi_ms = lin_reg(eps', squeeze(f_a_m(1,3,:,2)));
-params.df_a_1_by_dtheta_0s = [lin_reg(eps', squeeze(f_a_m(2,1,:,1))), ...
-    lin_reg(eps', squeeze(f_a_m(2,1,:,2)))];
-params.df_a_3_by_dtheta_0s = lin_reg(eps', squeeze(f_a_m(2,3,:,2)));
-params.df_a_2_by_dphi_mk = max_abs([lin_reg(eps(eps'>0)', squeeze(f_a_m(3,2,eps'>0,1))), ...
-    lin_reg(eps(eps'<0)', squeeze(f_a_m(3,2,eps'<0,1)))]);
-% But which one to use is undecided - use the one with the larger magnitude;
-params.df_a_1_by_dphi_0s = [lin_reg(eps', squeeze(f_a_m(4,1,:,1))), ...
-    lin_reg(eps', squeeze(f_a_m(4,1,:,2)))];
-params.df_a_3_by_dphi_0s = lin_reg(eps', squeeze(f_a_m(4,3,:,2)));
-params.df_a_2_by_dtheta_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(f_a_m(5,2,eps'>0,1))), ...
-    lin_reg(eps(eps'<0)', squeeze(f_a_m(5,2,eps'<0,1)))]);
-params.df_a_2_by_dpsi_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(f_a_m(6,2,eps'>0,1))), ...
-    lin_reg(eps(eps'<0)', squeeze(f_a_m(6,2,eps'<0,1)))]);
-%
-% params.df_a_1_by_dtheta_A_m = [lin_reg(eps', squeeze(f_a_m(4,1,:,1))), ...
+% params.df_a_1_by_dphi_ms = [lin_reg(eps', squeeze(f_a_m(1,1,:,1))), ...
+%     lin_reg(eps', squeeze(f_a_m(1,1,:,2)))];
+% params.df_a_3_by_dphi_ms = lin_reg(eps', squeeze(f_a_m(1,3,:,2)));
+% params.df_a_1_by_dtheta_0s = [lin_reg(eps', squeeze(f_a_m(2,1,:,1))), ...
+%     lin_reg(eps', squeeze(f_a_m(2,1,:,2)))];
+% params.df_a_3_by_dtheta_0s = lin_reg(eps', squeeze(f_a_m(2,3,:,2)));
+% params.df_a_2_by_dphi_mk = max_abs([lin_reg(eps(eps'>0)', squeeze(f_a_m(3,2,eps'>0,1))), ...
+%     lin_reg(eps(eps'<0)', squeeze(f_a_m(3,2,eps'<0,1)))]);
+% % But which one to use is undecided - use the one with the larger magnitude;
+% params.df_a_1_by_dphi_0s = [lin_reg(eps', squeeze(f_a_m(4,1,:,1))), ...
 %     lin_reg(eps', squeeze(f_a_m(4,1,:,2)))];
-% params.df_a_3_by_dtheta_A_m = [lin_reg(eps', squeeze(f_a_m(4,3,:,1))), ...
-%     lin_reg(eps', squeeze(f_a_m(4,3,:,2)))];
+% params.df_a_3_by_dphi_0s = lin_reg(eps', squeeze(f_a_m(4,3,:,2)));
+% params.df_a_2_by_dtheta_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(f_a_m(5,2,eps'>0,1))), ...
+%     lin_reg(eps(eps'<0)', squeeze(f_a_m(5,2,eps'<0,1)))]);
+% params.df_a_2_by_dpsi_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(f_a_m(6,2,eps'>0,1))), ...
+%     lin_reg(eps(eps'<0)', squeeze(f_a_m(6,2,eps'<0,1)))]);
+% %
+% % params.df_a_1_by_dtheta_A_m = [lin_reg(eps', squeeze(f_a_m(4,1,:,1))), ...
+% %     lin_reg(eps', squeeze(f_a_m(4,1,:,2)))];
+% % params.df_a_3_by_dtheta_A_m = [lin_reg(eps', squeeze(f_a_m(4,3,:,1))), ...
+% %     lin_reg(eps', squeeze(f_a_m(4,3,:,2)))];
+% %
+% params.dM_a_2_by_dphi_ms = [lin_reg(eps', squeeze(M_a_m(1,2,:,1))), ...
+%     lin_reg(eps', squeeze(f_a_m(1,2,:,2)))];
+% params.dM_a_2_by_dtheta_0s = [lin_reg(eps', squeeze(M_a_m(2,2,:,1))), ...
+%     lin_reg(eps', squeeze(M_a_m(2,2,:,2)))];
+% params.dM_a_1_by_dphi_mk = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(3,1,eps'>0,1))), ...
+%     lin_reg(eps(eps'<0)', squeeze(M_a_m(3,1,eps'<0,1)))]);
+% params.dM_a_3_by_dphi_mk = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(3,3,eps'>0,1))), ...
+%     lin_reg(eps(eps'<0)', squeeze(M_a_m(3,3,eps'<0,1)))]);
+% params.dM_a_2_by_dphi_0s = [lin_reg(eps', squeeze(M_a_m(4,2,:,1))), ...
+%     lin_reg(eps', squeeze(M_a_m(4,2,:,2)))];
+% params.dM_a_1_by_dtheta_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(5,1,eps'>0,1))), ...
+%     lin_reg(eps(eps'<0)', squeeze(M_a_m(5,1,eps'<0,1)))]);
+% params.dM_a_3_by_dtheta_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(5,3,eps'>0,1))), ...
+%     lin_reg(eps(eps'<0)', squeeze(M_a_m(5,3,eps'<0,1)))]);
+% params.dM_a_1_by_dpsi_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(6,1,eps'>0,1))), ...
+%     lin_reg(eps(eps'<0)', squeeze(M_a_m(6,1,eps'<0,1)))]);
+% params.dM_a_3_by_dpsi_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(6,3,eps'>0,1))), ...
+%     lin_reg(eps(eps'<0)', squeeze(M_a_m(6,3,eps'<0,1)))]);
 %
-params.dM_a_2_by_dphi_ms = [lin_reg(eps', squeeze(M_a_m(1,2,:,1))), ...
-    lin_reg(eps', squeeze(f_a_m(1,2,:,2)))];
-params.dM_a_2_by_dtheta_0s = [lin_reg(eps', squeeze(M_a_m(2,2,:,1))), ...
-    lin_reg(eps', squeeze(M_a_m(2,2,:,2)))];
-params.dM_a_1_by_dphi_mk = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(3,1,eps'>0,1))), ...
-    lin_reg(eps(eps'<0)', squeeze(M_a_m(3,1,eps'<0,1)))]);
-params.dM_a_3_by_dphi_mk = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(3,3,eps'>0,1))), ...
-    lin_reg(eps(eps'<0)', squeeze(M_a_m(3,3,eps'<0,1)))]);
-params.dM_a_2_by_dphi_0s = [lin_reg(eps', squeeze(M_a_m(4,2,:,1))), ...
-    lin_reg(eps', squeeze(M_a_m(4,2,:,2)))];
-params.dM_a_1_by_dtheta_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(5,1,eps'>0,1))), ...
-    lin_reg(eps(eps'<0)', squeeze(M_a_m(5,1,eps'<0,1)))]);
-params.dM_a_3_by_dtheta_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(5,3,eps'>0,1))), ...
-    lin_reg(eps(eps'<0)', squeeze(M_a_m(5,3,eps'<0,1)))]);
-params.dM_a_1_by_dpsi_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(6,1,eps'>0,1))), ...
-    lin_reg(eps(eps'<0)', squeeze(M_a_m(6,1,eps'<0,1)))]);
-params.dM_a_3_by_dpsi_0k = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(6,3,eps'>0,1))), ...
-    lin_reg(eps(eps'<0)', squeeze(M_a_m(6,3,eps'<0,1)))]);
-%
-params.mat_aero = zeros(6);
-for i=1:6
-    for j=1:3
-        params.mat_aero(j, i) = lin_reg(eps', squeeze(f_a_m(i,j,:,1)));
-        params.mat_aero(j+3, i) = lin_reg(eps', squeeze(M_a_m(i,j,:,1)));
+params.mat_aero = zeros(6,6,2);
+for j=1:3
+    for i=[1,2,4]
+        for k=1:2
+            params.mat_aero(j, i, k) = lin_reg(eps', squeeze(f_a_m(i,j,:,k)));
+            params.mat_aero(j+3, i, k) = lin_reg(eps', squeeze(M_a_m(i,j,:,k)));
+        end
+    end
+    for i=[3,5,6]
+        params.mat_aero(j, i, :) = max_abs([lin_reg(eps(eps'>0)', squeeze(f_a_m(i,j,eps'>0,1))), ...
+            lin_reg(eps(eps'<0)', squeeze(f_a_m(i,j,eps'<0,1)))]);
+        params.mat_aero(j+3, i, :) = max_abs([lin_reg(eps(eps'>0)', squeeze(M_a_m(i,j,eps'>0,1))), ...
+            lin_reg(eps(eps'<0)', squeeze(M_a_m(i,j,eps'<0,1)))]);
     end
 end
+
+% cond_num = zeros(1, N);
+% mat_aero = zeros(6);
+% for k=1:N
+%     for i=1:6
+%         for j=1:3
+%             mat_aero(j, i) = lin_reg(eps', squeeze(f_aero(i,j,k,:)));
+%             mat_aero(j+3, i) = lin_reg(eps', squeeze(M_aero(i,j,k,:)));
+%         end
+%     end
+%     cond_num(k) = cond(mat_aero);
+% end
 %%
 % Get a list of all variables
 allvars = whos;

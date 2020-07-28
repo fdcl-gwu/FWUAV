@@ -84,50 +84,69 @@ if strcmp(type, 'xR')
     load('parametric_study_xR.mat');
     xlabels = {'$\Delta\phi_{m_s}$', '$\Delta\theta_{0_s}$', '$\Delta\phi_{m_k}$',...
         '$\Delta\phi_{0_s}$', '$\Delta\theta_{0_k}$', '$\Delta\psi_{0_k}$'};
-    ylabels_f = {'$\bar f_{a_1}$', '$\bar f_{a_2}$' '$\bar f_{a_3}$'};
-    ylabels_M = {'$\bar M_{a_1}$', '$\bar M_{a_2}$' '$\bar M_{a_3}$'};
-    nr = 3;
+    ylabels = {'$\bar f_{a_1}$', '$\bar f_{a_2}$' '$\bar f_{a_3}$',...
+        '$\bar M_{a_1}$', '$\bar M_{a_2}$' '$\bar M_{a_3}$'};
+    a_m(:, 1:3, :, :) = f_a_m;
+    a_m(:, 4:6, :, :) = M_a_m;
+    nr = 6;
     nc = 6;
     %
     h_f_a = figure;
     h_f_a.PaperUnits = 'inches';
-    h_f_a.PaperPosition = [0 0 16 7];
-    for ir=1:3
+    h_f_a.PaperPosition = [0 0 16 14];
+    for ir=1:6
         for ic=1:6
             subplot(nr,nc,(ir-1)*nc+ic);
-            plot(eps, squeeze(f_a_m(ic,ir,:,1)));
+            plot(eps, squeeze(a_m(ic,ir,:,1)));
             if ic==1
-                ylabel(ylabels_f{ir},'interpreter','latex');
+                ylabel(ylabels{ir},'interpreter','latex');
             end
-%             hold on;
-%             yyaxis right;
-%             plot(eps, squeeze(f_a_m(ic,ir,:,2)), 'r');
-            if ir==3
+            hold on;
+            yyaxis right;
+            plot(eps, squeeze(a_m(ic,ir,:,2)), 'r');
+            if ir==nr
                 xlabel(xlabels{ic},'interpreter','latex');
             end
         end
     end
-    print(h_f_a, 'hover_param_study_xRf', '-depsc', '-r0');
+    print(h_f_a, 'hover_param_study_xR', '-depsc', '-r0');
     %
     h_f_a = figure;
     h_f_a.PaperUnits = 'inches';
-    h_f_a.PaperPosition = [0 0 16 7];
-    for ir=1:3
+    h_f_a.PaperPosition = [0 0 16 14];
+    for ir=1:6
         for ic=1:6
             subplot(nr,nc,(ir-1)*nc+ic);
-            plot(eps, squeeze(M_a_m(ic,ir,:,1)));
+            plot(eps, squeeze(a_m(ic,ir,:,3)));
             if ic==1
-                ylabel(ylabels_M{ir},'interpreter','latex');
+                ylabel(ylabels{ir},'interpreter','latex');
             end
-%             hold on;
-%             yyaxis right;
-%             plot(eps, squeeze(M_a_m(ic,ir,:,2)), 'r');
-            if ir==3
+            if ir==nr
                 xlabel(xlabels{ic},'interpreter','latex');
             end
         end
     end
-    print(h_f_a, 'hover_param_study_xRM', '-depsc', '-r0');
+    print(h_f_a, 'hover_param_study_xR_total', '-depsc', '-r0');
+    %
+%     h_f_a = figure;
+%     h_f_a.PaperUnits = 'inches';
+%     h_f_a.PaperPosition = [0 0 16 7];
+%     for ir=1:3
+%         for ic=1:6
+%             subplot(nr,nc,(ir-1)*nc+ic);
+%             plot(eps, squeeze(M_a_m(ic,ir,:,1)));
+%             if ic==1
+%                 ylabel(ylabels_M{ir},'interpreter','latex');
+%             end
+%             hold on;
+%             yyaxis right;
+%             plot(eps, squeeze(M_a_m(ic,ir,:,2)), 'r');
+%             if ir==3
+%                 xlabel(xlabels{ic},'interpreter','latex');
+%             end
+%         end
+%     end
+%     print(h_f_a, 'hover_param_study_xRM', '-depsc', '-r0');
 
 %     title(sprintf('$m_p$ = %0.3e \n $m_n$ = %0.3e\n', params.df_a_1_by_dphi_m), 'interpreter','latex');
 end
