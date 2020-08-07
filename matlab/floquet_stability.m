@@ -33,9 +33,13 @@ epsilon = 1e-8;
 % n = 12; n_vars = 18; % for (x,R) stability with @eom_hover_xR; n=8 for just pitch, n=12 for all modes;
 % [delta_mat, F_linear] = sim_pert(@eom_hover_xR, n, n_vars, INSECT, WK, X0, N, t, epsilon);
 load('sim_QS_xR_hover_control.mat', 'des', 'gains', 'wt', 'bound_param');
+% gains.KR = 40; gains.KOm = 10;
 X0 = [X0; zeros(3,1); zeros(3,1)];
-n = 15; n_vars = 24; % for (x,R) control with @eom_hover_xR_control
-[delta_mat, F_linear] = sim_pert(@eom_hover_xR_control, n, n_vars, INSECT, WK, X0, N, t, epsilon, des, gains, wt, bound_param);
+n = 18; n_vars = 24; % for (x,R) control with @eom_hover_xR_control
+% tic;
+% [delta_mat, F_linear] = sim_pert(@eom_hover_xR_control, n, n_vars, INSECT, WK, X0, N, t, epsilon, des, gains, wt, bound_param);
+% toc;
+[delta_mat, F_linear, gains] = optimized_gains(@eom_hover_xR_control, n, n_vars, INSECT, WK, X0, N, t, epsilon, des, gains, wt, bound_param);
 
 B = zeros(n, n, 1+ix_d);
 start_ix = max(1, round((N_period-2)/N_period * N));
@@ -91,6 +95,71 @@ tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
 % Pass these variable names to save
 save(filename, allvars(tosave).name)
 evalin('base',['load ' filename]);
+end
+
+function [delta_mat, F_linear, gains] = optimized_gains(eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin)
+%% The optimization algorithm
+A = []; b = []; Aeq = []; beq = [];
+% Initial value of gains_arr = [Kp_pos, Kd_pos, Ki_pos, KR, KOm, KI, cI]
+gains0 = varargin{2};
+gains_arr0 = struct2array(gains0);
+lb = [0, 0, 0, 0, 0, 0, 0];
+ub = [1000, 500, 100, 100, 100, 50, 10];
+nonlcon = @(gains_arr) gains_condition(gains_arr);
+
+tic;
+rng default; % For reproducibility
+
+% FMINCON
+options = optimoptions(@fmincon,'Algorithm','interior-point','Display','iter',...
+    'MaxFunctionEvaluations',30,'PlotFcn',@optimplotfval,'UseParallel',true);
+[gains_arr, fval, exitflag, output] = fmincon(@(gains_arr) objective_func(gains_arr, eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin{:}),...
+    gains_arr0,A,b,Aeq,beq,lb,ub,nonlcon,options);
+
+% % MULTISTART, PARTICLESWARM
+% ptmatrix(1, :) = gains_arr0;
+% N_points = 5;
+% ptmatrix(2:N_points, :) = lb + rand(N_points-1, length(gains_arr0)) .* (ub - lb);
+% tpoints = CustomStartPointSet(ptmatrix);
+% ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf,'MaxTime',1*3600);
+% options = optimoptions(@fmincon,'Algorithm','sqp',...
+%     'UseParallel',false,'MaxIterations',2000,'MaxFunctionEvaluations',6000);%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
+% problem = createOptimProblem('fmincon','objective',@(gains_arr) objective_func(gains_arr, eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin{:}),...
+%     'x0',gains_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
+% [gains_arr, fval, exitflag, output, solutions] = run(ms, problem, tpoints);
+
+fprintf('Optimization has been completed\n');
+disp(output);
+toc;
+
+%%
+gains = struct('Kp_pos', gains_arr(1), 'Kd_pos', gains_arr(2), 'Ki_pos', gains_arr(3),...
+        'KR', gains_arr(4), 'KOm', gains_arr(5), 'KI', gains_arr(6) , 'cI', gains_arr(7));
+varargin{2} = gains;
+[delta_mat, F_linear] = sim_pert(eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin{:});
+
+end
+
+function [c, ceq] = gains_condition(gains_arr)
+    c = real(roots([1, gains_arr(2), gains_arr(1), gains_arr(3)]));
+    ceq = [];
+end
+
+function [J] = objective_func(gains_arr, eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin)
+%% Objective function
+gains = struct('Kp_pos', gains_arr(1), 'Kd_pos', gains_arr(2), 'Ki_pos', gains_arr(3),...
+        'KR', gains_arr(4), 'KOm', gains_arr(5), 'KI', gains_arr(6) , 'cI', gains_arr(7));
+varargin{2} = gains;
+delta_mat = sim_pert(eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin{:});
+B = delta_mat(:, :, round(N/4)) \ delta_mat(:, :, round(N/4) + 2*round(N/4));
+[~, rhos] = eig(B);
+mus = log(abs(diag(rhos))) * WK.f;
+J = sum(exp(mus(mus>0)) - 1);
+
+if isnan(J)
+    J = 1/eps;
+end
+
 end
 
 function [delta_mat, F_linear] = sim_pert(eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin)
@@ -329,68 +398,72 @@ delta_mat=reshape(X(n_vars+1:(n^2+n_vars)), n, n);
 X = X(1:n_vars);
 
 %% Ideal uncontrolled values
+d_x = zeros(3, 1); des_x_dot = zeros(3, 1);
+des_R = zeros(3, 3); des_W = zeros(3, 1);
+for k=1:3
+    d_x(k) = des.x_fit{k}(t) - x(k);
+    des_x_dot(k) = des.x_dot_fit{k}(t);
+    des_W(k) = des.W_fit{k}(t);
+    for j=1:3
+        des_R(k, j) = des.R_fit{k,j}(t);
+    end
+end
+
 [Euler_R, Euler_R_dot, Euler_R_ddot] = wing_kinematics(t,WK_R_des);
 [Euler_L, Euler_L_dot, Euler_L_ddot] = wing_kinematics(t,WK_L_des);
 [Q_R, Q_L, W_R, W_L, W_R_dot, W_L_dot] = wing_attitude(WK_R_des.beta, ...
     Euler_R, Euler_L, Euler_R_dot, Euler_L_dot, Euler_R_ddot, Euler_L_ddot);
 [Q_A, W_A, W_A_dot] = abdomen_attitude(t, WK_R_des.f, WK_R_des); % abdomen
-JJ = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
-[JJ_11, JJ_12, JJ_21, JJ_22] = inertia_sub_decompose_6_9(JJ);
-C=[zeros(3,9);
-    -Q_R -Q_L -Q_A];
-JJ_xR = (JJ_11 - C*JJ_21);
-% [JJ_A, KK_A] = inertia_wing_sub(INSECT.m_A, INSECT.mu_A, INSECT.nu_A, INSECT.J_A, R, Q_A, X(4:6), W, W_A);
-% f_abd = -(JJ_A(1:3, 7:9)*W_A_dot + KK_A(1:3, 7:9)*W_A);
-% % f_abd(isnan(f_abd)) = 0;
-% 
-% [L_R, L_L, D_R, D_L, M_R, M_L]=wing_QS_aerodynamics(INSECT, ...
-%     W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L);
-% F_R = L_R + D_R;
-% F_L = L_L + D_L;
-% f_a=[R*Q_R*F_R + R*Q_L*F_L;
-%     hat(INSECT.mu_R)*Q_R*F_R + hat(INSECT.mu_L)*Q_L*F_L + Q_R*M_R + Q_L*M_L];
+
+[L_R, L_L, D_R, D_L, M_R, M_L]=wing_QS_aerodynamics(INSECT, ...
+    W_R, W_L, W_R_dot, W_L_dot, des_x_dot, des_R, des_W, Q_R, Q_L);
+F_R=L_R+D_R;
+F_L=L_L+D_L;
+M_A=zeros(3,1);
+f_a=[des_R*Q_R*F_R + des_R*Q_L*F_L;
+    hat(INSECT.mu_R)*Q_R*F_R + hat(INSECT.mu_L)*Q_L*F_L;
+    M_R; M_L; M_A];
+f_a_1=f_a(1:6);
+f_a_2=f_a(7:15);
+
+[~, dU]=potential(INSECT,x,des_R,Q_R,Q_L,Q_A);
+f_g=-dU;
+f_g_1=f_g(1:6);
+f_g_2=f_g(7:15);
+C=[zeros(3,9); -Q_R -Q_L -Q_A];
+
+tmp_f_des = f_a_1+f_g_1 - C*(f_a_2+f_g_2);
 
 %% Ideal controlled trajectory
-d_x = zeros(3, 1); d_x_dot = zeros(3, 1);
-for k=1:3
-    d_x(k) = des.x_fit{k}(t) - x(k);
-    d_x_dot(k) = des.x_dot_fit{k}(t) - x_dot(k);
-end
-
-[dang, WK_R, WK_L, u_control] = controller(t, des, gains, X, JJ_xR, ...
+JJ_xR = get_cross_terms(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
+[~, ~, ~, u_control, int_att_dot] = controller(t, des, gains, X, JJ_xR, ...
     WK_R_des, WK_L_des, wt, bound_param);
 
-[X_dot, R, Q_R, Q_L, Q_A, theta_A, W, W_R, ...
-    W_R_dot, W_L, W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a] = ...
-    eom_QS_xR_ideal(INSECT, WK_R_des, WK_L_des, t, X(1:18), u_control);
-xi_dot = [X_dot(13:18); W_R_dot; W_L_dot; W_A_dot;];
+[X_dot, R, Q_R, Q_L, Q_A, theta_A, W] = ...
+    eom_QS_xR_ideal(INSECT, WK_R_des, WK_L_des, t, X(1:18), u_control, tmp_f_des);
+xi_dot = [X_dot(13:18)];
 
-f_total_1 = f_a(1:3);
+% f_total_1 = f_a(1:3);
 
 %% Controlled trajectory with perturbation
 delta_mat_dot = zeros(n,n);
 parfor j=1:size(delta_mat, 2)
     dx = delta_mat(1:3, j); dR = delta_mat(4:6, j);
-    dx_dot = delta_mat(7:9, j); dW = delta_mat(10:12, j); dint_x = delta_mat(13:15, j);
-    X_del = [X(1:3)+dx; reshape(R*expmhat(dR), 9, 1); X(13:21) + [dx_dot; dW; dint_x]; X(22:24)];
+    dx_dot = delta_mat(7:9, j); dW = delta_mat(10:12, j);
+    X_del = [X(1:3)+dx; reshape(R*expmhat(dR), 9, 1); X(13:24) + delta_mat(7:18, j)];
     
-    [dang, WK_R, WK_L, u_control] = controller(t, des, gains, X_del, JJ_xR, ...
+    JJ_xR_del = get_cross_terms(INSECT, R*expmhat(dR), Q_R, Q_L, Q_A, ...
+        x_dot+dx_dot, W+dW, W_R, W_L, W_A);
+    [~, ~, ~, u_control, int_att_dot_del] = controller(t, des, gains, X_del, JJ_xR, ...
         WK_R_des, WK_L_des, wt, bound_param);
     
-    [X_dot_del, R_del, Q_R_del, Q_L_del, Q_A_del, ~, W_del, W_R_del, ...
-    W_R_dot_del, W_L_del, W_L_dot_del, W_A_del, W_A_dot_del, F_R, F_L, M_R, M_L, f_a] = ...
-    eom_QS_xR_ideal(INSECT, WK_R_des, WK_L_des, t, X_del(1:18), u_control);
+    [X_dot_del] = ...
+    eom_QS_xR_ideal(INSECT, WK_R_des, WK_L_des, t, X_del(1:18), u_control, tmp_f_des);
 
-    x_dot_del = X_del(13:15);
-    xi_dot_del = [X_dot_del(13:18); W_R_dot_del; W_L_dot_del; W_A_dot_del;];
-    JJ_del = inertia(INSECT, R_del, Q_R_del, Q_L_del, Q_A_del, x_dot_del, W_del, W_R_del, W_L_del, W_A_del);
+    xi_dot_del = [X_dot_del(13:18)];
 %     dxi_ddot = ((JJ_del*xi_dot_del - JJ*xi_dot) - (JJ_del - JJ)*xi_dot);
 %     dxi_ddot = JJ(1:6,1:6) \ dxi_ddot(1:6);
-    
-    [JJ_11, JJ_12, JJ_21, JJ_22] = inertia_sub_decompose_6_9(JJ_del);
-    C=[zeros(3,9);
-        -Q_R_del -Q_L_del -Q_A_del];
-    JJ_xR_del = (JJ_11 - C*JJ_21);
+
     dxi_ddot = JJ_xR \ ((JJ_xR_del*xi_dot_del(1:6) - JJ_xR*xi_dot(1:6)) - (JJ_xR_del - JJ_xR)*xi_dot(1:6));
     %
     d_mat = zeros(n, 1);
@@ -398,25 +471,24 @@ parfor j=1:size(delta_mat, 2)
     d_mat(4:6) = -hat(W)*dR + dW;
     d_mat(7:12) = dxi_ddot(1:6);
     d_mat(13:15) = dx;
+    d_mat(16:18) = int_att_dot_del - int_att_dot;
     delta_mat_dot(:, j) = d_mat;
-    
-%     f_total_2 = f_a(1:3);
-%     del_f = f_total_2 - f_total_1;
-%     delta_mat_dot(:, j) = [delta_mat(4:6,j); del_f / INSECT.m; delta_mat(1:3,j);];
 end
 
 F_linear = delta_mat_dot / delta_mat;
-X_dot = [X_dot(1:18); d_x; zeros(3,1); reshape(delta_mat_dot, n^2, 1);];
+X_dot = [X_dot(1:18); d_x; int_att_dot; reshape(delta_mat_dot, n^2, 1);];
 
 end
 
-function [dang, WK_R, WK_L, u_control] = controller(t, des, gains, X, JJ_xR, WK_R_des, WK_L_des, wt, bound_param)
+function [dang, WK_R, WK_L, u_control, int_att_dot] = controller(t, des, gains, X,...
+    JJ_xR, WK_R_des, WK_L_des, wt, bound_param)
 %%
     x=X(1:3);
     R=reshape(X(4:12),3,3);
     x_dot=X(13:15);
     W=X(16:18);
     int_d_x=X(19:21);
+    int_att=X(22:24);
     
     d_x = zeros(3, 1); d_x_dot = zeros(3, 1);
     des_R = zeros(3, 3); des_W = zeros(3, 1);
@@ -433,9 +505,11 @@ function [dang, WK_R, WK_L, u_control] = controller(t, des, gains, X, JJ_xR, WK_
     int_att_dot = e_Om + gains.cI * e_R;
 
     pos_err = (gains.Kp_pos * d_x + gains.Kd_pos * d_x_dot + gains.Ki_pos * int_d_x);
-    att_err = (- gains.KR*e_R - gains.KOm*e_Om);% - gains.KI*int_att);
+    att_err = (- gains.KR*e_R - gains.KOm*e_Om - gains.KI*int_att);
     err_xR = JJ_xR*[pos_err; att_err];
-    u_control = err_xR;
+    
+    u_control = err_xR;% + tmp_mat - tmp_des;
+%     u_control = err_xR - tmp_des;
 
     dang = zeros(6, 1);
     WK_R = WK_R_des; WK_L = WK_L_des;
@@ -447,4 +521,19 @@ function [dang, WK_R, WK_L, u_control] = controller(t, des, gains, X, JJ_xR, WK_
 %     WK_L.psi_m = WK_L_des.psi_m - dpsi_m;
 %     WK_R.theta_A_m = WK_R_des.theta_A_m + dtheta_A_m;
 %     WK_L.theta_A_m = WK_L_des.theta_A_m + dtheta_A_m;
+end
+
+function [JJ_xR] = get_cross_terms(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A)
+    JJ = inertia(INSECT, R, Q_R, Q_L, Q_A, x_dot, W, W_R, W_L, W_A);
+    [JJ_11, ~, JJ_21, ~] = inertia_sub_decompose_6_9(JJ);
+    C=[zeros(3,9);
+        -Q_R -Q_L -Q_A];
+    JJ_xR = (JJ_11 - C*JJ_21);
+
+%     LL = KK - 0.5*KK';
+%     co_ad=blkdiag(zeros(3,3), -hat(W), -hat(W_R), -hat(W_L), -hat(W_A));
+%     [LL_11, ~, LL_21, ~] = inertia_sub_decompose_6_9(LL);
+%     [co_ad_11, ~, ~, co_ad_22] = inertia_sub_decompose_6_9(co_ad);
+%     xi_1 = [x_dot; W];
+%     tmp_mat = -(co_ad_11*JJ_11-C*co_ad_22*JJ_21)*xi_1 + (LL_11-C*LL_21)*xi_1;
 end

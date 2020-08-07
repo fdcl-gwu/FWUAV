@@ -58,7 +58,7 @@ xlabel('$t/T$','interpreter','latex');
 % print(h_rot, 'hover_control_rot', '-depsc', '-r0');
 
 h_x_dot=figure;
-for ii=1:3 
+for ii=1:3
     subplot(3,1,ii);
     plot(t*WK.f,x_dot(ii,:));
     hold on;

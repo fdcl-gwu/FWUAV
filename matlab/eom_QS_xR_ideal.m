@@ -1,6 +1,6 @@
 function [X_dot, R, Q_R, Q_L, Q_A, theta_A, W, W_R, ...
     W_R_dot, W_L, W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, ...
-    f_tau, tau, Euler_R, Euler_R_dot]= eom_QS_xR_ideal(INSECT, WK_R, WK_L, t, X, u_control)
+    f_tau, tau, Euler_R, Euler_R_dot]= eom_QS_xR_ideal(INSECT, WK_R, WK_L, t, X, u_control, tmp_f_des)
 % Returns the states and forces for given wing kinematics and
 % abdomen attitude.
 
@@ -65,7 +65,10 @@ tmp_2 = -(JJ_12-C*JJ_22)*xi_2_dot + (co_ad_11*JJ_12-C*co_ad_22*JJ_22)*xi_2 ...
     -(LL_12-C*LL_22)*xi_2;
 tmp_f = f_a_1+f_g_1 - C*(f_a_2+f_g_2);
 
-xi_1_dot=(JJ_11-C*JJ_21)\(-tmp_1+tmp_2+tmp_f+u_control);
+% xi_1_dot=(JJ_11-C*JJ_21)\(-tmp_1+tmp_2+tmp_f+u_control);
+xi_1_dot=(JJ_11-C*JJ_21)\(-tmp_1+tmp_2+tmp_f_des+u_control);
+% xi_1_dot=(JJ_11-C*JJ_21)\(tmp_2+tmp_f_des+u_control);
+% xi_1_dot=(JJ_11-C*JJ_21)\(u_control);
 
 f_tau_2 = JJ_21*xi_1_dot + JJ_22*xi_2_dot - co_ad_22*(JJ_21*xi_1+JJ_22*xi_2) ...
     + LL_21*xi_1 + LL_22*xi_2 - f_a_2 - f_g_2;
