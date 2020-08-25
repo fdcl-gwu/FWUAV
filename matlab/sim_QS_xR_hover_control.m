@@ -244,7 +244,7 @@ F_L = L_L + D_L;
 f_a=[R*Q_R*F_R + R*Q_L*F_L;
     hat(INSECT.mu_R)*Q_R*F_R + hat(INSECT.mu_L)*Q_L*F_L + Q_R*M_R + Q_L*M_L];
 % % f_a(isnan(f_a)) = 0;
-% f_total = f_a + f_abd; % Use this for gettings signs
+% f_total = f_a + f_abd; % Use this to get signs
 
 %% Control design
 d_x = zeros(3, 1); d_x_dot = zeros(3, 1);
@@ -286,43 +286,61 @@ for k=1:6
 end
 
 dang = zeros(7,1);
-if wt == 0
-    dang(1:6) = params \ err_xR;
-else
-    % Minimum norm solution
-    temp_A = temp_A(1:2,:);
-%     pos_err = tanh(pos_err) * 1e-2; %(norm(temp_A, 'fro') * bound_param);
-%     rhs = [pos_err(1); pos_err(3); 0];
-    dang = temp_A' * ((temp_A*temp_A') \ rhs(1:2));
-end
-
-idx = abs(dang) > bound_param;
-dang(idx) = bound_param * sign(dang(idx));
-
-% dang(:) = 0;
-% dang(1) = 0.1;%*sin(t*WK_R.f*2*pi);
-
-WK_R.phi_m = WK_R.phi_m + dang(1) + dang(3);
-WK_L.phi_m = WK_L.phi_m + dang(1) - dang(3);
-WK_R.phi_0 = WK_R.phi_0 + dang(4);
-WK_L.phi_0 = WK_L.phi_0 + dang(4);
-WK_R.theta_0 = WK_R.theta_0 + dang(2) + dang(5);
-WK_L.theta_0 = WK_L.theta_0 + dang(2) - dang(5);
-WK_R.psi_m = WK_R.psi_m + dang(6);
-WK_L.psi_m = WK_L.psi_m - dang(6);
-WK_R.theta_A_m = WK_R.theta_A_m + dang(7);
-WK_L.theta_A_m = WK_L.theta_A_m + dang(7);
-
-X = X(1:18);
-[X_dot, R, Q_R, Q_L, Q_A, theta_A, W, W_R, ...
-    W_R_dot, W_L, W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, ...
-    f_tau, tau, Euler_R, Euler_R_dot] = eom_QS_xR(INSECT, WK_R, WK_L, t, X);
-
+% if wt == 0
+%     dang(1:6) = params \ err_xR;
+% else
+%     % Minimum norm solution
+%     temp_A = temp_A(1:2,:);
+% %     pos_err = tanh(pos_err) * 1e-2; %(norm(temp_A, 'fro') * bound_param);
+% %     rhs = [pos_err(1); pos_err(3); 0];
+%     dang = temp_A' * ((temp_A*temp_A') \ rhs(1:2));
+% end
+% 
+% idx = abs(dang) > bound_param;
+% dang(idx) = bound_param * sign(dang(idx));
+% 
+% % dang(:) = 0;
+% % dang(1) = 0.1;%*sin(t*WK_R.f*2*pi);
+% 
+% WK_R.phi_m = WK_R.phi_m + dang(1) + dang(3);
+% WK_L.phi_m = WK_L.phi_m + dang(1) - dang(3);
+% WK_R.phi_0 = WK_R.phi_0 + dang(4);
+% WK_L.phi_0 = WK_L.phi_0 + dang(4);
+% WK_R.theta_0 = WK_R.theta_0 + dang(2) + dang(5);
+% WK_L.theta_0 = WK_L.theta_0 + dang(2) - dang(5);
+% WK_R.psi_m = WK_R.psi_m + dang(6);
+% WK_L.psi_m = WK_L.psi_m - dang(6);
+% WK_R.theta_A_m = WK_R.theta_A_m + dang(7);
+% WK_L.theta_A_m = WK_L.theta_A_m + dang(7);
+% 
 % X = X(1:18);
-% u_control = err_xR;
 % [X_dot, R, Q_R, Q_L, Q_A, theta_A, W, W_R, ...
 %     W_R_dot, W_L, W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, ...
-%     f_tau, tau, Euler_R, Euler_R_dot] = eom_QS_xR_ideal(INSECT, WK_R, WK_L, t, X, u_control);
+%     f_tau, tau, Euler_R, Euler_R_dot] = eom_QS_xR(INSECT, WK_R, WK_L, t, X);
+
+[L_R, L_L, D_R, D_L, M_R, M_L]=wing_QS_aerodynamics(INSECT, ...
+    W_R, W_L, W_R_dot, W_L_dot, des_x_dot, des_R, des_W, Q_R, Q_L);
+F_R=L_R+D_R;
+F_L=L_L+D_L;
+M_A=zeros(3,1);
+f_a=[des_R*Q_R*F_R + des_R*Q_L*F_L;
+    hat(INSECT.mu_R)*Q_R*F_R + hat(INSECT.mu_L)*Q_L*F_L;
+    M_R; M_L; M_A];
+f_a_1=f_a(1:6);
+f_a_2=f_a(7:15);
+
+[~, dU]=potential(INSECT,x,des_R,Q_R,Q_L,Q_A);
+f_g=-dU;
+f_g_1=f_g(1:6);
+f_g_2=f_g(7:15);
+
+tmp_f_des = f_a_1+f_g_1 - C*(f_a_2+f_g_2);
+
+X = X(1:18);
+u_control = err_xR;
+[X_dot, R, Q_R, Q_L, Q_A, theta_A, W, W_R, ...
+    W_R_dot, W_L, W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, ...
+    f_tau, tau, Euler_R, Euler_R_dot] = eom_QS_xR_ideal(INSECT, WK_R, WK_L, t, X, u_control, tmp_f_des);
 
 X_dot=[X_dot(1:18); d_x; int_att_dot];
 

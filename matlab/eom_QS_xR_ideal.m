@@ -67,8 +67,6 @@ tmp_f = f_a_1+f_g_1 - C*(f_a_2+f_g_2);
 
 % xi_1_dot=(JJ_11-C*JJ_21)\(-tmp_1+tmp_2+tmp_f+u_control);
 xi_1_dot=(JJ_11-C*JJ_21)\(-tmp_1+tmp_2+tmp_f_des+u_control);
-% xi_1_dot=(JJ_11-C*JJ_21)\(tmp_2+tmp_f_des+u_control);
-% xi_1_dot=(JJ_11-C*JJ_21)\(u_control);
 
 f_tau_2 = JJ_21*xi_1_dot + JJ_22*xi_2_dot - co_ad_22*(JJ_21*xi_1+JJ_22*xi_2) ...
     + LL_21*xi_1 + LL_22*xi_2 - f_a_2 - f_g_2;
