@@ -9,9 +9,9 @@ des_cont = load('sim_QS_xR_hover.mat', 'Euler_R', 'theta_A', 'f_a',...
 des_cont.fM_a = des_cont.f_a(1:6, :);
 fM_a = f_a(1:6, :);
 for i=1:N
-    fM_a(4:6, i) = fM_a(4:6, i) + Q_R(:,:,i)*M_R(:,i) + Q_L(:,:,i)*M_L(:,i);
-    des_cont.fM_a(4:6, i) = des_cont.fM_a(4:6, i) + des_cont.Q_R(:,:,i)*des_cont.M_R(:,i) +...
-        des_cont.Q_L(:,:,i)*des_cont.M_L(:,i);
+%     fM_a(4:6, i) = fM_a(4:6, i) + Q_R(:,:,i)*M_R(:,i) + Q_L(:,:,i)*M_L(:,i);
+%     des_cont.fM_a(4:6, i) = des_cont.fM_a(4:6, i) + des_cont.Q_R(:,:,i)*des_cont.M_R(:,i) +...
+%         des_cont.Q_L(:,:,i)*des_cont.M_L(:,i);
     [e_phi(i), e_psi(i), e_theta(i)] = dcm2angle(R(:,:,i)'*des.R_fit_t(:,:,i), 'xzy');
 end
 
@@ -136,17 +136,17 @@ ylabel('$\Omega$','interpreter','latex');
 % xlabel('$t/T$','interpreter','latex');
 % % print(h_wk, 'hover_control_wk', '-depsc', '-r0');
 
-h_err = figure;
-h_err.PaperUnits = 'inches';
-h_err.PaperPosition = [0 0 6 8];
-for ii=1:6
-    subplot(6,1,ii);
-    plot(t*WK.f, err_xR(ii,:));
-    patch_downstroke(h_err,t*WK.f,Euler_R_dot);
-end
-xlabel('$t/T$','interpreter','latex');
-subplot(6,1,3);
-ylabel('Error');
+% h_err = figure;
+% h_err.PaperUnits = 'inches';
+% h_err.PaperPosition = [0 0 6 8];
+% for ii=1:6
+%     subplot(6,1,ii);
+%     plot(t*WK.f, err_xR(ii,:));
+%     patch_downstroke(h_err,t*WK.f,Euler_R_dot);
+% end
+% xlabel('$t/T$','interpreter','latex');
+% subplot(6,1,3);
+% ylabel('Error');
 
 h_control = figure;
 h_control.PaperUnits = 'inches';
@@ -162,16 +162,16 @@ end
 xlabel('$t/T$','interpreter','latex');
 % print(h_control, 'hover_control_input', '-depsc', '-r0');
 
-h_aero = figure;
-h_aero.PaperUnits = 'inches';
-h_aero.PaperPosition = [0 0 6 8];
-for ii=1:6
-    subplot(6,1,ii);
-    plot(t*WK.f, fM_a(ii,:));
-    hold on;
-    plot(t*WK.f, des_cont.fM_a(ii, :), 'k');
-    patch_downstroke(h_aero,t*WK.f,Euler_R_dot);
-end
-xlabel('$t/T$','interpreter','latex');
-subplot(6,1,3);
-ylabel('F, M');
+% h_aero = figure;
+% h_aero.PaperUnits = 'inches';
+% h_aero.PaperPosition = [0 0 6 8];
+% for ii=1:6
+%     subplot(6,1,ii);
+%     plot(t*WK.f, fM_a(ii,:));
+%     hold on;
+%     plot(t*WK.f, des_cont.fM_a(ii, :), 'k');
+%     patch_downstroke(h_aero,t*WK.f,Euler_R_dot);
+% end
+% xlabel('$t/T$','interpreter','latex');
+% subplot(6,1,3);
+% ylabel('F, M');

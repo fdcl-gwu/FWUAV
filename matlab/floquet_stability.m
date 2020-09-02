@@ -34,12 +34,36 @@ epsilon = 1e-8;
 % [delta_mat, F_linear] = sim_pert(@eom_hover_xR, n, n_vars, INSECT, WK, X0, N, t, epsilon);
 load('sim_QS_xR_hover_control.mat', 'des', 'gains', 'wt', 'bound_param');
 % gains.KR = 40; gains.KOm = 10;
+
+load('sim_QS_xR_hover.mat', 'solutions');
+WK_arr = solutions(2).X; % Controllable : (2), Uncontrollable : (1)
+[WK, des.x_dot0, des.R0, des.W0] = get_WK0(WK, WK_arr);
+des.X0=[des.x0; reshape(des.R0,9,1); des.x_dot0; des.W0];
+
+des.t = linspace(0,3/WK.f,6001)';
+[~, X_ref]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t,X), des.t, des.X0', odeset('AbsTol',1e-6,'RelTol',1e-6));
+des.x = X_ref(:, 1:3)'; des.x_dot = X_ref(:, 13:15)';
+des.R = reshape(X_ref(:, 4:12)', 3, 3, []); des.W = X_ref(:, 16:18)';
+
+des.x_fit = cell(3, 1); des.x_dot_fit = cell(3, 1);
+des.R_fit = cell(3, 3); des.W_fit = cell(3, 1);
+interp = 'fourier8'; % 'fourier8', 'cubicinterp'
+for i=1:3
+    des.x_fit{i} = fit(des.t, des.x(i, :)', interp);
+    des.x_dot_fit{i} = fit(des.t, des.x_dot(i, :)', interp);
+    des.W_fit{i} = fit(des.t, des.W(i, :)', interp);
+    for j=1:3
+        des.R_fit{i,j} = fit(des.t, squeeze(des.R(i, j, :)), interp);
+    end
+end
+X0 = des.X0;
+
 X0 = [X0; zeros(3,1); zeros(3,1)];
 n = 18; n_vars = 24; % for (x,R) control with @eom_hover_xR_control
-% tic;
-% [delta_mat, F_linear] = sim_pert(@eom_hover_xR_control, n, n_vars, INSECT, WK, X0, N, t, epsilon, des, gains, wt, bound_param);
-% toc;
-[delta_mat, F_linear, gains] = optimized_gains(@eom_hover_xR_control, n, n_vars, INSECT, WK, X0, N, t, epsilon, des, gains, wt, bound_param);
+tic;
+[delta_mat, F_linear] = sim_pert(@eom_hover_xR_control, n, n_vars, INSECT, WK, X0, N, t, epsilon, des, gains, wt, bound_param);
+toc;
+% [delta_mat, F_linear, gains] = optimized_gains(@eom_hover_xR_control, n, n_vars, INSECT, WK, X0, N, t, epsilon, des, gains, wt, bound_param);
 
 B = zeros(n, n, 1+ix_d);
 start_ix = max(1, round((N_period-2)/N_period * N));
