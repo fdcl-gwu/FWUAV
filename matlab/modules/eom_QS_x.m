@@ -1,6 +1,6 @@
 function [X_dot, R, Q_R, Q_L, Q_A, theta_B, theta_A, W, W_dot, W_R, ...
     W_R_dot, W_L, W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, ...
-    f_tau, tau, Euler_R, Euler_R_dot] = eom_QS_x(INSECT, WK_R, WK_L, t, X)
+    f_tau, tau, Euler_R, Euler_R_dot, JJ, U] = eom_QS_x(INSECT, WK_R, WK_L, t, X)
 % Returns the states and forces for given thorax attiude, wing kinematics,
 % abdomen attitude.
 
@@ -34,7 +34,7 @@ f_a_1=f_a(1:3);
 f_a_2=f_a(4:15);
 
 % gravitational force and moment
-[~, dU]=potential(INSECT,x,R,Q_R,Q_L,Q_A);
+[U, dU]=potential(INSECT,x,R,Q_R,Q_L,Q_A);
 f_g=-dU;
 f_g_1=f_g(1:3);
 f_g_2=f_g(4:15);

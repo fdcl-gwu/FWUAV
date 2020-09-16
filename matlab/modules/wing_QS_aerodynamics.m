@@ -40,14 +40,16 @@ else
     rs=linspace(0,INSECT.l,N_r);
     dr=rs(2)-rs(1);
     
-    U_R = (eye(3)-e2*e2')*Q_R'*(R'*x_dot+hat(W)*INSECT.mu_R) + rs.*(hat(Q_R*W+W_R)*e2);
-    U_L = (eye(3)-e2*e2')*Q_L'*(R'*x_dot+hat(W)*INSECT.mu_L) - rs.*(hat(Q_L*W+W_L)*e2);
+    hat_e2 = hat(e2);
+    Ime2 = (eye(3) - e2*e2'); RTx_dot = R'*x_dot; hat_W = hat(W);
+    U_R = Ime2*Q_R'*(RTx_dot+hat_W*INSECT.mu_R) + rs.*(hat(Q_R*W+W_R)*e2);
+    U_L = Ime2*Q_L'*(RTx_dot+hat_W*INSECT.mu_L) - rs.*(hat(Q_L*W+W_L)*e2);
     c=polyval(INSECT.cr_poly,rs/INSECT.scale)*INSECT.scale;
-    [L, D, M]=compute_LD(INSECT, U_R, e2);
+    [L, D, M]=compute_LD(INSECT, U_R, hat_e2);
     L_R = sum(L .* c, 2)/INSECT.S * dr;
     D_R = sum(D .* c, 2)/INSECT.S * dr;
     M_R = sum(M .* rs .* c, 2) /(INSECT.r_cp * INSECT.S) * dr;
-    [L, D, M]=compute_LD(INSECT, U_L, e2);
+    [L, D, M]=compute_LD(INSECT, U_L, hat_e2);
     L_L = sum(L .* c, 2)/INSECT.S * dr;
     D_L = sum(D .* c, 2)/INSECT.S * dr;
     M_L = sum(-M .* rs .* c, 2) /(INSECT.r_cp * INSECT.S) * dr;
@@ -66,14 +68,14 @@ end
 
 end
 
-function [L, D, M, alpha]=compute_LD(INSECT, U, e2)
+function [L, D, M, alpha]=compute_LD(INSECT, U, hat_e2)
 norm_U = vecnorm(U, 2, 1);
 alpha=compute_alpha(U, norm_U);
 [C_L, C_D]=wing_QS_LD_coeff(INSECT, alpha);
 
-L = 0.5 * INSECT.rho * INSECT.S * (C_L .* sign(U(1, :).* U(3, :)) .* (hat(e2)*U) .* norm_U);
+L = 0.5 * INSECT.rho * INSECT.S * (C_L .* sign(U(1, :).* U(3, :)) .* (hat_e2*U) .* norm_U);
 D = - 0.5 * INSECT.rho * INSECT.S * (C_D .* norm_U .* U);
-M = INSECT.r_cp * hat(e2) * (L+D);
+M = INSECT.r_cp * hat_e2 * (L+D);
 end
 
 function [F_rot, M_rot, alpha, U_alpha_dot]=compute_rotational_force(INSECT, U, U_dot, e1, e2, e3)

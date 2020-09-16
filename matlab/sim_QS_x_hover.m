@@ -6,7 +6,7 @@ evalin('base','clear all');
 close all;
 addpath('./modules', './sim_data', './plotting');
 load('./sim_data/other_insects/morp_MONARCH.mat', 'INSECT');
-filename='./sim_data/other_insects/sim_QS_x_hover_forw';
+filename='./sim_data/other_insects/sim_QS_x_hover_mona';
 
 WK.f=INSECT.f;
 WK.type='BermanWang';
@@ -18,9 +18,9 @@ WK.psi_N = 2; % or 1
 
 N=1001;
 x0=[0 0 0]';
-% final_pos = [0; 0; 0;];
-final_pos = [0.1; 0; -0.1/3;]/(INSECT.f/10); % Experimental trajectory
-final_pos = [0.1654; 0; -0.0626;]; % From data
+final_pos = [0; 0; 0;];
+% final_pos = [0.1; 0; -0.1/3;]/(INSECT.f/10); % Experimental trajectory
+% final_pos = [0.1654; 0; -0.0626;]; % From data
 
 %% The optimization algorithm
 A = []; b = []; Aeq = []; beq = [];
@@ -110,7 +110,7 @@ X0=[x0; x_dot0];
 
 T=1/WK.f;
 t=linspace(0,T,N);
-[t, X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+[~, X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t, X), [t(1), t(end)], X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 c(1) = abs(WK.phi_0) + WK.phi_m - WK.phi_max;
 c(2) = abs(WK.psi_0) + WK.psi_m - WK.psi_max;
 ceq(1:3) = X(1,1:3)' - (X(end,1:3)' -final_pos);
@@ -129,16 +129,28 @@ T=1/WK.f;
 t=linspace(0,T,N);
 [t, X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 
-x=X(:,1:3)';
-x_dot=X(:,4:6)';
-m=INSECT.m;
-E = 0.5*m*(vecnorm(x_dot).^2) - m*9.81*x(3,:);
-E_dot = diff(E')./diff(t);
-E_dot = [E_dot; E_dot(end)];
+% x = X(:,1:3)';
+x_dot = X(:,4:6)';
+% m=INSECT.m;
+% E = 0.5*m*(vecnorm(x_dot).^2) - m*9.81*x(3,:);
+% E_dot = diff(E')./diff(t);
+% E_dot = [E_dot; E_dot(end)];
 
-gam = 1e3;
+T = zeros(1,N); U = zeros(1,N); tau = zeros(12, N);
+for k=1:N
+    [~, ~, ~, ~, ~, ~,...
+        ~, W, ~, W_R, ~, W_L,...
+        ~, W_A, ~, ~, ~, ~,...
+        ~, ~, ~, ~, tau(:, k), ~, ~, JJ, U(k)] = eom_QS_x(INSECT, WK, WK, t(k), X(k,:)');
+    xi = [x_dot(:,k); W; W_R; W_L; W_A];
+    T(k) = 0.5 * xi' * JJ * xi;
+end
+E = T + U;
+E_dot = vecnorm(tau,2,1);
+
 del = 1e4;
-J = gam * trapz(t, abs(E_dot)) + del * trapz(t, abs(E));
+gam = 1e3;
+J = del * abs(trapz(t, E)) + gam * abs(trapz(t, E_dot));
 
 % % Augmentation of constraints
 % c(1) = abs(WK.phi_0) + WK.phi_m - WK.phi_max;
