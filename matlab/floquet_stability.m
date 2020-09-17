@@ -121,13 +121,13 @@ save(filename, allvars(tosave).name)
 evalin('base',['load ' filename]);
 end
 
-function [delta_mat, F_linear, gains] = optimized_gains(eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin)
+function [delta_mat, F_linear, gains, varargout] = optimized_gains(eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin)
 %% The optimization algorithm
 A = []; b = []; Aeq = []; beq = [];
 % Initial value of gains_arr = [Kp_pos, Kd_pos, Ki_pos, KR, KOm, KI, cI]
 gains0 = varargin{2};
 gains_arr0 = struct2array(gains0);
-lb = [0, 0, 0, 0, 0, 0, 0];
+lb = [1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 0, 0];
 ub = [1000, 500, 100, 100, 100, 50, 10];
 nonlcon = @(gains_arr) gains_condition(gains_arr);
 
@@ -136,21 +136,33 @@ rng default; % For reproducibility
 
 % FMINCON
 options = optimoptions(@fmincon,'Algorithm','interior-point','Display','iter',...
-    'MaxFunctionEvaluations',30,'PlotFcn',@optimplotfval,'UseParallel',true);
+    'MaxFunctionEvaluations',100,'PlotFcn',@optimplotfval,'UseParallel',true);
 [gains_arr, fval, exitflag, output] = fmincon(@(gains_arr) objective_func(gains_arr, eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin{:}),...
     gains_arr0,A,b,Aeq,beq,lb,ub,nonlcon,options);
 
+% % SURROGATEOPT
+% ptmatrix(1, :) = gains_arr0;
+% N_points = 2;
+% ptmatrix(2:N_points, :) = lb + rand(N_points-1, length(gains_arr0)) .* (ub - lb);
+% options = optimoptions(@surrogateopt, 'InitialPoints', ptmatrix, 'MaxTime', 12*3600,...
+%     'MaxFunctionEvaluations', 3000, 'PlotFcn', @surrogateoptplot, 'UseParallel', true,...
+%     'MinSurrogatePoints', 50);
+% [gains_arr, fval, exitflag, output, trials] = surrogateopt(@(gains_arr) objective_func(gains_arr, eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin{:}),...
+%     lb,ub,options);
+% varargout{1} = trials;
+
 % % MULTISTART, PARTICLESWARM
 % ptmatrix(1, :) = gains_arr0;
-% N_points = 5;
+% N_points = 50;
 % ptmatrix(2:N_points, :) = lb + rand(N_points-1, length(gains_arr0)) .* (ub - lb);
 % tpoints = CustomStartPointSet(ptmatrix);
 % ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf,'MaxTime',1*3600);
 % options = optimoptions(@fmincon,'Algorithm','sqp',...
-%     'UseParallel',false,'MaxIterations',2000,'MaxFunctionEvaluations',6000);%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
+%     'UseParallel',true,'MaxIterations',1000,'MaxFunctionEvaluations',3000);%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
 % problem = createOptimProblem('fmincon','objective',@(gains_arr) objective_func(gains_arr, eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin{:}),...
 %     'x0',gains_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
 % [gains_arr, fval, exitflag, output, solutions] = run(ms, problem, tpoints);
+% varargout{1} = solutions;
 
 fprintf('Optimization has been completed\n');
 disp(output);
@@ -174,11 +186,21 @@ function [J] = objective_func(gains_arr, eom, n, n_vars, INSECT, WK, X0, N, t, e
 gains = struct('Kp_pos', gains_arr(1), 'Kd_pos', gains_arr(2), 'Ki_pos', gains_arr(3),...
         'KR', gains_arr(4), 'KOm', gains_arr(5), 'KI', gains_arr(6) , 'cI', gains_arr(7));
 varargin{2} = gains;
-delta_mat = sim_pert(eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin{:});
-B = delta_mat(:, :, round(N/4)) \ delta_mat(:, :, round(N/4) + 2*round(N/4));
+[delta_mat, ~, is_unbounded] = sim_pert(eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin{:});
+if is_unbounded
+    J = 1e6;
+    return;
+end
+N_half = round(N/4);
+B = delta_mat(:, :, N_half) \ delta_mat(:, :, 3*N_half);
 [~, rhos] = eig(B);
 mus = log(abs(diag(rhos))) * WK.f;
-J = sum(exp(mus(mus>0)) - 1);
+idx = (mus >= 0);
+if any(idx)
+    J = log(eps + sum(exp(mus(idx)) - 1));
+else
+    J = log(eps) + max(mus)*1e3;
+end
 
 if isnan(J)
     J = 1/eps;
@@ -186,12 +208,19 @@ end
 
 end
 
-function [delta_mat, F_linear] = sim_pert(eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin)
+function [delta_mat, F_linear, is_unbounded] = sim_pert(eom, n, n_vars, INSECT, WK, X0, N, t, epsilon, varargin)
 %%
 delta0 = eye(n)*epsilon;
 X0 = [X0(1:n_vars); reshape(delta0, n^2, 1);];
 
-[t,X] = ode45(@(t,X) eom(n, n_vars, INSECT, WK, WK, t, X, varargin), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+[t,X] = ode45(@(t,X) eom(n, n_vars, INSECT, WK, WK, t, X, varargin), t, X0, odeset('Events',@time_exceeded));
+N_act = length(t);
+if N_act < N
+    delta_mat = 0;
+    F_linear = 0;
+    is_unbounded = true;
+    return;
+end
 F_linear = zeros(n, n, N);
 parfor k=1:N
     [~, F_linear(:, :, k)] = eom(n, n_vars, INSECT, WK, WK, t(k), X(k, :)', varargin);
@@ -199,6 +228,13 @@ end
 
 delta_mat = reshape(X(:,n_vars+1:(n^2+n_vars))', n, n, N);
 
+end
+
+function [value,isterminal,direction] = time_exceeded(t, y)
+t_clock = toc;
+value = t_clock - 50; % time in seconds
+isterminal = 1;
+direction = 0;
 end
 
 function [X_dot, F_linear]= eom_hover_vel(n, n_vars, INSECT, WK_R, WK_L, t, X, varargin)
