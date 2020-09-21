@@ -15,12 +15,12 @@ load('morp_MONARCH');
 bool_video=false;
 file_to_save = 'sim_QS_x_hover_mona.avi';
 
-add_to_save="_forw";
+add_to_save="_mona_no_ab";
 load('sim_QS_x_hover'+ add_to_save,'WK','t','x','R','Q_R','Q_L','Q_A','N','F_R','F_L','des');
 N_period = round(max(t*WK.f));
 ix_d = round((N-1)/N_period);
 ix_to_save = round(linspace(1,ix_d,9));
-bool_save_plot = true;
+bool_save_plot = false;
 
 %% generate the initial object when k=1
 k=1;

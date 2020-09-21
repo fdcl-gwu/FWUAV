@@ -8,10 +8,10 @@ filename='floquet_stability';
 
 %% Linearized dynamics
 addpath('./sim_data/other_insects');
-load('sim_QS_x_hover_mona.mat', 'INSECT', 'WK', 'X0');
+load('sim_QS_x_hover_mona.mat', 'INSECT', 'WK', 'X0', 'solutions');
 conv_name='conv_rate_mona';
 save_rate=false;
-bool_sort_mus=true; % false if n ~= 6
+bool_sort_mus=false; % false if n ~= 6
 
 N = 1001;
 N_period = 2;
@@ -22,10 +22,13 @@ dt = t(2) - t(1);
 epsilon = 1e-8;
 
 % n is #perturbation states; n_vars is #actual states
-% n = 3; n_vars = 6; % for nominal hover with @eom_hover_vel if position is not periodic
-% [delta_mat, F_linear] = sim_pert(@eom_hover_vel, n, n_vars, INSECT, WK, X0, N, t, epsilon);
-n = 6; n_vars = 6; % for nominal hover with @eom_hover
-[delta_mat, F_linear] = sim_pert(@eom_hover, n, n_vars, INSECT, WK, X0, N, t, epsilon);
+WK_arr = solutions(11).X;
+[WK, x_dot0] = get_WK0(WK, WK_arr, 'x');
+X0 = [X0(1:3); x_dot0];
+n = 3; n_vars = 6; % for nominal hover with @eom_hover_vel if position is not periodic
+[delta_mat, F_linear] = sim_pert(@eom_hover_vel, n, n_vars, INSECT, WK, X0, N, t, epsilon);
+% n = 6; n_vars = 6; % for nominal hover with @eom_hover
+% [delta_mat, F_linear] = sim_pert(@eom_hover, n, n_vars, INSECT, WK, X0, N, t, epsilon);
 % n = 12; n_vars = 6; % attitude stability with @eom_hover_attitude
 % [delta_mat, F_linear] = sim_pert(@eom_hover_attitude, n, n_vars, INSECT, WK, X0, N, t, epsilon);
 

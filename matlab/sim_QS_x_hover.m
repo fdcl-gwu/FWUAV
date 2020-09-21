@@ -6,7 +6,8 @@ evalin('base','clear all');
 close all;
 addpath('./modules', './sim_data', './plotting');
 load('./sim_data/other_insects/morp_MONARCH.mat', 'INSECT');
-filename='./sim_data/other_insects/sim_QS_x_hover_mona';
+filename='sim_data/other_insects/sim_QS_x_hover_mona';
+use_past_data=true; % Use previously optimized points in current optimization
 
 WK.f=INSECT.f;
 WK.type='BermanWang';
@@ -18,16 +19,67 @@ WK.psi_N = 2; % or 1
 
 N=1001;
 x0=[0 0 0]';
-final_pos = [0; 0; 0;];
+% final_pos = [0; 0; 0;];
 % final_pos = [0.1; 0; -0.1/3;]/(INSECT.f/10); % Experimental trajectory
-% final_pos = [0.1654; 0; -0.0626;]; % From data
+final_pos = [0.1654; 0; -0.0626;]; % From data
 
+%%
+% [WK_arr, solutions, output, lb, ub] = optimization(WK, INSECT, N, x0, final_pos, filename, use_past_data);
+load(filename)
+
+sol_arr = zeros(length(solutions), 5);
+for i=1:length(solutions)
+    sol_arr(i, :) = [i, solutions(i).Fval, solutions(i).Output.firstorderopt, ...
+        solutions(i).Output.funcCount, solutions(i).Output.constrviolation];
+end
+sol_arr = array2table(sol_arr, 'VariableNames', ...
+    {'Index','Fval','Firstorderopt','FuncCount','Constrviolation'});
+sol_arr = sortrows(sol_arr, 'Firstorderopt');
+disp([sol_arr(1:5,:); sol_arr(sol_arr.Index == 1, :)]);
+sol_idx = sol_arr{1, 1};
+WK_arr = solutions(sol_idx).X; % (1) with ab, (2) without ab, (11) forw, (1) forw without ab
+
+[WK, x_dot0] = get_WK(WK, WK_arr);
+X0=[x0; x_dot0];
+
+N=1001;
+T=3/WK.f;
+t=linspace(0,T,N);
+
+[t, X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+
+x = X(:,1:3)';
+x_dot = X(:,4:6)';
+
+for k=1:N
+    [X_dot(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), theta_B(k),...
+        theta_A(k), W(:,k), W_dot(:,k), W_R(:,k), W_R_dot(:,k), W_L(:,k),...
+        W_L_dot(:,k), W_A(:,k), W_A_dot(:,k), F_R(:,k), F_L(:,k), M_R(:,k),...
+        M_L(:,k), f_a(:,k), f_g(:,k), f_tau(:,k), tau(:,k)]= eom_QS_x(INSECT, WK, WK, t(k), X(k,:)');
+    F_B(:,k) = Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);
+    [Euler_R(:,k), Euler_R_dot(:,k), Euler_R_ddot(:,k)] = wing_kinematics(t(k),WK);
+end
+
+x_ddot = X_dot(4:6,:);
+
+% Get a list of all variables
+allvars = whos;
+% Identify the variables that ARE NOT graphics handles. This uses a regular
+% expression on the class of each variable to check if it's a graphics object
+tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
+% Pass these variable names to save
+save(filename, allvars(tosave).name)
+evalin('base',['load ' filename]);
+
+end
+
+function [WK_arr, solutions, output, lb, ub] = optimization(WK, INSECT, N, x0, final_pos, filename, use_past_data)
 %% The optimization algorithm
 A = []; b = []; Aeq = []; beq = [];
 % Initial value of WK_arr = [beta, phi_m, phi_K, phi_0, theta_m, theta_C, theta_0, theta_a, psi_m, psi_a, psi_0, x_dot1, x_dot2, x_dot3, theta_B_m, theta_B_0, theta_B_a, theta_A_m, theta_A_0, theta_A_a, freq]
 WK_arr0 = [-0.2400   0.7806  0.4012   0.7901    0.6981    2.9999    0.2680    0.1050    8*pi/180    0.9757    5*pi/180   -0.1000   -0.0000 -0.1000 0 0 0 0.0937 0 0 WK.f];
-lb = [-pi/8, 0, 0, -pi/2, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/12, -pi, 0, pi/12, -pi, WK.f*(1-0.15)];
-ub = [pi/5, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/3, pi, pi/12, pi/4, pi, WK.f*(1+0.15)];
+lb = [-pi/8, 0, 0, -pi/3, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/12, -pi, 0, pi/12, -pi, WK.f*(1-0.15)];
+ub = [pi/5, pi/2, 1, 5*pi/180, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/3, pi, pi/12, pi/4, pi, WK.f*(1+0.15)];
 nonlcon = @(WK_arr) traj_condition(WK_arr, WK, INSECT, N, x0, final_pos);
 
 tic;
@@ -47,10 +99,19 @@ ptmatrix(3, :) = [-0.4324    1.4397-0.6658    0.3889    0.6658    0.1137    1.72
 ptmatrix(4, :) = [0.0577    pi/2-1.2217    0.3587    1.2217  0.5233    2.7760    0.2207    0.0059    8*pi/180    0.9429    0.0291 0 0 0 0 15*pi/180 0 10*pi/180  0 0 WK.f];
 ptmatrix(5, :) = [-1.1117    0.8052    0.9530    0.3491    0.0039    1.5236    0.5158    0.8012    0.1344   -1.5344    0.0771    0.0981    0.0000   -0.0814  0  0.3219 0 0.2869   -0.3374    1.5438   11.8923];
 ptmatrix(6, :) = [0.1815    pi/2-1.2217   0.3218    -1.2217    0.5196    2.9411    0.1942    0.0157    8*pi/180    0.9508   -0.0505 0 0 0 0 15*pi/180 0 10*pi/180  0 0 WK.f];
+N_sol = 0;
+if use_past_data
+    load(filename, 'solutions');
+    N_sol = length(solutions);
+    for sol=1:N_sol
+        ptmatrix(sol+6, :) = solutions(sol).X;
+    end
+end
 
-ptmatrix(7:26, :) = lb + rand(20, length(WK_arr0)) .* (ub - lb);
+N_points = 25;
+ptmatrix((7+N_sol):N_points, :) = lb + rand(N_points-6-N_sol, length(WK_arr0)) .* (ub - lb);
 tpoints = CustomStartPointSet(ptmatrix);
-ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf,'MaxTime',12*3600);
+ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf,'MaxTime',12*3600,'UseParallel',true);
 options = optimoptions(@fmincon,'Algorithm','interior-point',...
     'UseParallel',true,'MaxIterations',2000,'MaxFunctionEvaluations',6000);%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
 problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0, final_pos),...
@@ -67,39 +128,6 @@ problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_a
 fprintf('Optimization has been completed\n');
 disp(output);
 toc;
-
-%%
-[WK, x_dot0] = get_WK(WK, WK_arr);
-X0=[x0; x_dot0];
-
-N=1001;
-T=3/WK.f;
-t=linspace(0,T,N);
-
-[t, X]=ode45(@(t,X) eom_QS_x(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
-
-x = X(:,1:3)';
-x_dot = X(:,4:6)';
-
-for k=1:N    
-    [X_dot(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), theta_B(k),...
-        theta_A(k), W(:,k), W_dot(:,k), W_R(:,k), W_R_dot(:,k), W_L(:,k),...
-        W_L_dot(:,k), W_A(:,k), W_A_dot(:,k), F_R(:,k), F_L(:,k), M_R(:,k),...
-        M_L(:,k), f_a(:,k), f_g(:,k), f_tau(:,k), tau(:,k)]= eom_QS_x(INSECT, WK, WK, t(k), X(k,:)');
-    F_B(:,k) = Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);    
-    [Euler_R(:,k), Euler_R_dot(:,k), Euler_R_ddot(:,k)] = wing_kinematics(t(k),WK);
-end
-
-x_ddot = X_dot(4:6,:);
-
-% Get a list of all variables
-allvars = whos;
-% Identify the variables that ARE NOT graphics handles. This uses a regular
-% expression on the class of each variable to check if it's a graphics object
-tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
-% Pass these variable names to save
-save(filename, allvars(tosave).name)
-evalin('base',['load ' filename]);
 
 end
 
