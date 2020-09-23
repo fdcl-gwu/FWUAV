@@ -2,7 +2,12 @@
 addpath('../modules', '../sim_data', '../');
 set(0,'DefaultAxesFontName','times');
 set(0,'DefaultAxesFontSize',12);
+% study = 'monte_carlo';
+study = 'energy_comp';
+add_to_save="_mona";
 
+switch study
+    case 'monte_carlo'
 %% Monte carlo study
 load('sim_QS_x_hover_control_mc_pos_long_asy.mat');
 err_bound = 1e-4; % 5e-4
@@ -73,15 +78,16 @@ print(h_Nconv, 'hover_mc_perf', '-depsc', '-r0');
 % h_Nconv = figure;
 % surf(x_mesh, z_mesh, N_diff_mesh, 'FaceColor', 'blue', 'FaceAlpha', 0.5, 'EdgeColor', 'none');
 
+    case 'energy_comp'
 %% Power and energy
 set(0,'DefaultAxesFontSize',16);
 addpath('./sim_data/other_insects');
-add_to_save="_forw";
 % Without abdomen oscillation
 load('sim_QS_x_hover'+add_to_save + '_no_ab.mat')
 tau_no = tau(4:12,:);
 [pow_no, E_no, E_dot_no, eff_no, P_in_no, P_out_no] = compute_power(...
     INSECT.m, t, x, x_dot, tau, Q_R, Q_L, Q_A, W_R, W_L, W_A, W, f_a, f_tau);
+E_no = E; E_dot_no = E_dot;
 
 % With abdomen oscillation
 % load('sim_QS_x_hover.mat')
@@ -89,6 +95,7 @@ load('sim_QS_x_hover'+add_to_save + '.mat')
 tau_ab = tau(4:12,:);
 [pow_ab, E_ab, E_dot_ab, eff_ab, P_in_ab, P_out_ab] = compute_power(...
     INSECT.m, t, x, x_dot, tau, Q_R, Q_L, Q_A, W_R, W_L, W_A, W, f_a, f_tau);
+E_ab = E; E_dot_ab = E_dot;
 
 N_period = T*WK.f;
 mean_pow_no = sum(mean(abs(pow_no), 2) / N_period);
@@ -158,6 +165,9 @@ print(h_tau_model, 'hover_tau_model'+add_to_save, '-depsc', '-r0');
 mean_E_no = mean(abs(E_no), 2) / N_period;
 mean_E_ab = mean(abs(E_ab), 2) / N_period;
 change_E = (mean_E_ab - mean_E_no) ./ mean_E_no;
+mean_E_dot_no = mean(abs(E_dot_no), 2) / N_period;
+mean_E_dot_ab = mean(abs(E_dot_ab), 2) / N_period;
+change_E_dot = (mean_E_dot_ab - mean_E_dot_no) ./ mean_E_dot_no;
 h_E = figure;
 subplot(2,1,1);
 plot(t*WK.f,E_no,'r');
@@ -170,7 +180,9 @@ plot(t*WK.f,E_dot_no,'r');
 patch_downstroke(h_E,t*WK.f,Euler_R_dot);
 hold on;
 plot(t*WK.f,E_dot_ab,'b');
-ylabel('$\dot{E}$','interpreter','latex');
+ylabel('$\sqrt{\sum_{i=\lbrace R,L,A \rbrace} \|\tau_i\|^2}$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
-sgtitle('Reduction in mean energy is ' + string(round(-change_E*100, 1)) + ' %');
+sgtitle('Reduction in mean energy is ' + string(round(-change_E*100, 1)) + ' % '...
+    +'and in mean torque is ' + string(round(-change_E_dot*100, 1)) + ' %');
 print(h_E, 'hover_energy_ab'+add_to_save, '-depsc', '-r0');
+end

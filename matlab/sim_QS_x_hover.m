@@ -7,7 +7,7 @@ close all;
 addpath('./modules', './sim_data', './plotting');
 load('./sim_data/other_insects/morp_MONARCH.mat', 'INSECT');
 filename='sim_data/other_insects/sim_QS_x_hover_mona';
-use_past_data=true; % Use previously optimized points in current optimization
+use_past_data=false; % Use previously optimized points in current optimization
 
 WK.f=INSECT.f;
 WK.type='BermanWang';
@@ -19,9 +19,9 @@ WK.psi_N = 2; % or 1
 
 N=1001;
 x0=[0 0 0]';
-% final_pos = [0; 0; 0;];
+final_pos = [0; 0; 0;];
 % final_pos = [0.1; 0; -0.1/3;]/(INSECT.f/10); % Experimental trajectory
-final_pos = [0.1654; 0; -0.0626;]; % From data
+% final_pos = [0.1654; 0; -0.0626;]; % From data
 
 %%
 % [WK_arr, solutions, output, lb, ub] = optimization(WK, INSECT, N, x0, final_pos, filename, use_past_data);
@@ -37,7 +37,11 @@ sol_arr = array2table(sol_arr, 'VariableNames', ...
 sol_arr = sortrows(sol_arr, 'Firstorderopt');
 disp([sol_arr(1:5,:); sol_arr(sol_arr.Index == 1, :)]);
 sol_idx = sol_arr{1, 1};
-WK_arr = solutions(sol_idx).X; % (1) with ab, (2) without ab, (11) forw, (1) forw without ab
+% Need to minimize both 'Fval' and 'Firstorderopt'
+% So we pick the best possible solution manually
+sol_idx = 3; % (3) with ab, (2) without ab, (4) forw, (7) forw without ab
+WK_arr = solutions(sol_idx).X;
+fval = solutions(sol_idx).Fval;
 
 [WK, x_dot0] = get_WK(WK, WK_arr);
 X0=[x0; x_dot0];
@@ -55,11 +59,14 @@ for k=1:N
     [X_dot(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), theta_B(k),...
         theta_A(k), W(:,k), W_dot(:,k), W_R(:,k), W_R_dot(:,k), W_L(:,k),...
         W_L_dot(:,k), W_A(:,k), W_A_dot(:,k), F_R(:,k), F_L(:,k), M_R(:,k),...
-        M_L(:,k), f_a(:,k), f_g(:,k), f_tau(:,k), tau(:,k)]= eom_QS_x(INSECT, WK, WK, t(k), X(k,:)');
+        M_L(:,k), f_a(:,k), f_g(:,k), f_tau(:,k), tau(:,k), ...
+        Euler_R(:,k), Euler_R_dot(:,k), JJ, U]= eom_QS_x(INSECT, WK, WK, t(k), X(k,:)');
     F_B(:,k) = Q_R(:,:,k)*F_R(:,k) + Q_L(:,:,k)*F_L(:,k);
-    [Euler_R(:,k), Euler_R_dot(:,k), Euler_R_ddot(:,k)] = wing_kinematics(t(k),WK);
+    xi = [X_dot(4:6,k); W(:,k); W_R(:,k); W_L(:,k); W_A(:,k)];
+    E(k) = 0.5 * xi' * JJ * xi + U;
 end
 
+E_dot = vecnorm(tau,2,1);
 x_ddot = X_dot(4:6,:);
 
 % Get a list of all variables
