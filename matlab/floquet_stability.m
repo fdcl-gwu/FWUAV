@@ -22,13 +22,10 @@ dt = t(2) - t(1);
 epsilon = 1e-8;
 
 % n is #perturbation states; n_vars is #actual states
-WK_arr = solutions(11).X;
-[WK, x_dot0] = get_WK0(WK, WK_arr, 'x');
-X0 = [X0(1:3); x_dot0];
-n = 3; n_vars = 6; % for nominal hover with @eom_hover_vel if position is not periodic
-[delta_mat, F_linear] = sim_pert(@eom_hover_vel, n, n_vars, INSECT, WK, X0, N, t, epsilon);
-% n = 6; n_vars = 6; % for nominal hover with @eom_hover
-% [delta_mat, F_linear] = sim_pert(@eom_hover, n, n_vars, INSECT, WK, X0, N, t, epsilon);
+% n = 3; n_vars = 6; % for nominal hover with @eom_hover_vel if position is not periodic
+% [delta_mat, F_linear] = sim_pert(@eom_hover_vel, n, n_vars, INSECT, WK, X0, N, t, epsilon);
+n = 6; n_vars = 6; % for nominal hover with @eom_hover
+[delta_mat, F_linear] = sim_pert(@eom_hover, n, n_vars, INSECT, WK, X0, N, t, epsilon);
 % n = 12; n_vars = 6; % attitude stability with @eom_hover_attitude
 % [delta_mat, F_linear] = sim_pert(@eom_hover_attitude, n, n_vars, INSECT, WK, X0, N, t, epsilon);
 

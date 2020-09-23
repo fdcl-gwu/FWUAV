@@ -39,7 +39,7 @@ disp([sol_arr(1:5,:); sol_arr(sol_arr.Index == 1, :)]);
 sol_idx = sol_arr{1, 1};
 % Need to minimize both 'Fval' and 'Firstorderopt'
 % So we pick the best possible solution manually
-sol_idx = 3; % (3) with ab, (2) without ab, (4) forw, (7) forw without ab
+% sol_idx = 7; % (3) with ab, (2) without ab, (7) forw, (10) forw without ab
 WK_arr = solutions(sol_idx).X;
 fval = solutions(sol_idx).Fval;
 

@@ -20,20 +20,18 @@ h_x.PaperPosition = [0 0 8 8];
 for ii=1:3 
     subplot(3,1,ii);
     plot(t*WK.f,x(ii,:));
+    ylabel('$x_'+string(ii)+'$','interpreter','latex');
 end
 xlabel('$t/T$','interpreter','latex');
-subplot(3,1,2);
-ylabel('$x$','interpreter','latex');
 
 h_x_dot=figure;
 for ii=1:3 
     subplot(3,1,ii);
     plot(t*WK.f,x_dot(ii,:));
     patch_downstroke(h_x_dot,t*WK.f,Euler_R_dot);
+    ylabel('$\dot x_'+string(ii)+'$','interpreter','latex');
 end
 xlabel('$t/T$','interpreter','latex');
-subplot(3,1,2);
-ylabel('$\dot x$','interpreter','latex');
 print(h_x_dot, 'hover_velocity'+add_to_save, '-depsc', '-r0');
 
 nn = numel(t);
