@@ -5,13 +5,26 @@ function sim_QS_x_hover
 evalin('base','clear all');
 close all;
 addpath('./modules', './sim_data', './plotting');
+
+%% Simulation parameters
 load('./sim_data/other_insects/morp_MONARCH.mat', 'INSECT');
-filename='sim_data/other_insects/sim_QS_x_hover_mona';
+add_to_file="_forw_no_ab";
+% WK.ab_type='varying';
+WK.ab_type='fixed';
+% final_pos = [0; 0; 0;];
+final_pos = [0.1654; 0; -0.0626;]; % From data
+
+% Need to minimize both 'Fval' and 'Firstorderopt'
+% So we pick the best possible solution manually
+load_past_data=true; % Change solution index with past data
+% sol_idx = 2; % (2) with ab, (3) without ab, (4) forw, (10) forw without ab
+
+%%
+filename=char('sim_data/other_insects/sim_QS_x_hover'+add_to_file);
 use_past_data=false; % Use previously optimized points in current optimization
 
 WK.f=INSECT.f;
 WK.type='BermanWang';
-WK.ab_type='varying';
 WK.bo_type='varying';
 WK.phi_max=75*pi/180;
 WK.psi_max=5*pi/180;
@@ -19,13 +32,13 @@ WK.psi_N = 2; % or 1
 
 N=1001;
 x0=[0 0 0]';
-final_pos = [0; 0; 0;];
-% final_pos = [0.1; 0; -0.1/3;]/(INSECT.f/10); % Experimental trajectory
-% final_pos = [0.1654; 0; -0.0626;]; % From data
 
 %%
-% [WK_arr, solutions, output, lb, ub] = optimization(WK, INSECT, N, x0, final_pos, filename, use_past_data);
-load(filename)
+if load_past_data
+    load(filename, 'WK', 'WK_arr', 'solutions', 'output', 'lb', 'ub');
+else
+    [WK_arr, solutions, output, lb, ub] = optimization(WK, INSECT, N, x0, final_pos, filename, use_past_data);
+end
 
 sol_arr = zeros(length(solutions), 5);
 for i=1:length(solutions)
@@ -36,10 +49,9 @@ sol_arr = array2table(sol_arr, 'VariableNames', ...
     {'Index','Fval','Firstorderopt','FuncCount','Constrviolation'});
 sol_arr = sortrows(sol_arr, 'Firstorderopt');
 disp([sol_arr(1:5,:); sol_arr(sol_arr.Index == 1, :)]);
-sol_idx = sol_arr{1, 1};
-% Need to minimize both 'Fval' and 'Firstorderopt'
-% So we pick the best possible solution manually
-% sol_idx = 7; % (3) with ab, (2) without ab, (7) forw, (10) forw without ab
+if ~exist('sol_idx')
+    sol_idx = sol_arr{1, 1};
+end
 WK_arr = solutions(sol_idx).X;
 fval = solutions(sol_idx).Fval;
 
@@ -84,9 +96,10 @@ function [WK_arr, solutions, output, lb, ub] = optimization(WK, INSECT, N, x0, f
 %% The optimization algorithm
 A = []; b = []; Aeq = []; beq = [];
 % Initial value of WK_arr = [beta, phi_m, phi_K, phi_0, theta_m, theta_C, theta_0, theta_a, psi_m, psi_a, psi_0, x_dot1, x_dot2, x_dot3, theta_B_m, theta_B_0, theta_B_a, theta_A_m, theta_A_0, theta_A_a, freq]
+% Experimental theta_B_a = -83.16, theta_A_a = -196.56
 WK_arr0 = [-0.2400   0.7806  0.4012   0.7901    0.6981    2.9999    0.2680    0.1050    8*pi/180    0.9757    5*pi/180   -0.1000   -0.0000 -0.1000 0 0 0 0.0937 0 0 WK.f];
-lb = [-pi/8, 0, 0, -pi/3, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/12, -pi, 0, pi/12, -pi, WK.f*(1-0.15)];
-ub = [pi/5, pi/2, 1, 5*pi/180, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/3, pi, pi/12, pi/4, pi, WK.f*(1+0.15)];
+lb = [-pi/8, 0, 0, -pi/3, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/12, -pi/2, 0, pi/12, -210*pi/180, WK.f*(1-0.15)];
+ub = [pi/5, pi/2, 1, 5*pi/180, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/3, -5*pi/12, pi/12, pi/4, -pi, WK.f*(1+0.15)];
 nonlcon = @(WK_arr) traj_condition(WK_arr, WK, INSECT, N, x0, final_pos);
 
 tic;

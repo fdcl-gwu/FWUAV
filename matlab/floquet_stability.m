@@ -8,7 +8,7 @@ filename='floquet_stability';
 
 %% Linearized dynamics
 addpath('./sim_data/other_insects');
-load('sim_QS_x_hover_mona.mat', 'INSECT', 'WK', 'X0', 'solutions');
+load('sim_QS_x_hover_forw_no_ab.mat', 'INSECT', 'WK', 'X0', 'solutions');
 conv_name='conv_rate_mona';
 save_rate=false;
 bool_sort_mus=false; % false if n ~= 6

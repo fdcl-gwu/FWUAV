@@ -4,7 +4,7 @@ set(0,'DefaultAxesFontName','times');
 set(0,'DefaultAxesFontSize',12);
 % study = 'monte_carlo';
 study = 'energy_comp';
-add_to_save="_mona";
+add_to_save="_forw";
 
 switch study
     case 'monte_carlo'
