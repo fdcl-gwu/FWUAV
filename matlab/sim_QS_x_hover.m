@@ -8,16 +8,16 @@ addpath('./modules', './sim_data', './plotting');
 
 %% Simulation parameters
 load('./sim_data/other_insects/morp_MONARCH.mat', 'INSECT');
-add_to_file="_forw_no_ab";
-% WK.ab_type='varying';
-WK.ab_type='fixed';
-% final_pos = [0; 0; 0;];
-final_pos = [0.1654; 0; -0.0626;]; % From data
+add_to_file="_mona";
+WK.ab_type='varying';
+% WK.ab_type='fixed';
+final_pos = [0; 0; 0;];
+% final_pos = [0.1654; 0; -0.0626;]; % From data
 
+load_past_data=true; % Change solution index with past data
 % Need to minimize both 'Fval' and 'Firstorderopt'
 % So we pick the best possible solution manually
-load_past_data=true; % Change solution index with past data
-% sol_idx = 2; % (2) with ab, (3) without ab, (4) forw, (10) forw without ab
+% sol_idx = 1; % (2) with ab, (3) without ab, (4) forw, (10) forw without ab
 
 %%
 filename=char('sim_data/other_insects/sim_QS_x_hover'+add_to_file);
@@ -48,7 +48,11 @@ end
 sol_arr = array2table(sol_arr, 'VariableNames', ...
     {'Index','Fval','Firstorderopt','FuncCount','Constrviolation'});
 sol_arr = sortrows(sol_arr, 'Firstorderopt');
-disp([sol_arr(1:5,:); sol_arr(sol_arr.Index == 1, :)]);
+if length(solutions) > 5
+    disp([sol_arr(1:5,:); sol_arr(sol_arr.Index == 1, :)]);
+else
+    disp(sol_arr);
+end
 if ~exist('sol_idx')
     sol_idx = sol_arr{1, 1};
 end

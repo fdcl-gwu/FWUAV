@@ -8,7 +8,7 @@ filename='floquet_stability';
 
 %% Linearized dynamics
 addpath('./sim_data/other_insects');
-load('sim_QS_x_hover_forw_no_ab.mat', 'INSECT', 'WK', 'X0', 'solutions');
+load('sim_QS_x_hover_mona.mat', 'INSECT', 'WK', 'X0', 'solutions');
 conv_name='conv_rate_mona';
 save_rate=false;
 bool_sort_mus=false; % false if n ~= 6
@@ -83,6 +83,8 @@ if bool_sort_mus
     end
     mus_sort(end) = mus_s(lat_idx); mus_sort(lat_idx) = mus_s(end);
     e_vecs_sort(:,end) = e_vecs_s(:,lat_idx); e_vecs_sort(:,lat_idx) = e_vecs_s(:,end);
+    [mus_sort(1:5), idx_mus] = sort(mus_sort(1:5),'descend');
+    e_vecs_sort(:,1:5) = e_vecs_sort(:,idx_mus);
     [~, idx_sort] = ismember(mus_sort, mus); % Sort according to modes
 end
 
