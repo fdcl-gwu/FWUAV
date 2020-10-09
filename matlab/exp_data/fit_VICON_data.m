@@ -191,7 +191,7 @@ if bool_print
     print('fit_VICON_wing_tip','-depsc');
     figure(h_E);
     print('fit_VICON_E','-depsc');    
-    !mv fit_VICON*.eps ../../doc/Figs/
+%     !mv fit_VICON*.eps ../../doc/Figs/
 end
 
 end

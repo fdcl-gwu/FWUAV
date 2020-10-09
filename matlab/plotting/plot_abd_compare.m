@@ -1,10 +1,12 @@
 %% Comparison to observe the effect of abdomen oscillation
 addpath('../modules', '../sim_data', '../');
 set(0,'DefaultAxesFontName','times');
+set(0,'FixedWidthFontName','times');
 set(0,'DefaultAxesFontSize',12);
+set(0,'DefaultLineLineWidth',1.25);
 % study = 'monte_carlo';
 study = 'energy_comp';
-add_to_save="_forw";
+add_to_save="_mona";
 
 switch study
     case 'monte_carlo'
@@ -82,6 +84,7 @@ print(h_Nconv, 'hover_mc_perf', '-depsc', '-r0');
 %% Power and energy
 set(0,'DefaultAxesFontSize',16);
 addpath('./sim_data/other_insects');
+fontsize = get(0, 'DefaultAxesFontSize');
 % Without abdomen oscillation
 load('sim_QS_x_hover'+add_to_save + '_no_ab.mat')
 tau_no = tau(4:12,:);
@@ -119,8 +122,9 @@ plot(t*WK.f,pow_ab(3,:),'b');
 patch_downstroke(h_pow,t*WK.f,Euler_R_dot);
 ylabel('$P_A$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
-sgtitle('Reduction in total mean power is ' + string(round(-change_pow*100, 1)) + ' %');
-print(h_pow, 'hover_power_ab'+add_to_save, '-depsc', '-r0');
+sgtitle('Reduction in total mean power is ' + string(round(-change_pow*100, 1)) + ' \%',...
+    'FontSize', fontsize, 'interpreter','latex');
+print(h_pow, 'hover_power_ab'+add_to_save, '-depsc2');
 
 mean_tau_no = (1/3)*mean(vecnorm(tau_no(1:3,:),2,1)+...
     vecnorm(tau_no(4:6,:),2,1) + vecnorm(tau_no(7:9,:),2,1), 2) / N_period;
@@ -141,8 +145,9 @@ plot(t*WK.f,vecnorm(tau_ab(7:9,:), 2, 1),'b');
 patch_downstroke(h_tau,t*WK.f,Euler_R_dot);
 ylabel('$\|\tau_A\|$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
-sgtitle('Reduction in total torque magnitude is ' + string(round(-change_tau*100, 1)) + ' %');
-print(h_tau, 'hover_torque_ab'+add_to_save, '-depsc', '-r0');
+sgtitle('Reduction in total torque magnitude is ' + string(round(-change_tau*100, 1)) + ' \%',...
+    'FontSize', fontsize, 'interpreter','latex');
+print(h_tau, 'hover_torque_ab'+add_to_save, '-depsc2');
 
 dt = t(2) - t(1);
 tau_A = tau_ab(8,:);
@@ -160,7 +165,7 @@ legend('Actual torque', 'Modeled torque');
 title(sprintf('Torsional model as \n $\\tau_A(t) = -k\\theta_A(t) - c\\dot{\\theta}_A(t) + \\tau_0 $'),...
     'interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
-print(h_tau_model, 'hover_tau_model'+add_to_save, '-depsc', '-r0');
+print(h_tau_model, 'hover_tau_model'+add_to_save, '-depsc2');
 
 mean_E_no = mean(abs(E_no), 2) / N_period;
 mean_E_ab = mean(abs(E_ab), 2) / N_period;
@@ -182,7 +187,8 @@ hold on;
 plot(t*WK.f,E_dot_ab,'b');
 ylabel('$\sqrt{\sum_{i=\lbrace R,L,A \rbrace} \|\tau_i\|^2}$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
-sgtitle('Reduction in mean energy is ' + string(round(-change_E*100, 1)) + ' % '...
-    +'and in mean torque is ' + string(round(-change_E_dot*100, 1)) + ' %');
-print(h_E, 'hover_energy_ab'+add_to_save, '-depsc', '-r0');
+sgtitle([{'Reduction in mean energy is ' + string(round(-change_E*100, 1)) + ' \%'};...
+    {'and in mean torque is ' + string(round(-change_E_dot*100, 1)) + ' \%'}], ...
+    'FontSize', fontsize, 'interpreter','latex');
+print(h_E, 'hover_energy_ab'+add_to_save, '-depsc2');
 end

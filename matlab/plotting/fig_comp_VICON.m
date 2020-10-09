@@ -1,7 +1,9 @@
 clear all;
 close all;
 
-set(0, 'DefaultLineLineWidth', 2);
+set(0,'DefaultAxesFontName','times');
+set(0,'DefaultAxesFontSize',18);
+set(0,'DefaultLineLineWidth',2);
 
 XLIM=[0 5];
 
@@ -12,12 +14,15 @@ plot3(x(1,:),x(2,:),x(3,:));
 set(gca,'YDir','reverse','ZDir','reverse');
 axis equal;
 
-% h_v3=figure;
-% plot(x_dot(1,:),x_dot(3,:));
+h_v3=figure;
+plot(x_dot(1,:),x_dot(3,:));
 % set(gca,'YDir','reverse');
-% axis equal;
-% xlabel('$\dot x_1$','interpreter','latex');
-% zlabel('$\dot x_3$','interpreter','latex');
+hold on
+axis equal;
+scatter(x_dot(1,1),x_dot(3,1),50,'r','filled');
+text(x_dot(1,1),x_dot(3,1), '$\leftarrow v(0)$', 'FontSize', 18, 'Interpreter', 'latex')
+xlabel('$v_1$','interpreter','latex');
+ylabel('$v_3$','interpreter','latex');
 
 h_x=figure;
 for ii=1:3
@@ -100,11 +105,10 @@ for ii=1:3
     subplot(3,1,ii);
     hold on;
     plot(t*WK.f,x(ii,:),'r');
+    ylabel('$x_'+string(ii)+'$','interpreter','latex');
     patch_downstroke(h_x,t_sim_QS*WK.f,Euler_R_dot);
 end
 xlabel('$t/T$','interpreter','latex');
-subplot(3,1,2);
-ylabel('$x$','interpreter','latex');
 
 
 figure(h_E);
@@ -137,11 +141,10 @@ for ii=1:3
     subplot(3,1,ii);
     hold on;
     plot(t(2:end)*WK.f,v(ii,:),'r');
+    ylabel('$\dot{x}_'+string(ii)+'$','interpreter','latex');
     patch_downstroke(h_v,t_sim_QS*WK.f,Euler_R_dot);
 end
 xlabel('$t/T$','interpreter','latex');
-subplot(3,1,2);
-ylabel('$\dot x$','interpreter','latex');
 
 
 figure(h_FB);
@@ -149,22 +152,38 @@ for ii=1:3
     subplot(3,1,ii);
     hold on;
     plot(t(3:end)*WK.f,F_B(ii,:),'r');
+    ylabel('${F_B}_'+string(ii)+'$','interpreter','latex');
     patch_downstroke(h_FB,t_sim_QS*WK.f,Euler_R_dot);
 end
 xlabel('$t/T$','interpreter','latex');
-subplot(3,1,2);
-ylabel('$F_B$','interpreter','latex');
 
+h_E = figure;
+my_ylabel={'$\phi$','$\theta$','$\psi$'};
+for ii=1:3
+    subplot(3,1,ii);
+    plot(t*WK.f,E_R(ii,:)*180/pi,'r','LineWidth',1.5);
+    hold on;
+    plot(t*WK.f,E_L(ii,:)*180/pi,'b','LineWidth',1.5);
+    ylabel(my_ylabel{ii},'interpreter','latex');
+    plot(t*WK.f,0.5*(E_R(ii,:)+E_L(ii,:))*180/pi,'k--','LineWidth',1.5);
+    axis('tight');
+    if ii==1
+        legend({'right wing','left wing','average'});
+    end
+end
+xlabel('$t/T$','interpreter','latex');
 
 bool_print=true;
 filename='comp_VICON';
 if bool_print
     figure(h_x3);pause(1);print([filename '_x3'],'-depsc2');
+    figure(h_v3);pause(1);print([filename '_v3'],'-depsc2');
     figure(h_x);pause(1);print([filename '_x'],'-depsc2');
     figure(h_theta);pause(1);print([filename '_theta'],'-depsc2');
-    figure(h_E);print([filename '_E'],'-depsc2');
-    figure(h_v);print([filename '_v'],'-depsc2');
-    figure(h_FB);print([filename '_FB'],'-depsc2');
+    figure(h_E);pause(1);print([filename '_E'],'-depsc2');
+    figure(h_v);pause(1);print([filename '_v'],'-depsc2');
+    figure(h_FB);pause(1);print([filename '_FB'],'-depsc2');
+    figure(h_E);pause(1);print('fit_VICON_E','-depsc2');
 end
-!mv *.eps ../doc/Figs
+% !mv *.eps ../doc/Figs
 
