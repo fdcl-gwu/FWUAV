@@ -28,54 +28,23 @@ for i=1:3
     end
 end
 
-% Values obtained from parametric study
-load('parametric_study_xR.mat', 'params');
-des.params = params;
-% Observing parametric study plots
-% des.params.mat_aero(1,[3,5,6],:) = 0;
-% des.params.mat_aero(2,[1,2,4,6],:) = 0;
-% des.params.mat_aero(3,[3,5,6],:) = 0;
-% des.params.mat_aero(3,[1,2,4],1) = 1; % A big number?
-% des.params.mat_aero(4,[1,2,4,5,6],:) = 0;
-% des.params.mat_aero(5,[3,5,6],:) = 0;
-% des.params.mat_aero(6,[1,2,4],:) = 0;
-
-% [f_a, M_a] vs [dphi_ms, dtheta_0s, dphi_mk, dphi_0s, dtheta_0k, dpsi_0k]
-if rank(des.params.mat_aero(:,:,1), 1e-10) < 6
-    error('Parameters are not able to generate aerodynamic forces and moments');
-end
-
 % load('sim_QS_xR_hover.mat', 'solutions');
 % WK_arr = solutions(1).X; % Controllable : (2), Uncontrollable : (1)
 % [WK, des.x_dot0, des.R0, des.W0] = get_WK0(WK, WK_arr);
 % des.X0=[des.x0; reshape(des.R0,9,1); des.x_dot0; des.W0];
 
-%% Gains
-pol = poly([-7.8 + 19i, -7.8 - 19i, -0.003]);
-if ~all(real(roots(pol)) < 0)
-    error('The chosen gains are not suitable');
-end
-% Optimized gs = [427.1529   15.6076  13.4983];
-% gains.Kp_pos = pol(3); gains.Kd_pos = pol(2); gains.Ki_pos = pol(4);
-gains.Kp_pos = 4; gains.Kd_pos = 2; gains.Ki_pos = 1;
-gains.KR = 4; gains.KOm = 2; gains.KI = 1; gains.cI = 1e-1;
-
-%% Single simulation
-rng default;
-eps = 1e-3;
-X0 = des.X0 + [1e-2*ones(3,1); zeros(9,1); 0.05*ones(3,1); 1*ones(3,1)].*rand(18,1);
-% wt = 0;
-
 %% Optimization
-N_periods = 3; % 1, 3, 15
-N_iters = 10; % 2, 4 per period
+rng default;
+N_periods = 3; % 1, 3
+N_iters = 10; % 2, 4, 10 per period
 p = 2*N_iters; % Prediction Horizon multiplier of iter
+m = N_iters; % Control Horizon multiplier of iter
 N_single = 100; % per time period
 N_per_iter = N_single / N_iters;
-N = N_single*N_periods + 1 + N_per_iter*(p-1);
+N = N_single*(N_periods-1) + 1 + N_per_iter*p;
 err_bound = 1e-4; % Convergence criterion is a f(N, N_periods, WK)
-T = N_periods/WK.f;
-t = linspace(0,T + (p-1)/(WK.f*N_iters),N);
+T = (N_periods - 1 + p/N_iters)/WK.f;
+t = linspace(0,T,N);
 bound_param = 0.1; % Parameter bound; Use 0.25?
 
 X_ref = zeros(N, 18);
@@ -90,11 +59,13 @@ idx_con = 1:(1+N_single*N_periods);
 des.x_fit_t = X_ref(idx_con, 1:3)'; des.x_dot_fit_t = X_ref(idx_con, 13:15)';
 des.R_fit_t = reshape(X_ref(idx_con, 4:12)', 3, 3, []); des.W_fit_t = X_ref(idx_con, 16:18)';
 
-Weights.OutputVariables = [25*ones(1,3), 2.5*ones(1,9), 5*ones(1,3), 1*ones(1,3)]; % 10, 2.5, 2.5, 2
+Weights.OutputVariables = [15*ones(1,3), 1*ones(1,9), 5*ones(1,3), 1*ones(1,3)]; % 15/25, 1/2.5, 5, 1
 Weights.PredictionHorizon = logspace(-1, 1, p); % p elements
 Weights.PredictionHorizon = Weights.PredictionHorizon / sum(Weights.PredictionHorizon);
-% Weights.OutputVariables = ones(1,18); % 10, 2.5, 2.5, 2
-% Weights.Time = logspace(-1, 1, N_per_iter+1)';
+% To multiply the perturbations
+dx_max = 0.2*max(max(abs(X_ref(:, 1:3)), [], 1)); dtheta_max = 5*pi/180;
+dx_dot_max = 0.05 * max(max(abs(X_ref(:, 13:15)), [], 1)); domega_max = 0.05 * max(max(abs(X_ref(:, 16:18)), [], 1));
+Weights.PerturbVariables = [dx_max*ones(1,3), dtheta_max*ones(1,3), dx_dot_max*ones(1,3), domega_max*ones(1,3)];
 
 WK_R = WK; WK_L = WK;
 
@@ -117,44 +88,48 @@ problem.lb = repmat(lb, p, 1);
 problem.ub = repmat(ub, p, 1);
 problem.solver = 'fmincon';
 problem.options = optimoptions(@fmincon);
-problem.options.Algorithm = 'active-set'; % interior-point, sqp, fastest : active-set
-% if p >= 4
-%     problem.options.MaxFunctionEvaluations = 2000;
-% end
+problem.options.Algorithm = 'sqp'; % interior-point, sqp, fastest : active-set
+if p*N_dang*100 > 4000
+    problem.options.MaxFunctionEvaluations = 4000;
+end
 problem.options.Display = 'iter';
 problem.options.UseParallel = true;
 
-%% Single simulation
-load('sim_QS_xR_hover_control_opt_mcdata', 'X0_pert', 'cost', 'dX');
-idx_unstable = cost(:, end) > cost(:, 1);
-% X0 = X0_pert(idx_unstable, :);
-% X0 = X0(end, :)';
-dX0 = dX(idx_unstable, :);
-dX0 = dX0(end, :);
-e1 = [1 0 0]'; e2 = [0 1 0]'; e3 = [0 0 1]';
-des_X0 = X_ref(1, :);
-X0 = [des_X0(1:3)+dX0(1:3),...
-        reshape(reshape(des_X0(4:12), 3, 3)*expmhat(dX0(6)*e3)*expmhat(dX0(5)*e2)*expmhat(dX0(4)*e1),1,9),...
-        des_X0(13:18) + dX0(7:12)]';
-tic;
-[cost, dang, X, x, x_dot, R, Q_R, Q_L, Q_A, theta_A, W, W_R, W_R_dot, W_L, ...
-    W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
-    Euler_R_dot] = simulate_control(t, X0, X_ref, WK_R, WK_L, INSECT, ...
-    N, N_periods, N_single, N_iters, N_per_iter, problem, Weights, ...
-    get_args, param_type, p);
-time_taken = toc;
+%% Simulation
+simulation_type = 'single'; % 'single', 'monte_carlo'
+switch simulation_type
+    case 'single'
+    load('sim_QS_xR_hover_control_opt_mcdata', 'X0_pert', 'cost', 'dX');
+    idx_unstable = cost(:, end) > cost(:, 1);
+    % X0 = X0_pert(idx_unstable, :);
+    % X0 = X0(end, :)';
+    dX0 = dX(idx_unstable, :);
+    dX0 = dX0(end, :);
+    e1 = [1 0 0]'; e2 = [0 1 0]'; e3 = [0 0 1]';
+    des_X0 = X_ref(1, :);
+    dX0 = Weights.PerturbVariables;
+    X0 = [des_X0(1:3)+dX0(1:3),...
+            reshape(reshape(des_X0(4:12), 3, 3)*expmhat(dX0(6)*e3)*expmhat(dX0(5)*e2)*expmhat(dX0(4)*e1),1,9),...
+            des_X0(13:18) + dX0(7:12)]';
+    tic;
+    [cost, opt_param, dang, X, x, x_dot, R, Q_R, Q_L, Q_A, theta_A, W, W_R, W_R_dot, W_L, ...
+        W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
+        Euler_R_dot] = simulate_control(t, X0, X_ref, WK_R, WK_L, INSECT, ...
+        N, N_periods, N_single, N_iters, N_per_iter, problem, Weights, ...
+        get_args, param_type, p, m);
+    time_taken = toc;
 
-plot(0:1:N_periods*N_iters, cost);
+    plot(0:1:N_periods*N_iters, cost);
 
-%% Monte carlo
-% N_sims = 1024; % 512 takes 36478s, 16 ; 71.2s per sim
-% problem.options.Display = 'none';
-% Weights.PerturbVariables = [0.025*ones(1,3), 0.25*ones(1,3), 0.1*ones(1,3), 1*ones(1,3)]; % To multiply the perturbations
-% tic;
-% [X0_pert, dX, cost, dang] = monte_carlo(N_sims, t, X_ref, WK_R, WK_L, INSECT, ...
-%         N, N_periods, N_single, N_iters, N_per_iter, problem, Weights, ...
-%         get_args, param_type, p);
-% time_taken = toc;
+    case 'monte_carlo'
+    N_sims = 4; % 1 takes 4200s
+    problem.options.Display = 'none';
+    tic;
+    [X0_pert, dX, cost, opt_param] = monte_carlo(N_sims, t, X_ref, WK_R, WK_L, INSECT, ...
+            N, N_periods, N_single, N_iters, N_per_iter, problem, Weights, ...
+            get_args, param_type, p, m);
+    time_taken = toc;
+end
 
 %%
 t = t(idx_con);
@@ -170,98 +145,123 @@ evalin('base',['load ' filename]);
 
 end
 
-function [X0_pert, dX, cost, dang] = monte_carlo(N_sims, t, X_ref, WK_R, WK_L, INSECT, ...
+function [X0_pert, dX, cost, opt_param] = monte_carlo(N_sims, t, X_ref, WK_R, WK_L, INSECT, ...
         N, N_periods, N_single, N_iters, N_per_iter, problem, Weights, ...
-        get_args, param_type, p)
+        get_args, param_type, p, m)
 %%
 e1 = [1 0 0]'; e2 = [0 1 0]'; e3 = [0 0 1]';
-X0_pert = zeros(N_sims, 18);
 dX = zeros(N_sims, 12);
-cost = zeros(N_sims, N_periods*N_iters+1);
-dang = zeros(N_sims, length(problem.x0), N_periods*N_iters);
-idx_dang = linspace(1, N, N_iters*N_periods+1);
-idx_dang = idx_dang(1:end-1);
+cost = zeros(N_sims, N_periods, 1+N_iters);
+opt_param = zeros(N_sims, N_periods, length(problem.x0)*m/p);
+X0_pert = zeros(N_sims, N_periods, 18);
+idx_cost = zeros(N_periods, 1+N_iters);
+for period=1:3
+    idx_cost(period,1:(1+N_iters)) = (1+(period-1)*N_iters):(1+period*N_iters);
+end
+idx_X0 = 1:N_single:(N_single*N_periods);
 des_X0 = X_ref(1, :);
 des_R0 = reshape(des_X0(4:12), 3, 3);
 
 par_pool = gcp;
 nWorkers = par_pool.NumWorkers;
-% ticBytes(par_pool);
+ticBytes(par_pool);
 parfor n=1:nWorkers
     rng(n);
 end
 pause(1);
 
+for i = 1:N_sims
+    dX(i,:) = Weights.PerturbVariables .* randn(1, 12);
+end
 parfor i = 1:N_sims
     % perturbation
-    dXi = Weights.PerturbVariables .* randn(1, 12);
+    dXi = dX(i,:);
     X0 = [des_X0(1:3)+dXi(1:3),...
         reshape(des_R0*expmhat(dXi(6)*e3)*expmhat(dXi(5)*e2)*expmhat(dXi(4)*e1),1,9),...
         des_X0(13:18) + dXi(7:12)]';
-    dX(i,:) = dXi; X0_pert(i,:) = X0';
-    [cost(i,:), dang_arr] = simulate_control(t, X0, X_ref, WK_R, WK_L, INSECT, ...
+    [cost_arr, opt_param_arr, ~, X] = simulate_control(t, X0, X_ref, WK_R, WK_L, INSECT, ...
         N, N_periods, N_single, N_iters, N_per_iter, problem, Weights, ...
-        get_args, param_type, p);
-    dang(i,:,:) = dang_arr(:, idx_dang);
+        get_args, param_type, p, m);
+    cost(i,:,:) = cost_arr(idx_cost);
+    opt_param(i,:,:) = opt_param_arr';
+    X0_pert(i,:,:) = X(idx_X0, :);
     fprintf('Completed simulation %d\n', i);
 end
 
-% tocBytes(par_pool);
+cost = reshape(cost, N_sims*N_periods, 1+N_iters);
+opt_param = reshape(opt_param, N_sims*N_periods, length(problem.x0)*m/p);
+X0_pert = reshape(X0_pert, N_sims*N_periods, 18);
+
+tocBytes(par_pool);
 
 end
 
-function [cost, dang, X, x, x_dot, R, Q_R, Q_L, Q_A, theta_A, W, W_R, W_R_dot, W_L, ...
+function [cost, opt_param, dang, X, x, x_dot, R, Q_R, Q_L, Q_A, theta_A, W, W_R, W_R_dot, W_L, ...
     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
     Euler_R_dot] = simulate_control(t, X0, X_ref, WK_R, WK_L, INSECT, ...
     N, N_periods, N_single, N_iters, N_per_iter, problem, Weights, ...
-    get_args, param_type, p)
+    get_args, param_type, p, m)
 %%
-cost = [sum((Weights.OutputVariables .* (X0' - X_ref(1,:))).^2)];
+cost = zeros(1, 1+N_periods*N_iters);
+cost(1) = sqrt(sum((Weights.OutputVariables .* (X0' - X_ref(1, :))).^2));
 X = zeros(1+N_single*N_periods, 18);
 N_p = length(problem.x0) / p;
 dang = zeros(N_p, 1+N_single*N_periods);
+opt_param = zeros(N_p*m, N_periods*N_iters/m);
 
 for period=1:N_periods
-    for iter=1:N_iters
+    for iter=1:m:N_iters
 %         cost0 = cost(end);
 %         problem.nonlcon = @(param) cost_cons(...
 %             param, t(idx), X0, INSECT, WK_R, WK_L, X_ref(idx,:), Weights, param_type, cost0, varargin{:});
         idx_opt = (1+(period-1)*N_single+(iter-1)*N_per_iter):(1+(period-1)*N_single+(iter+p-1)*N_per_iter);
+        dang0 = dang(:,idx_opt(1));
         varargin = get_args(t(idx_opt(1)), dang(:,idx_opt(1)));
         problem.objective = @(param) cost_fun(param, t(idx_opt), X0, ...
             INSECT, WK_R, WK_L, X_ref(idx_opt,:), Weights, param_type, ...
             get_args, p, N_p, N_per_iter, varargin{:});
+        % Equality constraints work only for special values of p, m
+        I_66 = eye(6); O_66 = zeros(6);
+        problem.Aeq = [repmat(I_66, 1, N_iters), repmat(O_66, 1, N_iters);
+                       repmat(O_66, 1, N_iters), repmat(I_66, 1, N_iters)];
+        problem.beq = zeros(12, 1);
+%         problem.nonlcon = @(param) param_cons(param, p, N_iters, dang0, idx_opt);
         [param, fval, exitflag] = fmincon(problem);
         fprintf('Exit flag is %d\n', exitflag);
         if p > 1
-            problem.x0 = [param((1+N_p):end); zeros(N_p,1)];
+            problem.x0 = [param((1+N_p*m):end); zeros(N_p*m,1)];
         end
-        param = param(1:N_p);
+        param = param(1:(N_p*m));
+        opt_param(:,1+((period-1)*N_iters+(iter-1))/m) = param;
         
-        idx_con = (1+(period-1)*N_single+(iter-1)*N_per_iter):(1+(period-1)*N_single+iter*N_per_iter);
-        if length(idx_con) == 2
-            [~, X_temp] = ode45(@(t,X) eom_param(INSECT, WK_R, WK_L, t, X, param, param_type, varargin{:}), ...
-            t(idx_con), X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
-            X(idx_con,:) = [X_temp(1,:); X_temp(end,:)];
-        else
-            [~, X(idx_con,:)] = ode45(@(t,X) eom_param(INSECT, WK_R, WK_L, t, X, param, param_type, varargin{:}), ...
-            t(idx_con), X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+        idx_con = (1+(period-1)*N_single+(iter-1)*N_per_iter):(1+(period-1)*N_single+(iter+m-1)*N_per_iter);
+        for con=1:m
+            param_idx = (1+(con-1)*N_p):(con*N_p);
+            param_m = param(param_idx);
+            idx = idx_con((1+(con-1)*N_per_iter):(1+con*N_per_iter));
+
+            [~, X(idx,:)] = ode45(@(t,X) eom_param(INSECT, WK_R, WK_L, t, X, param_m, param_type, varargin{:}), ...
+            t(idx), X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+            for k=idx
+                dang(:,k) = param_type(param_m, t(k), varargin{:});
+                [WK_R_new, WK_L_new] = get_WK(WK_R, WK_L, dang(:,k));
+                [X_dot(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k),...
+                    theta_A(k), W(:,k), W_R(:,k), W_R_dot(:,k), W_L(:,k),...
+                    W_L_dot(:,k), W_A(:,k), W_A_dot(:,k), F_R(:,k), F_L(:,k), M_R(:,k),...
+                    M_L(:,k), f_a(:,k), f_g(:,k), f_tau(:,k), tau(:,k), ...
+                    Euler_R(:,k), Euler_R_dot(:,k)] = ...
+                    eom_QS_xR(INSECT, WK_R_new, WK_L_new, t(k), X(k, :)');
+            end
+            
+            X0 = X(idx(end),:)';
+            dang0 = param_type(param_m, t(idx(end)), varargin{:});
+            varargin = get_args(t(idx(end)), dang0);
+            cost(1+(N_periods-1)*N_iters+(iter-1)+con) = sqrt(...
+                sum((Weights.OutputVariables .* (X(idx(end), :) - X_ref(idx(end), :))).^2));
         end
-        cost = [cost, sum((Weights.OutputVariables .* (X(idx_con(end), :) - X_ref(idx_con(end), :))).^2)];
-        for k=idx_con
-            dang(:,k) = param_type(param, t(k), varargin{:});
-            [WK_R_new, WK_L_new] = get_WK(WK_R, WK_L, dang);
-            [X_dot(:,k), R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k),...
-                theta_A(k), W(:,k), W_R(:,k), W_R_dot(:,k), W_L(:,k),...
-                W_L_dot(:,k), W_A(:,k), W_A_dot(:,k), F_R(:,k), F_L(:,k), M_R(:,k),...
-                M_L(:,k), f_a(:,k), f_g(:,k), f_tau(:,k), tau(:,k), ...
-                Euler_R(:,k), Euler_R_dot(:,k)] = ...
-                eom_QS_xR(INSECT, WK_R_new, WK_L_new, t(k), X(k, :)');
+        if p > 4
+            problem.options.MaxFunctionEvaluations = 3000;
         end
-        X0 = X(idx_con(end),:)';
-    end
-    if p >= 4
-        problem.options.MaxFunctionEvaluations = 2000;
     end
     fprintf('Period number %d completed\n', period);
 end
@@ -306,13 +306,12 @@ end
 
 end
 
-function [c, ceq] = cost_cons(param, t, X0, INSECT, WK_R, WK_L, X_ref, Weights, param_type, cost0, varargin)
+function [c, ceq] = param_cons(param, p, N_iters, dang0, idx_opt)
 %%
-[~, X] = ode45(@(t,X) eom_param(INSECT, WK_R, WK_L, t, X, param, param_type, varargin{:}), ...
-    [t(1), t(end)], X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
-J = sum((Weights.OutputVariables .* (X(end,:) - X_ref(end,:))).^2);
-c(1) = J - cost0;
-ceq = [];
+c = [];
+param = reshape(param, 6, p);
+ceq(1:6) = sum(param(:,1:N_iters), 2);
+ceq(7:12) = sum(param(:,(N_iters+1):p), 2);
 end
 
 function dXdt = eom_param(INSECT, WK_R, WK_L, t, X, param, param_type, varargin)
