@@ -18,9 +18,9 @@ end
 h_x=figure;
 for ii=1:3 
     subplot(3,1,ii);
-    plot(t*WK.f,x(ii,:));
+    plot(t*WK.f,x(ii,1:N));
     hold on;
-    plot(t*WK.f,des.x_fit_t(ii, :), 'k');
+    plot(t*WK.f,des.x_fit_t(ii,1:N), 'k');
     patch_downstroke(h_x,t*WK.f,Euler_R_dot);
 end
 xlabel('$t/T$','interpreter','latex');
@@ -60,9 +60,9 @@ xlabel('$t/T$','interpreter','latex');
 h_x_dot=figure;
 for ii=1:3
     subplot(3,1,ii);
-    plot(t*WK.f,x_dot(ii,:));
+    plot(t*WK.f,x_dot(ii, 1:N));
     hold on;
-    plot(t*WK.f,des.x_dot_fit_t(ii, :), 'k');
+    plot(t*WK.f,des.x_dot_fit_t(ii, 1:N), 'k');
     patch_downstroke(h_x_dot,t*WK.f,Euler_R_dot);
 end
 xlabel('$t/T$','interpreter','latex');
@@ -73,9 +73,9 @@ ylabel('$\dot x$','interpreter','latex');
 h_W=figure;
 for ii=1:3 
     subplot(3,1,ii);
-    plot(t*WK.f,W(ii,:));
+    plot(t*WK.f,W(ii, 1:N));
     hold on;
-    plot(t*WK.f,des.W_fit_t(ii, :), 'k');
+    plot(t*WK.f,des.W_fit_t(ii, 1:N), 'k');
     patch_downstroke(h_W,t*WK.f,Euler_R_dot);
 end
 xlabel('$t/T$','interpreter','latex');
