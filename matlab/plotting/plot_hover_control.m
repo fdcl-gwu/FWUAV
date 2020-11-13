@@ -18,10 +18,10 @@ end
 h_x=figure;
 for ii=1:3 
     subplot(3,1,ii);
-    plot(t*WK.f,x(ii,1:N));
+    plot(t(1:N)*WK.f,x(ii,1:N));
     hold on;
-    plot(t*WK.f,des.x_fit_t(ii,1:N), 'k');
-    patch_downstroke(h_x,t*WK.f,Euler_R_dot);
+    plot(t(1:N)*WK.f,des.x_fit_t(ii,1:N), 'k');
+    patch_downstroke(h_x,t(1:N)*WK.f,Euler_R_dot(:, 1:N));
 end
 xlabel('$t/T$','interpreter','latex');
 subplot(3,1,2);
@@ -43,16 +43,16 @@ ylabel('$x$','interpreter','latex');
 
 h_rot=figure;
 subplot(3,1,1);
-plot(t*WK.f,e_phi);
-patch_downstroke(h_rot,t*WK.f,Euler_R_dot);
+plot(t(1:N)*WK.f,e_phi(1:N));
+patch_downstroke(h_rot,t(1:N)*WK.f,Euler_R_dot(:, 1:N));
 ylabel('$d\phi$','interpreter','latex');
 subplot(3,1,2);
-plot(t*WK.f,e_psi);
-patch_downstroke(h_rot,t*WK.f,Euler_R_dot);
+plot(t(1:N)*WK.f,e_psi(1:N));
+patch_downstroke(h_rot,t(1:N)*WK.f,Euler_R_dot(:, 1:N));
 ylabel('$d\psi$','interpreter','latex');
 subplot(3,1,3);
-plot(t*WK.f,e_theta);
-patch_downstroke(h_rot,t*WK.f,Euler_R_dot);
+plot(t(1:N)*WK.f,e_theta(1:N));
+patch_downstroke(h_rot,t(1:N)*WK.f,Euler_R_dot(:, 1:N));
 ylabel('$d\theta$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
 % print(h_rot, 'hover_control_rot', '-depsc', '-r0');
@@ -60,10 +60,10 @@ xlabel('$t/T$','interpreter','latex');
 h_x_dot=figure;
 for ii=1:3
     subplot(3,1,ii);
-    plot(t*WK.f,x_dot(ii, 1:N));
+    plot(t(1:N)*WK.f,x_dot(ii, 1:N));
     hold on;
-    plot(t*WK.f,des.x_dot_fit_t(ii, 1:N), 'k');
-    patch_downstroke(h_x_dot,t*WK.f,Euler_R_dot);
+    plot(t(1:N)*WK.f,des.x_dot_fit_t(ii, 1:N), 'k');
+    patch_downstroke(h_x_dot,t(1:N)*WK.f,Euler_R_dot(:, 1:N));
 end
 xlabel('$t/T$','interpreter','latex');
 subplot(3,1,2);
@@ -73,10 +73,10 @@ ylabel('$\dot x$','interpreter','latex');
 h_W=figure;
 for ii=1:3 
     subplot(3,1,ii);
-    plot(t*WK.f,W(ii, 1:N));
+    plot(t(1:N)*WK.f,W(ii, 1:N));
     hold on;
-    plot(t*WK.f,des.W_fit_t(ii, 1:N), 'k');
-    patch_downstroke(h_W,t*WK.f,Euler_R_dot);
+    plot(t(1:N)*WK.f,des.W_fit_t(ii, 1:N), 'k');
+    patch_downstroke(h_W,t(1:N)*WK.f,Euler_R_dot(:, 1:N));
 end
 xlabel('$t/T$','interpreter','latex');
 subplot(3,1,2);
@@ -155,8 +155,8 @@ ylabels = {'$\Delta\phi_{m_s}$', '$\Delta\theta_{0_s}$', '$\Delta\phi_{m_k}$',..
         '$\Delta\phi_{0_s}$', '$\Delta\theta_{0_k}$', '$\Delta\psi_{0_k}$'};
 for ii=1:6
     subplot(6,1,ii);
-    plot(t*WK.f, dang(ii,:));
-    patch_downstroke(h_control,t*WK.f,Euler_R_dot);
+    plot(t(1:N)*WK.f, dang(ii,1:N));
+    patch_downstroke(h_control,t(1:N)*WK.f,Euler_R_dot(:, 1:N));
     ylabel(ylabels{ii},'interpreter','latex');
 end
 xlabel('$t/T$','interpreter','latex');

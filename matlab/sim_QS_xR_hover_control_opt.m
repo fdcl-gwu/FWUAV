@@ -142,7 +142,7 @@ switch simulation_type
 %     % Longitudinal velocity perturbations only
 %     Weights.PerturbVariables([1:6,8,10:12]) = 0;
 %     Weights.PerturbVariables = 20 * Weights.PerturbVariables;
-    N_sims = 23; % 48 take 1 day
+    N_sims = 30; % 48 take 1 day
 %     problem.options.Display = 'none';
     old_seed = 'shuffle'; % default, shuffle
     if load_mc_data
@@ -189,21 +189,6 @@ switch simulation_type
     
     case 'optimized'
     mc = load('sim_QS_xR_hover_control_opt_mc.mat', 'N_sims', 'X0_pert', 'cost', 'opt_param');
-    X0_temp = zeros(3*mc.N_sims, 11, 18);
-    N_periods = 1;
-    t = t(1:(1+N_periods*N_single));
-    for i=1:(3*mc.N_sims)
-        X0_temp(i, 1:10, :) = mc.X0_pert(i, :, :);
-        if i <= 2*mc.N_sims
-            X0_temp(i, 11, :) = mc.X0_pert(i + mc.N_sims, 1, :);
-        else
-            X0 = squeeze(mc.X0_pert(i, 1, :)); opt_param = reshape(squeeze(mc.opt_param(i, :, :))', 60, 1);
-            [~, ~, ~, X] = simulate_control(t, X0, X_ref, WK_R, WK_L, INSECT, ...
-            N_periods, N_single, N_iters, N_per_iter, problem, Weights, ...
-            get_args, param_type, p, m, opt_param, 'none', 1, des.X0);
-            X0_temp(i, 11, :) = X(end, :);
-        end
-    end
     use_control_net = 'period'; % 'none', 'iter', 'period'
     mc.X0_pert_flat = squeeze(mc.X0_pert(:, 1, :)); mc.opt_param_flat = reshape(permute(mc.opt_param, [1, 3, 2]), 3*mc.N_sims, 6*N_iters);
     N_periods = 3;
@@ -228,14 +213,40 @@ switch simulation_type
             end
         end
         control_net = newgrnn((1 ./ Weights.PerturbVariables)' .* reshape(mc.err, 3*mc.N_sims*N_iters, [])', reshape(mc.opt_dang, 3*mc.N_sims*N_iters, 6)', 0.1);
-%         control_net = mvregress(reshape(mc.err, 3*mc.N_sims*N_iters, []),reshape(mc.opt_dang, 3*mc.N_sims*N_iters, 6));
-%         control_net = newgrnn(reshape(mc.X0_pert, 3*mc.N_sims*N_iters, 18)', reshape(mc.opt_param, 3*mc.N_sims*N_iters, 6)', 0.1);
         case 'period'
         mc.err = zeros(3*mc.N_sims, 12);
         for i=1:(3*mc.N_sims)
             mc.err(i, :) = get_error(mc.X0_pert_flat(i, :)', des.X0)';
         end
-        control_net = newgrnn((1 ./ Weights.PerturbVariables)' .* mc.err', mc.opt_param_flat');
+        inputs = (1 ./ Weights.PerturbVariables)' .* mc.err'; targets = mc.opt_param_flat';
+        train_new_net = true;   
+        if train_new_net
+            control_net = cascadeforwardnet([36]); % 24, 36
+%             control_net = fitnet([6, 36]); % 24, 36
+%             control_net.inputConnect(:) = 1;
+% %             control_net.layerConnect(3,1) = 1;
+            control_net = configure(control_net, inputs, targets);
+            control_net.trainFcn = 'trainbr';% train{lm,br,bfg}
+            control_net.trainParam.epochs = 30; % 30
+            control_net.performParam.normalization = 'standard';
+            control_net.inputs{1}.processFcns = {'mapminmax', 'processpca'};
+%             control_net.inputs{1}.processFcns = {'mapminmax'};
+    %         control_net.inputWeights{1,1}.weightFcn
+    %         control_net.layerWeights{2,1}.weightFcn
+    %         control_net.layers{1}.transferFcn = 'poslin';
+    %         control_net.layers{1}.netInputFcn = 'netprod';
+            control_net.divideParam.trainRatio = 80/100;
+            control_net.divideParam.valRatio = 10/100;
+            control_net.divideParam.testRatio = 10/100;
+    %         control_net.trainParam.mu = 1; control_net.trainParam.mu_dec = 0.8; control_net.trainParam.mu_inc = 1.5;
+            control_net = init(control_net);
+            [control_net, tr] = train(control_net, inputs, targets);
+            tstPerform = perform(control_net, targets(:, tr.testInd), control_net(inputs(:, tr.testInd)));
+        else
+            load('sim_QS_xR_hover_control_opt.mat', 'control_net', 'tr');
+%             control_net = newgrnn(inputs, targets, 0.5);
+        end
+
 %         beta = mvregress(mc.err, mc.opt_param_flat, 'algorithm', 'cwls');
 %         control_net = newgrnn(mc.X0_pert_flat', mc.opt_param_flat', 0.1);
     end
@@ -244,25 +255,25 @@ switch simulation_type
     opt_idx = inc_idx(1); % 3 for mc
     t = t(1:(1+N_periods*N_single));
     idx_con = 1:(1+N_single*N_periods);
-%     X0 = mc.X0_pert(opt_idx, :)';
     X0 = squeeze(mc.X0_pert(opt_idx, 1, :));
-%     rng('shuffle');
-%     dx = 2*rand(1,3)-1; dx = rand(1) * dx / norm(dx);
-%     dtheta = 2*rand(1,3)-1; dtheta = rand(1) * dtheta / norm(dtheta);
-%     dx_dot = 2*rand(1,3)-1; dx_dot = rand(1) * dx_dot / norm(dx_dot);
-%     domega = 2*rand(1,3)-1; domega = rand(1) * domega / norm(domega);
-%     dXi = Weights.PerturbVariables .* [dx, dtheta, dx_dot, domega];
-%     e1 = [1 0 0]'; e2 = [0 1 0]'; e3 = [0 0 1]';
-%     des_X0 = X_ref(1, :);
-%     des_R0 = reshape(des_X0(4:12), 3, 3);
-%     X0 = [des_X0(1:3)+dXi(1:3),...
-%         reshape(des_R0*expmhat(dXi(6)*e3)*expmhat(dXi(5)*e2)*expmhat(dXi(4)*e1),1,9),...
-%         des_X0(13:18) + dXi(7:12)]';
+    if false
+        rng('shuffle');
+        dx = 2*rand(1,3)-1; dx = rand(1) * dx / norm(dx);
+        dtheta = 2*rand(1,3)-1; dtheta = rand(1) * dtheta / norm(dtheta);
+        dx_dot = 2*rand(1,3)-1; dx_dot = rand(1) * dx_dot / norm(dx_dot);
+        domega = 2*rand(1,3)-1; domega = rand(1) * domega / norm(domega);
+        dXi = Weights.PerturbVariables .* [dx, dtheta, dx_dot, domega];
+        e1 = [1 0 0]'; e2 = [0 1 0]'; e3 = [0 0 1]';
+        des_X0 = X_ref(1, :);
+        des_R0 = reshape(des_X0(4:12), 3, 3);
+        X0 = [des_X0(1:3)+dXi(1:3),...
+            reshape(des_R0*expmhat(dXi(6)*e3)*expmhat(dXi(5)*e2)*expmhat(dXi(4)*e1),1,9),...
+            des_X0(13:18) + dXi(7:12)]';
+    end
     cost = zeros(1, 1+N_periods*N_iters);
     opt_param = zeros(N_dang*m, N_periods*N_iters/m);
     for i=1:N_periods
         cost((1+(i-1)*N_iters):(1+i*N_iters)) = mc.cost(opt_idx + (i-1)*mc.N_sims, :);
-%         opt_param(:, i) = mc.opt_param(opt_idx + (i-1)*mc.N_sims, :)';
         if strcmp(use_control_net, 'none')
             opt_param(:, i) = reshape(squeeze(mc.opt_param(opt_idx + (i-1)*mc.N_sims, :, :))', 60, 1);
         end
@@ -304,11 +315,11 @@ cost = zeros(N_sims, N_periods, 1+N_iters);
 N_p = length(problem.x0)/p;
 opt_param = zeros(N_sims, N_periods, N_iters, N_p); opt_fval = zeros(N_sims, N_periods, 1);
 opt_iter = zeros(N_sims, N_periods, 1); opt_firstorder = zeros(N_sims, N_periods, 1);
-X0_pert = zeros(N_sims, N_periods, N_iters, 18);
-idx_cost = zeros(N_periods, 1+N_iters); idx_X0 = zeros(N_periods, N_iters);
+X0_pert = zeros(N_sims, N_periods, 1+N_iters, 18);
+idx_cost = zeros(N_periods, 1+N_iters); idx_X0 = zeros(N_periods, 1+N_iters);
 for period=1:3
     idx_cost(period,:) = (1+(period-1)*N_iters):(1+period*N_iters);
-    idx_X0(period,:,:) = (1+(period-1)*N_single):N_per_iter:(period*N_single);
+    idx_X0(period,:,:) = (1+(period-1)*N_single):N_per_iter:(1+period*N_single);
 end
 des_X0 = X_ref(1, :);
 des_R0 = reshape(des_X0(4:12), 3, 3);
@@ -346,7 +357,7 @@ for i = 1:N_sims
     opt_param(i,:,:,:) = permute(reshape(opt_param_arr, N_p, N_iters, N_periods), [3, 2, 1]);
     opt_fval(i,:,:) = opt_fval_arr';
     opt_iter(i,:,:) = opt_iter_arr'; opt_firstorder(i,:,:) = opt_firstorder_arr';
-    X0_pert(i,:,:,:) = reshape(X(idx_X0, :), N_periods, N_iters, 18);
+    X0_pert(i,:,:,:) = reshape(X(idx_X0, :), N_periods, 1+N_iters, 18);
     fprintf('Completed simulation %d\n', i);
 end
 
@@ -356,7 +367,7 @@ opt_param = reshape(opt_param, N_sims*N_periods, N_iters, N_p);
 opt_fval = reshape(opt_fval, N_sims*N_periods, 1);
 opt_iter = reshape(opt_iter, N_sims*N_periods, 1);
 opt_firstorder = reshape(opt_firstorder, N_sims*N_periods, 1);
-X0_pert = reshape(X0_pert, N_sims*N_periods, N_iters, 18);
+X0_pert = reshape(X0_pert, N_sims*N_periods, 1+N_iters, 18);
 
 % tocBytes(par_pool);
 
@@ -385,10 +396,8 @@ for period=1:N_periods
             param = opt_param(:, 1+((period-1)*N_iters+(iter-1))/m);
         else
             if strcmp(use_control_net, 'period')
-%             opt_param(:, i) = sim(control_net, mc.X0_pert_flat(opt_idx + (i-1)*mc.N_sims, :)');
             param = sim(control_net, (1 ./ Weights.PerturbVariables)' .* get_error(X0, des_X0));
             opt_param(:,1+((period-1)*N_iters+(iter-1))/m) = param;
-%             opt_param(:, i) = beta' * get_error(mc.X0_pert_flat(opt_idx + (i-1)*mc.N_sims, :)', des.X0);
             end
         end
         for con=1:m
@@ -396,9 +405,7 @@ for period=1:N_periods
             idx = idx_con((1+(con-1)*N_per_iter):(1+con*N_per_iter));
             if strcmp(use_control_net, 'iter')
                 opt_dang = sim(control_net, (1 ./ Weights.PerturbVariables)' .* get_error(X0, des_X0));
-%                 opt_dang = control_net' * get_error(X0, des_X0);
                 param_m = 2*(opt_dang - dang(:, idx(1))) / (t(idx(end)) - t(idx(1)));
-%                 param_m = sim(control_net, X0);
                 opt_param(param_idx, 1+((period-1)*N_iters+(iter-1))/m) = param_m;
             else
                 param_m = param(param_idx);

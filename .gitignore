@@ -20,6 +20,7 @@
 
 # Matlab data files
 *.mat
+*.asv
 # Matlab cache
 slprj/
 
