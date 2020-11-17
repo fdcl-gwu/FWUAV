@@ -116,7 +116,7 @@ problem.options.Display = 'iter';
 problem.options.UseParallel = true;
 
 %% Simulation
-simulation_type = 'single'; % 'single', 'monte_carlo', 'optimized'
+simulation_type = 'monte_carlo'; % 'single', 'monte_carlo', 'optimized'
 switch simulation_type
     case 'single'
 %%
@@ -128,6 +128,7 @@ switch simulation_type
             reshape(reshape(des_X0(4:12), 3, 3)*expmhat(dX0(6)*e3)*expmhat(dX0(5)*e2)*expmhat(dX0(4)*e1),1,9),...
             des_X0(13:18) + dX0(7:12)]';
     load('sim_QS_xR_hover_control_opt_net', 'control_net');
+%     control_net = 'none';
     tic;
     [cost, opt_param, opt_fval, opt_iter, opt_firstorder, dang,...
         X, x, x_dot, R, Q_R, Q_L, Q_A, theta_A, W, W_R, W_R_dot, W_L, ...
@@ -145,7 +146,7 @@ switch simulation_type
 %     % Longitudinal velocity perturbations only
 %     Weights.PerturbVariables([1:6,8,10:12]) = 0;
 %     Weights.PerturbVariables = 20 * Weights.PerturbVariables;
-    N_sims = 30; % 48 take 1 day
+    N_sims = 48; % 48 take 1 day
 %     problem.options.Display = 'none';
     old_seed = 'shuffle'; % default, shuffle
     if load_mc_data
@@ -159,10 +160,12 @@ switch simulation_type
 %         N_sims = length(dX_idx);
     end
     t_init = tic;
+    load('sim_QS_xR_hover_control_opt_mc', 'control_net');
+%     control_net = 'none';
     [X0_pert, dX, cost, opt_param, opt_fval, opt_iter, opt_firstorder, ...
-    opt_time, new_seed] = monte_carlo(N_sims, t, X_ref, WK_R, WK_L, INSECT, ...
+    opt_time, new_seed, N_sims] = monte_carlo(N_sims, t, X_ref, WK_R, WK_L, INSECT, ...
             N, N_periods, N_single, N_iters, N_per_iter, problem, solver, Weights, ...
-            get_args, param_type, p, m, old_seed);
+            get_args, param_type, p, m, old_seed, control_net);
     time_taken = toc(t_init);
     if load_mc_data
         time_taken = time_taken + mc_old.time_taken;
@@ -227,7 +230,7 @@ switch simulation_type
             mc.err(i, :) = get_error(mc.X0_pert_flat(i, :)', des.X0)';
         end
         inputs = (1 ./ Weights.PerturbVariables)' .* mc.err'; targets = mc.opt_param_flat';
-        train_new_net = false;
+        train_new_net = true;
         if train_new_net
             control_net = cascadeforwardnet([36]); % 24, 36
 %             control_net = fitnet([6, 36]); % 24, 36
@@ -312,9 +315,9 @@ evalin('base',['load ' filename]);
 end
 
 function [X0_pert, dX, cost, opt_param, opt_fval, opt_iter, opt_firstorder, ...
-    opt_time, new_seed] = monte_carlo(N_sims, t, X_ref, WK_R, WK_L, INSECT, ...
+    opt_time, new_seed, N_sims] = monte_carlo(N_sims, t, X_ref, WK_R, WK_L, INSECT, ...
         N, N_periods, N_single, N_iters, N_per_iter, problem, solver, Weights, ...
-        get_args, param_type, p, m, old_seed, varargin)
+        get_args, param_type, p, m, old_seed, control_net, varargin)
 %%
 e1 = [1 0 0]'; e2 = [0 1 0]'; e3 = [0 0 1]';
 opt_time = zeros(N_sims, 1);
@@ -354,16 +357,20 @@ catch
 end
 new_seed = rng;
 
+stopbutton = uicontrol('style', 'toggle', 'String', 'STOP');
+set(stopbutton, 'Value', 0);
 for i = 1:N_sims
+    drawnow();%give time for callback
     % perturbation
     dXi = dX(i,:);
     X0 = [des_X0(1:3)+dXi(1:3),...
         reshape(des_R0*expmhat(dXi(6)*e3)*expmhat(dXi(5)*e2)*expmhat(dXi(4)*e1),1,9),...
         des_X0(13:18) + dXi(7:12)]';
     tic;
-    [cost_arr, opt_param_arr, opt_fval_arr, opt_iter_arr, opt_firstorder_arr, ~, X] = simulate_opt_control(t, X0, X_ref, WK_R, WK_L, INSECT, ...
+    [cost_arr, opt_param_arr, opt_fval_arr, opt_iter_arr, opt_firstorder_arr, ~, X] = ...
+        simulate_opt_control(t, X0, X_ref, WK_R, WK_L, INSECT, ...
         N, N_periods, N_single, N_iters, N_per_iter, problem, solver, Weights, ...
-        get_args, param_type, p, m);
+        get_args, param_type, p, m, control_net);
     opt_time(i) = toc;
     cost(i,:,:) = cost_arr(idx_cost);
     opt_param(i,:,:,:) = permute(reshape(opt_param_arr, N_p, N_iters, N_periods), [3, 2, 1]);
@@ -371,15 +378,22 @@ for i = 1:N_sims
     opt_iter(i,:,:) = opt_iter_arr'; opt_firstorder(i,:,:) = opt_firstorder_arr';
     X0_pert(i,:,:,:) = reshape(X(idx_X0, :), N_periods, 1+N_iters, 18);
     fprintf('Completed simulation %d\n', i);
+    quitthis = get(stopbutton, 'Value');
+    drawnow();
+    if quitthis
+        N_sims = i;
+        break;
+    end
 end
 
+dX = dX(1:N_sims, :); opt_time = opt_time(1:N_sims, :);
 % row (i, i+N_sims, i+2*N_sims ...) correspond to same dX
-cost = reshape(cost, N_sims*N_periods, 1+N_iters);
-opt_param = reshape(opt_param, N_sims*N_periods, N_iters, N_p);
-opt_fval = reshape(opt_fval, N_sims*N_periods, 1);
-opt_iter = reshape(opt_iter, N_sims*N_periods, 1);
-opt_firstorder = reshape(opt_firstorder, N_sims*N_periods, 1);
-X0_pert = reshape(X0_pert, N_sims*N_periods, 1+N_iters, 18);
+cost = reshape(cost(1:N_sims,:,:), N_sims*N_periods, 1+N_iters);
+opt_param = reshape(opt_param(1:N_sims,:,:,:), N_sims*N_periods, N_iters, N_p);
+opt_fval = reshape(opt_fval(1:N_sims,:,:), N_sims*N_periods, 1);
+opt_iter = reshape(opt_iter(1:N_sims,:,:), N_sims*N_periods, 1);
+opt_firstorder = reshape(opt_firstorder(1:N_sims,:,:), N_sims*N_periods, 1);
+X0_pert = reshape(X0_pert(1:N_sims,:,:,:), N_sims*N_periods, 1+N_iters, 18);
 
 % tocBytes(par_pool);
 
@@ -390,7 +404,7 @@ function [cost, opt_param, opt_fval, opt_iter, opt_firstorder, dang, ...
     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
     Euler_R_dot] = simulate_opt_control(t, X0, X_ref, WK_R, WK_L, INSECT, ...
     N, N_periods, N_single, N_iters, N_per_iter, problem, solver, Weights, ...
-    get_args, param_type, p, m, varargin)
+    get_args, param_type, p, m, control_net)
 %%
 cost = zeros(1, 1+N_periods*N_iters);
 cost(1) = sqrt(sum((Weights.OutputVariables .* (X0' - X_ref(1, :))).^2));
@@ -401,8 +415,7 @@ dang = zeros(N_p, 1+N_single*N_periods);
 opt_param = zeros(N_p*m, N_periods*N_iters/m); opt_fval = zeros(1, N_periods*N_iters/m);
 opt_iter = zeros(1, N_periods*N_iters/m); opt_firstorder = zeros(1, N_periods*N_iters/m);
 
-try
-    control_net = varargin{1};
+if isa(control_net, 'network')
     X_temp0 = X0;
     param = sim(control_net, (1 ./ Weights.PerturbVariables)' .* get_error(X_temp0, des_X0));
     problem.x0(1:(N_p*(p-m))) = param;
@@ -412,7 +425,7 @@ try
     X_temp0 = X_temp(end, :)';
     param = sim(control_net, (1 ./ Weights.PerturbVariables)' .* get_error(X_temp0, des_X0));
     problem.x0((1+(N_p*(p-m))):end) = param;
-catch
+else
     disp('Not using neural net');
 end
 
@@ -430,7 +443,7 @@ for period=1:N_periods
             [param, fval, exitflag, output] = solver(problem);
             opt_count = opt_count + 1;
 %             if ((output.iterations >= 20 || period > 1) && output.firstorderopt < 1e3) || opt_count >= 3
-            if (period == 1 && output.iterations >= 15) || (period > 1 && output.iterations >= 7) || opt_count >= 3 % period > 1 || 
+            if (((period == 1 && output.iterations >= 15) || (period > 1 && output.iterations >= 7)) && (exitflag ~= -2)) || opt_count >= 3 % period > 1 || 
                 opt_complete = true;
                 fprintf('Exit flag is %d\n', exitflag);
             else
@@ -476,15 +489,13 @@ for period=1:N_periods
             cost(1+(period-1)*N_iters+(iter-1)+con) = sqrt(...
                 sum((Weights.OutputVariables .* (X(idx(end), :) - X_ref(idx(end), :))).^2));
         end
-        try
+        if isa(control_net, 'network')
             X_temp0 = X0;
             [~, ~, ~, X_temp] = simulate_control(t, X_temp0, X_ref, WK_R, WK_L, INSECT, ...
             1, N_single, N_iters, N_per_iter, problem, Weights, ...
             get_args, param_type, p, m, problem.x0(1:(N_p*(p-m))), 'none', control_net, des_X0);
             X_temp0 = X_temp(end, :)';
             problem.x0((1+(N_p*(p-m))):end) = sim(control_net, (1 ./ Weights.PerturbVariables)' .* get_error(X_temp0, des_X0));
-        catch
-            disp('Not using neural net');
         end
     end
     fprintf('Period number %d completed\n', period);
