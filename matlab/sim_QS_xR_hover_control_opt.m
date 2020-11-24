@@ -116,7 +116,7 @@ problem.options.Display = 'iter';
 problem.options.UseParallel = true;
 
 %% Simulation
-simulation_type = 'monte_carlo'; % 'single', 'monte_carlo', 'optimized'
+simulation_type = 'optimized'; % 'single', 'monte_carlo', 'optimized'
 switch simulation_type
     case 'single'
 %%
@@ -146,7 +146,7 @@ switch simulation_type
 %     % Longitudinal velocity perturbations only
 %     Weights.PerturbVariables([1:6,8,10:12]) = 0;
 %     Weights.PerturbVariables = 20 * Weights.PerturbVariables;
-    N_sims = 48; % 48 take 1 day
+    N_sims = 100; % 48 take 1 day
 %     problem.options.Display = 'none';
     old_seed = 'shuffle'; % default, shuffle
     if load_mc_data
@@ -160,7 +160,7 @@ switch simulation_type
 %         N_sims = length(dX_idx);
     end
     t_init = tic;
-    load('sim_QS_xR_hover_control_opt_mc', 'control_net');
+    load('sim_QS_xR_hover_control_opt_mc', 'control_net', 'tr', 'inputs', 'targets');
 %     control_net = 'none';
     [X0_pert, dX, cost, opt_param, opt_fval, opt_iter, opt_firstorder, ...
     opt_time, new_seed, N_sims] = monte_carlo(N_sims, t, X_ref, WK_R, WK_L, INSECT, ...
@@ -236,12 +236,12 @@ switch simulation_type
 %             control_net = fitnet([6, 36]); % 24, 36
 %             control_net.inputConnect(:) = 1;
 % %             control_net.layerConnect(3,1) = 1;
+            control_net.biasConnect = [0, 0]';
             control_net = configure(control_net, inputs, targets);
             control_net.trainFcn = 'trainbr';% train{lm,br,bfg}
             control_net.trainParam.epochs = 30; % 30
             control_net.performParam.normalization = 'standard';
             control_net.inputs{1}.processFcns = {'mapminmax', 'processpca'};
-%             control_net.inputs{1}.processFcns = {'mapminmax'};
     %         control_net.inputWeights{1,1}.weightFcn
     %         control_net.layerWeights{2,1}.weightFcn
     %         control_net.layers{1}.transferFcn = 'poslin';
@@ -267,7 +267,7 @@ switch simulation_type
     t = t(1:(1+N_periods*N_single));
     idx_con = 1:(1+N_single*N_periods);
     X0 = squeeze(mc.X0_pert(opt_idx, 1, :));
-    if false
+    if true
         rng('shuffle');
         dx = 2*rand(1,3)-1; dx = rand(1) * dx / norm(dx);
         dtheta = 2*rand(1,3)-1; dtheta = rand(1) * dtheta / norm(dtheta);
@@ -359,8 +359,8 @@ new_seed = rng;
 
 stopbutton = uicontrol('style', 'toggle', 'String', 'STOP');
 set(stopbutton, 'Value', 0);
+drawnow();%give time for callback
 for i = 1:N_sims
-    drawnow();%give time for callback
     % perturbation
     dXi = dX(i,:);
     X0 = [des_X0(1:3)+dXi(1:3),...
@@ -378,8 +378,8 @@ for i = 1:N_sims
     opt_iter(i,:,:) = opt_iter_arr'; opt_firstorder(i,:,:) = opt_firstorder_arr';
     X0_pert(i,:,:,:) = reshape(X(idx_X0, :), N_periods, 1+N_iters, 18);
     fprintf('Completed simulation %d\n', i);
-    quitthis = get(stopbutton, 'Value');
     drawnow();
+    quitthis = get(stopbutton, 'Value');
     if quitthis
         N_sims = i;
         break;
