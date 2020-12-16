@@ -15,6 +15,15 @@ for i=1:N
     [e_phi(i), e_psi(i), e_theta(i)] = dcm2angle(R(:,:,i)'*des.R_fit_t(:,:,i), 'xzy');
 end
 
+figure;
+err_SO3 = zeros(1, N);
+I = eye(3);
+for i=1:N
+    att = R(:, :, i);
+    err_SO3(i) = norm(att'*att - I);
+end
+plot(t*WK.f, err_SO3);
+
 h_x=figure;
 for ii=1:3 
     subplot(3,1,ii);

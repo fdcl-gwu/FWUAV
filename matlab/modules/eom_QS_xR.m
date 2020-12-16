@@ -81,6 +81,7 @@ tau = tau*f_tau_2;
 % xi_dot=JJ\( co_ad*JJ*xi - LL*xi + f_a + f_g + f_tau);
 % disp(norm(xi_dot - [xi_1_dot; xi_2_dot]));
 
+% R_dot = R*hat(W) - 0.1*R*(R'*R - eye(3));
 R_dot = R*hat(W);
 X_dot=[x_dot; reshape(R_dot,9,1); xi_1_dot];
 
