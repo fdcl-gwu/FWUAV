@@ -9,9 +9,9 @@ filename='floquet_stability_opt';
 %% Linearized dynamics
 bool_sort_mus=false; % false if n ~= 6
 
-load('sim_QS_xR_hover_control_opt.mat', 'INSECT', 'WK', 'des', ...
-    'control_net', 'Weights', 'N_dang', 'm', 'X0_pert');
-N_period = 2;
+load('sim_QS_xR_hover_control_opt_mc.mat', 'INSECT', 'WK', 'des', ...
+    'control_net', 'Weights', 'N_dang', 'm');
+N_period = 400;
 N_single = 500;
 N = 1 + N_period*N_single;
 N_char = 1 + (N_period-1)*N_single;
@@ -20,10 +20,14 @@ t=linspace(0,T,N);
 dt = t(2) - t(1);
 des_X0 = des.X0;
 X0 = des_X0;
-epsilon = 1e-6; % 1e-10 stable, 1e-12 unstable
-del = 1e0;
-% epsilon = 1e0; % 1e-10 stable, 1e-12 unstable
+
+% epsilon = 1e-1;
+% prop_type = 'nonlinear'; % Large epsilon
 % del = 0;
+epsilon = 1e-6; % 1e-10 stable, 1e-12 unstable
+prop_type = 'linear'; % Small epsilon
+del = 0;
+
 rng(1);
 dx = 2*rand(1,3)-1; dx = rand(1) * dx / norm(dx);
 dtheta = 2*rand(1,3)-1; dtheta = rand(1) * dtheta / norm(dtheta);
@@ -38,10 +42,17 @@ X0 = [des_X0(1:3)'+dXi(1:3),...
 
 n = 12; n_vars = 18; % for (x,R) control with @eom_hover_xR_control
 tic;
-[delta_mat, F_linear] = sim_pert(@eom_hover_xR_control, n, n_vars, INSECT, WK, X0, N, t, epsilon, ...
-    control_net, Weights, des_X0, N_dang, m, N_single, N_period);
-% [delta_mat, F_linear] = sim_pert_non(@eom_hover_xR_control_non, n, n_vars, INSECT, WK, X0, N, t, epsilon, ...
-%     control_net, Weights, des_X0, N_dang, m, N_single, N_period);
+switch prop_type
+    case 'linear'
+    % Linear propagation for small perturbation
+    [delta_mat, F_linear] = sim_pert(@eom_hover_xR_control, n, n_vars, INSECT, WK, X0, N, t, epsilon, ...
+        control_net, Weights, des_X0, N_dang, m, N_single, N_period);
+    
+    case 'nonlinear'
+    % Nonlinear propagation for large perturbation; takes double time
+    [delta_mat, F_linear] = sim_pert_non(@eom_hover_xR_control_non, n, n_vars, INSECT, WK, X0, N, t, epsilon, ...
+        control_net, Weights, des_X0, N_dang, m, N_single, N_period);
+end
 time_taken = toc;
 
 delta_mag = zeros(n, N);
