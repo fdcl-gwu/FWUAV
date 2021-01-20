@@ -134,6 +134,7 @@ hold on;
 plot(t*WK.f,theta_ab*180/pi,'r');
 patch_downstroke(h_theta,t_sim_QS*WK.f,Euler_R_dot);
 ylabel('$\theta_A$','interpreter','latex');
+xlabel('$t/T$','interpreter','latex');
 
 
 figure(h_v);

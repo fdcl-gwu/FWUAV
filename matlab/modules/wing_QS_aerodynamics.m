@@ -1,6 +1,6 @@
 function [L_R, L_L, D_R, D_L, M_R, M_L, ...
     F_rot_R, F_rot_L, M_rot_R, M_rot_L, ...
-    alpha_R, alpha_L, U_alpha_R_dot, U_alpha_L_dot, U_R, U_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot, varargin)
+    alpha_R, alpha_L, U_alpha_R_dot, U_alpha_L_dot, U_R, U_L]=wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot, x_dot, R, W, Q_R, Q_L) %#codegen
 % compute forces and moment from QS model
 % [L_R L_L ...] = wing_QS_aerodynamics(INSECT, W_R, W_L, W_R_dot, W_L_dot)
 % computes the aerodynamic forces with small velocity assumption
@@ -19,22 +19,22 @@ if nargin <6
     U_R = INSECT.tilde_r_2*INSECT.l*cross(W_R,e2);
     U_R_dot = INSECT.tilde_r_2*INSECT.l*cross(W_R_dot,e2);
     [L_R, D_R, M_R]=compute_LD(INSECT, U_R);
-%     [F_rot_R M_rot_R alpha_R U_alpha_R_dot]=compute_rotational_force(INSECT, U_R, U_R_dot, e2);
+    [F_rot_R M_rot_R alpha_R U_alpha_R_dot]=compute_rotational_force(INSECT, U_R, U_R_dot, e2);
     
     U_L = -INSECT.tilde_r_2*INSECT.l*cross(W_L,e2);
     U_L_dot = -INSECT.tilde_r_2*INSECT.l*cross(W_L_dot,e2);
     [L_L, D_L, M_L]=compute_LD(INSECT, U_L);
     M_L = -M_L;
-%     [F_rot_L M_rot_L alpha_L U_alpha_L_dot]=compute_rotational_force(INSECT, U_L, U_L_dot, e2);
+    [F_rot_L M_rot_L alpha_L U_alpha_L_dot]=compute_rotational_force(INSECT, U_L, U_L_dot, e2);
     M_rot_L = -M_rot_L;
     
 else
     %% integrate infinitesimal forces over the wing span
-    x_dot=varargin{1};
-    R=varargin{2};
-    W=varargin{3};
-    Q_R=varargin{4};
-    Q_L=varargin{5};
+%     x_dot=varargin{1};
+%     R=varargin{2};
+%     W=varargin{3};
+%     Q_R=varargin{4};
+%     Q_L=varargin{5};
     
     N_r=50;
     rs=linspace(0,INSECT.l,N_r);
@@ -42,7 +42,7 @@ else
     
     hat_e2 = hat(e2);
     Ime2 = (eye(3) - e2*e2'); RTx_dot = R'*x_dot; hat_W = hat(W);
-    U_R = Ime2*Q_R'*(RTx_dot+hat_W*INSECT.mu_R) + rs.*(hat(Q_R*W+W_R)*e2);
+    U_R = Ime2*Q_R'*(RTx_dot+hat_W*INSECT.mu_R) + times(rs,(hat(Q_R*W+W_R)*e2));
     U_L = Ime2*Q_L'*(RTx_dot+hat_W*INSECT.mu_L) - rs.*(hat(Q_L*W+W_L)*e2);
     c=polyval(INSECT.cr_poly,rs/INSECT.scale)*INSECT.scale;
     [L, D, M]=compute_LD(INSECT, U_R, hat_e2);

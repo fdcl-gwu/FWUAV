@@ -1,4 +1,4 @@
-function [R W W_dot theta]=body_attitude(t, f, WK)
+function [R, W, W_dot, theta]=body_attitude(t, f, WK)
 %body_attitude compute attitude of body
 %
 % [R W W_dot theta]=body_attitude(t, f) returns the attitude, the angular
@@ -21,7 +21,7 @@ switch WK.bo_type
     case 'fixed'
         % fixed body attidue
         theta=WK.theta_B_0;
-        R=expm(theta*hat(e2));
+        R=expmhat(theta*(e2));
         W=zeros(3,1);
         W_dot=zeros(3,1);    
     case 'experimental'
@@ -36,13 +36,14 @@ switch WK.bo_type
 %         [theta theta_dot theta_ddot]= eval_Fourier(t, f, F_theta_th);
 % 
 %         Data constructed by ./exp_data/fit_VICON_data.m    
+        F_theta_th = struct;
         F_theta_th.f = 10.2213;
         F_theta_th.A0 = 18.6094-3;
         F_theta_th.AN = 1.1952126587572*1.3;
         F_theta_th.BN = 8.21314837914776*1.3;
-        [theta theta_dot theta_ddot]= eval_Fourier(t, f, F_theta_th);
+        [theta, theta_dot, theta_ddot]= eval_Fourier(t, f, F_theta_th);
 
-        R=expm(theta*hat(e2));
+        R=expmhat(theta*(e2));
         W=theta_dot*e2;
         W_dot=theta_ddot*e2;
     case 'varying'
