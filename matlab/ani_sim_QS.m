@@ -12,17 +12,17 @@ load STLRead/fv_monarch;
 
 addpath('./modules', './sim_data', './plotting');
 load('morp_MONARCH');
-bool_video=false;
+bool_video=true;
 file_to_save = 'sim_QS_xR_hover.avi';
 
 load('sim_QS_xR_hover.mat','WK','t','x','R','Q_R','Q_L','Q_A','N','F_R','F_L','des');
 N_period = round(max(t*WK.f));
 ix_d = round((N-1)/N_period);
 ix_to_save = round(linspace(1,ix_d,9));
-bool_save_plot = true;
+bool_save_plot = false;
 
-ixs=ix_to_save; % to save snapshots
-% ixs=floor(linspace(1, N, round(N/2))); % for the whole animation
+% ixs=ix_to_save; % to save snapshots
+ixs=floor(linspace(1, N, round(N/2))); % for the whole animation
 
 %% generate the initial object when k=1
 k=1;

@@ -2,7 +2,14 @@
 addpath('../modules', '../sim_data', '../');
 set(0,'DefaultAxesFontName','times');
 set(0,'DefaultAxesFontSize',12);
+% set(0,'FixedWidthFontName','times');
+% set(0,'DefaultLineLineWidth',1.25);
 
+% study = 'monte_carlo';
+study = 'energy_comp';
+
+switch study
+    case 'monte_carlo'
 %% Monte carlo study
 load('sim_QS_x_hover_control_mc_pos_long_asy.mat');
 err_bound = 1e-4; % 5e-4
@@ -73,18 +80,27 @@ print(h_Nconv, 'hover_mc_perf', '-depsc', '-r0');
 % h_Nconv = figure;
 % surf(x_mesh, z_mesh, N_diff_mesh, 'FaceColor', 'blue', 'FaceAlpha', 0.5, 'EdgeColor', 'none');
 
+    case 'energy_comp'
 %% Power and energy
 set(0,'DefaultAxesFontSize',16);
+fontsize = get(0, 'DefaultAxesFontSize');
 % Without abdomen oscillation
-load('sim_QS_x_hover_no_ab.mat')
-tau_no = tau(4:12,:);
+load('sim_QS_xR_hover_no_ab.mat')
+if size(tau,1) > 9
+    tau_no = tau(4:12,:);
+else
+    tau_no = tau(1:9,:);
+end
 [pow_no, E_no, E_dot_no, eff_no, P_in_no, P_out_no] = compute_power(...
     INSECT.m, t, x, x_dot, tau, Q_R, Q_L, Q_A, W_R, W_L, W_A, W, f_a, f_tau);
 
 % With abdomen oscillation
-% load('sim_QS_x_hover.mat')
-load('sim_QS_x_hover.mat')
-tau_ab = tau(4:12,:);
+load('sim_QS_xR_hover.mat')
+if size(tau,1) > 9
+    tau_ab = tau(4:12,:);
+else
+    tau_ab = tau(1:9,:);
+end
 [pow_ab, E_ab, E_dot_ab, eff_ab, P_in_ab, P_out_ab] = compute_power(...
     INSECT.m, t, x, x_dot, tau, Q_R, Q_L, Q_A, W_R, W_L, W_A, W, f_a, f_tau);
 
@@ -164,3 +180,4 @@ ylabel('$\dot{E}$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
 sgtitle('Reduction in mean energy is ' + string(round(-change_E*100, 1)) + ' %');
 print(h_E, 'hover_energy_ab', '-depsc', '-r0');
+end
