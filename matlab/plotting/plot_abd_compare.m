@@ -3,7 +3,7 @@ addpath('../modules', '../sim_data', '../');
 set(0,'DefaultAxesFontName','times');
 set(0,'DefaultAxesFontSize',12);
 % set(0,'FixedWidthFontName','times');
-% set(0,'DefaultLineLineWidth',1.25);
+set(0,'DefaultLineLineWidth',1.25);
 
 % study = 'monte_carlo';
 study = 'energy_comp';
@@ -39,7 +39,7 @@ legend({'without abdomen effect, $ w = 0 $', 'with abdomen effect, $ w = 0.1 $'}
 xlabel('$x$','interpreter','latex');
 ylabel('$z$','interpreter','latex');
 axis tight;
-print(h_err, 'hover_mc_roa', '-depsc', '-r0');
+print(h_err, 'hover_mc_roa', '-depsc');
 
 N_no_ab = N_conv(idx_no_ab, 1);
 N_with_ab = N_conv(idx_no_ab, 2);
@@ -51,7 +51,7 @@ scatter(vecnorm(x_no_ab, 2, 1), (N_with_ab - N_no_ab), 10, 'filled');
 % scatter(vecnorm(x_no_ab, 2, 1), N_with_ab, 10, 'filled', 'b');
 xlabel('Norm of x-z perturbation');
 ylabel('Change in number of cycles to convergence');
-print(h_Nconv, 'hover_mc_perf', '-depsc', '-r0');
+print(h_Nconv, 'hover_mc_perf', '-depsc');
 
 % idx_no_ab_line = (abs(err_pos(:, 1)) < err_bound) & (abs(x_pert(3, :)) < 1e-2)';
 % x_no_ab_line = x_pert(:, idx_no_ab_line);
@@ -70,7 +70,7 @@ print(h_Nconv, 'hover_mc_perf', '-depsc', '-r0');
 % xlabel('Norm of x-z perturbation');
 % title(sprintf('Number of cycles to convergence for initial \n conditions with $\z \\approx 0$'),...
 %     'interpreter','latex');
-% print(h_Nconv_line, 'hover_mc_perf_line', '-depsc', '-r0');
+% print(h_Nconv_line, 'hover_mc_perf_line', '-depsc');
 
 %
 % N_mesh = 100;
@@ -119,6 +119,8 @@ hold on;
 plot(t*WK.f,pow_ab(1,:),'b');
 patch_downstroke(h_pow,t*WK.f,Euler_R_dot);
 ylabel('$P_R$','interpreter','latex');
+ax = gca;
+ax.YAxis.Exponent = -2;
 subplot(2,1,2);
 plot(t*WK.f,pow_no(3,:),'r');
 hold on;
@@ -127,7 +129,7 @@ patch_downstroke(h_pow,t*WK.f,Euler_R_dot);
 ylabel('$P_A$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
 sgtitle('Reduction in total mean power is ' + string(round(-change_pow*100, 1)) + ' %');
-print(h_pow, 'hover_power_ab', '-depsc', '-r0');
+print(h_pow, 'hover_power_ab', '-depsc');
 
 h_tau = figure;
 subplot(2,1,1);
@@ -143,7 +145,7 @@ plot(t*WK.f,vecnorm(tau_ab(7:9,:), 2, 1),'b');
 patch_downstroke(h_tau,t*WK.f,Euler_R_dot);
 ylabel('$\|\tau_A\|$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
-print(h_tau, 'hover_torque_ab', '-depsc', '-r0');
+print(h_tau, 'hover_torque_ab', '-depsc');
 
 dt = t(2) - t(1);
 tau_A = tau_ab(8,:);
@@ -159,7 +161,7 @@ legend('Actual torque', 'Modeled torque');
 title(sprintf('Torsional model as \n $\\tau_A(t) = -k\\theta_A(t) - c\\dot{\\theta}_A(t) + \\tau_0 $'),...
     'interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
-print(h_tau_model, 'hover_tau_model', '-depsc', '-r0');
+print(h_tau_model, 'hover_tau_model', '-depsc');
 
 mean_E_no = mean(abs(E_no), 2) / N_period;
 mean_E_ab = mean(abs(E_ab), 2) / N_period;
@@ -179,5 +181,5 @@ plot(t*WK.f,E_dot_ab,'b');
 ylabel('$\dot{E}$','interpreter','latex');
 xlabel('$t/T$','interpreter','latex');
 sgtitle('Reduction in mean energy is ' + string(round(-change_E*100, 1)) + ' %');
-print(h_E, 'hover_energy_ab', '-depsc', '-r0');
+print(h_E, 'hover_energy_ab', '-depsc');
 end

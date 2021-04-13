@@ -124,6 +124,11 @@ switch simulation_type
     des_X0 = X_ref(1, :);
     load('sim_QS_xR_hover_control_opt_mc.mat', 'dX');
     dX0 = 1e-2 * dX(268, :);
+%     dx = 2*rand(1,3)-1; dx = rand(1) * dx / norm(dx);
+%     dtheta = 2*rand(1,3)-1; dtheta = rand(1) * dtheta / norm(dtheta);
+%     dx_dot = 2*rand(1,3)-1; dx_dot = rand(1) * dx_dot / norm(dx_dot);
+%     domega = 2*rand(1,3)-1; domega = rand(1) * domega / norm(domega);
+%     dX0 = Weights.PerturbVariables .* [dx, dtheta, dx_dot, domega];
     X0 = [des_X0(1:3)+dX0(1:3),...
             reshape(reshape(des_X0(4:12), 3, 3)*expmhat(dX0(6)*e3)*expmhat(dX0(5)*e2)*expmhat(dX0(4)*e1),1,9),...
             des_X0(13:18) + dX0(7:12)]';

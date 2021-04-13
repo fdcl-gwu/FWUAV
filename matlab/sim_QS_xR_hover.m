@@ -90,6 +90,7 @@ fval = solutions(sol_idx).Fval;
 %%
 [WK, x_dot0, R0, W0] = get_WK(WK, WK_arr);
 X0=[x0; reshape(R0,9,1); x_dot0; W0];
+% load('sim_QS_xR_hover_control_opt_single.mat', 'X0'); N=201; T=2/WK.f;
 
 N=1001;
 T=3/WK.f;
