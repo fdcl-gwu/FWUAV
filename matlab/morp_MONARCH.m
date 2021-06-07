@@ -81,7 +81,7 @@ J_R_yy = m_R/S * polyint_def( 1/3* (cr_LE_poly_pow3 - cr_TE_poly_pow3), [0 l])* 
 J_R_zz = J_R_xx + J_R_yy;
 
 nu_R_x = 1/S * polyint_def( 0.5* (cr_LE_poly_pow2 - cr_TE_poly_pow2), [0 l])* scale
-nu_R_y = 1/S * polyint_def( 0.5* conv(cr_LE_poly - cr_TE_poly, [1 0]), [0 l])* scale
+nu_R_y = 1/S * polyint_def( conv(cr_LE_poly - cr_TE_poly, [1 0]), [0 l])* scale
 nu_R = [nu_R_x nu_R_y 0]';
 nu_L = [nu_R_x -nu_R_y 0]';
 nu_A = [-h_A/2, 0, 0]';
