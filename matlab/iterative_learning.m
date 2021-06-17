@@ -10,13 +10,13 @@ load('sim_QS_xR_hover_control_opt_mc', 'inputs', 'targets', 't', 'X_ref0', ...
 % load('fwuav', 'inputs', 'targets');
 N_features = size(inputs, 1);
 [N_outputs, N_data] = size(targets);
-N_iters = 1;
+N_iters = 10;
 
 %% NN Model
 MLP_net = fitnet([N_features*2]);
 MLP_net = configure(MLP_net, inputs, targets);
 MLP_net.trainFcn = 'trainbr';% train{lm,br,bfg}
-MLP_net.trainParam.epochs = 30; % 30
+MLP_net.trainParam.epochs = 25; % 30
 %  MLP_net.performParam.regularization = 0.1; % if not trainbr
 % MLP_net.performParam.normalization = 'standard';
 MLP_net.inputs{1}.processFcns = {'mapminmax', 'processpca'};
@@ -30,9 +30,9 @@ MLP_net.divideParam.testRatio = 10/100;
 %% Setup
 y_star = targets;
 % ys = zeros(N_iters, N_data);
-ys = [];
 perf = zeros(N_iters, 1);
 cons = zeros(N_iters, 1);
+cons_z = zeros(N_iters, 1);
 
 alpha = 0.9;
 N_inp = N_features; [N_out, N_neu] = size(MLP_net.LW{2,1});
@@ -44,16 +44,19 @@ problem.options.Display = 'iter';
 problem.options.UseParallel = true;
 problem.options.MaxFunctionEvaluations = 5e5; % 1e6 takes 30 mins
 problem.options.MaxIterations = 5; % 1 min = 9 iters
-%     problem.options.ConstraintTolerance = 1e-10; problem.options.OptimalityTolerance = 1e-10;
+problem.options.ConstraintTolerance = 1e-10;
+% problem.options.SpecifyObjectiveGradient = true;
+problem.options.ObjectiveLimit = 0;
+% problem.options.OptimalityTolerance = 1e-10;
 
 %% Algorithm
 tic;
 
 % PRETRAINING
-% MLP_net = init(MLP_net);
-% [MLP_net, tr] = train(MLP_net, inputs, targets, 'useParallel', 'yes'); %
-% y = MLP_net(inputs);
-y = y_star;
+MLP_net = init(MLP_net);
+% MLP_net = configure(MLP_net, inputs, targets);
+[MLP_net, tr] = train(MLP_net, inputs, targets, 'useParallel', 'yes'); %
+y = MLP_net(inputs);
 w_star = get_weights(MLP_net);
 w_y = w_star;
 
@@ -68,16 +71,20 @@ for i=1:N_iters
     del = 5e-2;
 %             problem.x0 = w0 + del * rand(N_w, 1) .* abs(w0);
     problem.x0 = w0;
-%         problem.lb = w0 - del * abs(w0);
-%         problem.ub = w0 + del * abs(w0);
-    problem.objective = @(w) weight_fun(w, w0);
-%     problem.nonlcon = @(w) zero_cons(w, MLP_net, N_inp, N_neu, N_out);
-    problem.nonlcon = @(w) stability_error(w, MLP_net, N_inp, N_neu, N_out, t, ...
+    problem.lb = w0 - del * abs(w0);
+    problem.ub = w0 + del * abs(w0);
+%     problem.objective = @(w) weight_fun(w, w0);
+    problem.nonlcon = @(w) zero_cons(w, MLP_net, N_inp, N_neu, N_out);
+    problem.objective = @(w) stability_obj(w, MLP_net, N_inp, N_neu, N_out, t, ...
         X_ref0', WK_R, WK_L, INSECT, N_single, N_iters, N_per_iter, N_dang,...
         get_args, param_type, m, Weights);
+%     problem.nonlcon = @(w) stability_error(w, MLP_net, N_inp, N_neu, N_out, t, ...
+%         X_ref0', WK_R, WK_L, INSECT, N_single, N_iters, N_per_iter, N_dang,...
+%         get_args, param_type, m, Weights);
     [w, fval, exitflag, output] = solver(problem); 
     MLP_net = update_weights(w, MLP_net, N_inp, N_neu, N_out);
     z = MLP_net(inputs);
+    cons_z(i) = norm(MLP_net(zeros(N_features,1)));
     
     %% TRAINING / LEARNING
     MLP_net = init(MLP_net);
@@ -85,7 +92,6 @@ for i=1:N_iters
     y = MLP_net(inputs);
     w_y = get_weights(MLP_net);
 %     ys(i, :) = y;
-%     ys = [ys ; y];
     cons(i) = norm(MLP_net(zeros(N_features,1)));
     perf(i) = perform(MLP_net, y_star, y);
 end
@@ -103,6 +109,10 @@ save(filename, allvars(tosave).name)
 evalin('base',['load ' filename]);
 
 %%
+function J = stability_obj(varargin)
+    [~, J] = stability_error(varargin{:});
+end
+
 function [c, ceq] = stability_error(w, MLP_net, N_inp, N_neu, N_out, ...
     t, X0, WK_R, WK_L, INSECT, N_single, N_iters, N_per_iter, N_p, ...
     get_args, param_type, m, Weights)
@@ -120,23 +130,34 @@ for con=1:m
     idx = idx_con((1+(con-1)*N_per_iter):(1+con*N_per_iter));
     param_m = param(param_idx);
 
-    [~, X(idx,:)] = ode45(@(t,X) eom_param(INSECT, WK_R, WK_L, t, X, param_m, param_type, varargin{:}), ...
+    [~, X_temp] = ode45(@(t,X) eom_param(INSECT, WK_R, WK_L, t, X, param_m, param_type, varargin{:}), ...
     t(idx), X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+    if size(X_temp,1) ~= (N_per_iter+1)
+        ceq = 1e10;
+        return;
+    else
+        X(idx,:) = X_temp;
+    end
 
     X0 = X(idx(end),:)';
     dang0 = param_type(param_m, t(idx(end)), varargin{:});
     varargin = get_args(t(idx(end)), dang0);
 end
 
-ceq = sum((Weights.OutputVariables .* (X(end, :) - X0')).^2);
+ceq = sum((Weights.OutputVariables .* (X(end, :) - X(1, :))).^2);
 % ceq = X(end, :) - X0';
 
 end
 
-function J = weight_fun(w, w0)
+function [J, dJ] = weight_fun(w, w0)
 % c1 = 1; c2 = 1;
 % J = c1 * norm(w - w0) + c2 * norm(MLP_net(zeros(N_inp, 1)));
-J = norm(w - w0);
+J = 0.5 * (norm(w - w0))^2;
+
+if nargout > 1
+    dJ = w - w0;
+end
+
 end
 
 function [c, ceq] = zero_cons(w, MLP_net, N_inp, N_neu, N_out)
