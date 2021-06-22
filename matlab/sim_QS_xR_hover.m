@@ -8,7 +8,7 @@ addpath('./modules', './sim_data', './plotting');
 load('morp_MONARCH', 'MONARCH');
 INSECT=MONARCH;
 filename='sim_QS_xR_hover';
-load_past_data = true;
+load_past_data = false;
 
 WK.f=10.2247;
 % WK.beta=25.4292*pi/180;
@@ -18,7 +18,7 @@ WK.phi_max=75*pi/180;
 WK.psi_max=5*pi/180;
 WK.psi_N = 2; % or 1
 
-N=1001;
+N=101;
 x0=[0; 0; 0;];
 final_pos = [0; 0; 0;];
 % final_pos = [0.1; 0; -0.1/3;]; % Experimental trajectory
@@ -96,7 +96,8 @@ N=1001;
 T=3/WK.f;
 t=linspace(0,T,N);
 
-[t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+% [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+X = crgr_xR(INSECT, WK, WK, t, X0);
 
 x = X(:,1:3)';
 x_dot = X(:,13:15)';
@@ -131,7 +132,10 @@ X0=[x0; reshape(R0,9,1); x_dot0; W0];
 
 T=1/WK.f;
 t=linspace(0,T,N);
-[t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+
+% [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+X = crgr_xR(INSECT, WK, WK, t, X0);
+
 c(1) = abs(WK.phi_0) + WK.phi_m - WK.phi_max;
 c(2) = abs(WK.psi_0) + WK.psi_m - WK.psi_max;
 % R=reshape(X(:,4:12)',3,3,N);
@@ -156,13 +160,15 @@ X0=[x0; reshape(R0,9,1); x_dot0; W0];
 
 T=1/WK.f;
 t=linspace(0,T,N);
-[t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+
+% [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+X = crgr_xR(INSECT, WK, WK, t, X0);
 
 x=X(:,1:3)';
 x_dot=X(:,13:15)';
 m=INSECT.m;
 E = 0.5*m*(vecnorm(x_dot).^2) - m*9.81*x(3,:);
-E_dot = diff(E')./diff(t);
+E_dot = diff(E')./diff(t');
 E_dot = [E_dot; E_dot(end)];
 
 gam = 1e3;
