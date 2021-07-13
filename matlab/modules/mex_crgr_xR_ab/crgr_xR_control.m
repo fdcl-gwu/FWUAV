@@ -1,4 +1,4 @@
-function X = crgr_xR(INSECT, WK_R, WK_L, t, X0)
+function X = crgr_xR_control(INSECT, WK_R_des, WK_L_des, t, X0, dang0, param, N_dang, N_con, N_per_iter)
 %% assuming equally spaced t array
 N = length(t);
 dt = t(2) - t(1);
@@ -16,13 +16,21 @@ a = [0, 0, 0, 0, 0;
 b = [0.1370831520630755, -0.0183698531564020, 0.7397813985370780, -0.1907142565505889, 0.3322195591068374];
 c = [0, 0.8177227988124852, 0.3859740639032449, 0.3242290522866937, 0.8768903263420429];
 
-for k=1:N-1
-    X(k+1, :) = crouch_grossman_4th(INSECT, X(k, :)', t(k), dt, a, b, c, WK_R, WK_L);
+for con=1:N_con
+    param_idx = (1+(con-1)*N_dang):(con*N_dang);
+    param_con = param(param_idx);
+    idx_1 = 1+(con-1)*N_per_iter; idx_end = 1+con*N_per_iter;
+    
+    t0 = t(idx_1);
+    for k=idx_1:(idx_end-1)
+        X(k+1, :) = crouch_grossman_4th(INSECT, X(k, :)', t(k), dt, a, b, c, WK_R_des, WK_L_des, t0, dang0, param_con);
+    end
+    dang0 = dang0 + param_con * (t(idx_end) - t0);
 end
 
 end
 
-function Xout = crouch_grossman_4th(INSECT, X, t, dt, a, b, c, WK_R, WK_L)
+function Xout = crouch_grossman_4th(INSECT, X, t, dt, a, b, c, WK_R_des, WK_L_des, t0, dang0, param_con)
 %% 4th order Crouch Grossman
 x1=X(1:3);
 R1=reshape(X(4:12),3,3);
@@ -31,6 +39,8 @@ W1=X(16:18);
 
 xi1=X(13:18);
 t1=t+c(1)*dt;
+dang = dang0 + param_con*(t1 - t0);
+[WK_R, WK_L] = get_WK(WK_R_des, WK_L_des, dang);
 K1_xi = deriv_xi(INSECT, x1, R1, x_dot1, W1, WK_R, WK_L, t1);
 
 x2 = x1 + dt*a(2,1)* x_dot1;
@@ -38,6 +48,8 @@ R2 = R1 * expmhat(dt*a(2,1)*W1);
 xi2 = xi1 + dt*a(2,1)* K1_xi;
 x_dot2 = xi2(1:3); W2 = xi2(4:6);
 t2=t+c(2)*dt;
+dang = dang0 + param_con*(t2 - t0);
+[WK_R, WK_L] = get_WK(WK_R_des, WK_L_des, dang);
 K2_xi = deriv_xi(INSECT, x2, R2, x_dot2, W2, WK_R, WK_L, t2);
 
 x3 = x1 + dt* (a(3,1)* x_dot1 + a(3,2)* x_dot2);
@@ -45,6 +57,8 @@ R3 = R1 * expmhat(dt*a(3,1)*W1) * expmhat(dt*a(3,2)*W2);
 xi3 = xi1 + dt* (a(3,1)* K1_xi + a(3,2)* K2_xi);
 x_dot3 = xi3(1:3); W3 = xi3(4:6);
 t3=t+c(3)*dt;
+dang = dang0 + param_con*(t3 - t0);
+[WK_R, WK_L] = get_WK(WK_R_des, WK_L_des, dang);
 K3_xi = deriv_xi(INSECT, x3, R3, x_dot3, W3, WK_R, WK_L, t3);
 
 x4 = x1 + dt* (a(4,1)* x_dot1 + a(4,2)* x_dot2 + a(4,3)* x_dot3);
@@ -52,6 +66,8 @@ R4 = R1 * expmhat(dt*a(4,1)*W1) * expmhat(dt*a(4,2)*W2) * expmhat(dt*a(4,3)*W3);
 xi4 = xi1 + dt* (a(4,1)* K1_xi + a(4,2)* K2_xi + a(4,3)* K3_xi);
 x_dot4 = xi4(1:3); W4 = xi4(4:6);
 t4=t+c(4)*dt;
+dang = dang0 + param_con*(t4 - t0);
+[WK_R, WK_L] = get_WK(WK_R_des, WK_L_des, dang);
 K4_xi = deriv_xi(INSECT, x4, R4, x_dot4, W4, WK_R, WK_L, t4);
 
 x5 = x1 + dt* (a(5,1)* x_dot1 + a(5,2)* x_dot2 + a(5,3)* x_dot3 + a(5,4)* x_dot4);
@@ -59,6 +75,8 @@ R5 = R1 * expmhat(dt*a(5,1)*W1) * expmhat(dt*a(5,2)*W2) * expmhat(dt*a(5,3)*W3) 
 xi5 = xi1 + dt* (a(5,1)* K1_xi + a(5,2)* K2_xi + a(5,3)* K3_xi + a(5,4)* K4_xi);
 x_dot5 = xi5(1:3); W5 = xi5(4:6);
 t5=t+c(5)*dt;
+dang = dang0 + param_con*(t5 - t0);
+[WK_R, WK_L] = get_WK(WK_R_des, WK_L_des, dang);
 K5_xi = deriv_xi(INSECT, x5, R5, x_dot5, W5, WK_R, WK_L, t5);
 
 xout = x1 + dt* (b(1)* x_dot1 + b(2)* x_dot2 + b(3)* x_dot3 + b(4)* x_dot4 + b(5)* x_dot5);
@@ -67,6 +85,27 @@ xiout = xi1 + dt* (b(1)* K1_xi + b(2)* K2_xi + b(3)* K3_xi + b(4)* K4_xi + b(5)*
 
 Xout = [xout; reshape(Rout, 9, 1); xiout];
 
+end
+
+function [WKR_new, WKL_new] = get_WK(WKR_old, WKL_old, dang)
+%%
+WKR_new = WKR_old; WKL_new = WKL_old;
+WKR_new.phi_m = WKR_new.phi_m + dang(1) + dang(3);
+WKL_new.phi_m = WKL_new.phi_m + dang(1) - dang(3);
+WKR_new.theta_0 = WKR_new.theta_0 + dang(2) + dang(5);
+WKL_new.theta_0 = WKL_new.theta_0 + dang(2) - dang(5);
+WKR_new.phi_0 = WKR_new.phi_0 + dang(4);
+WKL_new.phi_0 = WKL_new.phi_0 + dang(4);
+WKR_new.psi_m = WKR_new.psi_m + dang(6);
+WKL_new.psi_m = WKL_new.psi_m - dang(6);
+    
+% Include more wing parameters?
+
+%     WKR_new.psi_m = WKR_new.psi_m + dang(4) + dang(6);
+%     WKL_new.psi_m = WKL_new.psi_m + dang(4) - dang(6);
+    
+%     WKR_new.theta_A_m = WKR_new.theta_A_m + dang(7);
+%     WKL_new.theta_A_m = WKL_new.theta_A_m + dang(7);
 end
 
 function xi_1_dot = deriv_xi(INSECT, x, R, x_dot, W, WK_R, WK_L, t)

@@ -32,3 +32,9 @@ slprj/
 
 # MATLAB coder
 codegen/
+*.mexa64
+*.mexw64
+*.mexmaci64
+
+# Temporary files
+tmp*

@@ -5,19 +5,9 @@ dt = t(2) - t(1);
 X = zeros(N, length(X0));
 X(1, :) = X0;
 
-% 3rd order
-% case 'crgr3'
-% a = [0, 0, 0;
-%     3/4, 0, 0;
-%     119/216, 17/108, 0;];
-% b = [13/51, -2/3, 24/17];
-% c = [0, 3/4, 17/24];
-% 
-% for k=1:N-1
-%     X(k+1, :) = crouch_grossman_3rd(INSECT, X(k, :)', t(k), dt, a, b, c, WK_R, WK_L);
-% end
-
-% 4th order
+% Jackiewicz, Z., Marthinsen, A. and Owren, B., 2000.
+% Construction of Runge–Kutta methods of Crouch–Grossman type of high order.
+% Advances in Computational Mathematics, 13(4), pp.405-415.
 a = [0, 0, 0, 0, 0;
     0.8177227988124852, 0, 0, 0, 0;
     0.3199876375476427, 0.0659864263556022, 0, 0, 0;
