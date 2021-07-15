@@ -10,7 +10,7 @@ load('sim_QS_xR_hover_control_opt_mc', 'inputs', 'targets', 't', 'X_ref0', ...
 % load('fwuav', 'inputs', 'targets');
 N_features = size(inputs, 1);
 [N_outputs, N_data] = size(targets);
-N_iters = 3;
+N_iters = 10;
 
 %% NN Model
 MLP_net = fitnet([N_features*2]);
@@ -31,6 +31,7 @@ MLP_net.divideParam.testRatio = 10/100;
 y_star = targets;
 % ys = zeros(N_iters, N_data);
 perf = zeros(N_iters, 1);
+perf_z = zeros(N_iters, 1);
 cons = zeros(N_iters, 1);
 cons_z = zeros(N_iters, 1);
 
@@ -43,7 +44,7 @@ problem.options.Algorithm = 'interior-point'; % interior-point, sqp, active-set
 problem.options.Display = 'iter';
 problem.options.UseParallel = true;
 problem.options.MaxFunctionEvaluations = 5e5; % 1e6 takes 30 mins
-problem.options.MaxIterations = 3; % 5 iters
+problem.options.MaxIterations = 10; % 5 iters
 problem.options.ConstraintTolerance = 1e-10;
 % problem.options.SpecifyObjectiveGradient = true;
 problem.options.ObjectiveLimit = 0;
@@ -98,6 +99,8 @@ for i=1:N_iters
                 
     n = 12; epsilon = 1e-6;
     delta0 = epsilon * Weights.PerturbVariables .* eye(n);
+%     n = 1; epsilon = 1e-6;
+%     delta0 = epsilon * Weights.PerturbVariables';
     problem.objective = @(w) period_error(w, MLP_net, N_inp, N_neu, N_out, ...
         t, X_ref0', WK_R, WK_L, INSECT, N_single, N_iters, N_per_iter, N_dang, ...
         get_args, param_type, m, Weights, delta0, n);
@@ -115,6 +118,7 @@ for i=1:N_iters
 %     ys(i, :) = y;
     cons(i) = norm(MLP_net(zeros(N_features,1)));
     perf(i) = perform(MLP_net, y_star, y);
+    perf_z(i) = perform(MLP_net, z, y);
 end
 
 time_taken = toc;
@@ -140,31 +144,36 @@ idx_con = 1:(1+N_single);
 err = zeros(n, 1);
 
 parfor j=1:n
-    X = zeros(1+N_single, length(X0));
+%     j = 1;
+%     X = zeros(1+N_single, length(X0));
     dR = delta0(4:6, j);
     X_del0 = [X0(1:3)+delta0(1:3, j); reshape(reshape(X0(4:12),3,3)*expmhat(dR), 9, 1); ...
         X0(13:18) + delta0(7:12, j)];
     param = MLP_net((1 ./ Weights.PerturbVariables)' .* get_error(X_del0, X0));
-    varargin = get_args(t(idx_con(1)), zeros(N_p, 1));
+%     varargin = get_args(t(idx_con(1)), zeros(N_p, 1));
     
-    for con=1:m
-        param_idx = (1+(con-1)*N_p):(con*N_p);
-        idx = idx_con((1+(con-1)*N_per_iter):(1+con*N_per_iter));
-        param_m = param(param_idx);
-
-        [~, X_temp] = ode45(@(t,X) eom_param(INSECT, WK_R, WK_L, t, X, param_m, param_type, varargin{:}), ...
-        t(idx), X_del0, odeset('AbsTol',1e-6,'RelTol',1e-6));
-        if size(X_temp,1) ~= (N_per_iter+1)
-            err(j) = 1/eps;
-            break;
-        else
-            X(idx,:) = X_temp;
-        end
-
-        X_del0 = X(idx(end),:)';
-        dang0 = param_type(param_m, t(idx(end)), varargin{:});
-        varargin = get_args(t(idx(end)), dang0);
+    X = crgr_xR_control_mex(INSECT, WK_R, WK_L, t(idx_con), X_del0, zeros(N_p,1), param, N_p, m, N_per_iter);
+    if ~all(isfinite(X), 'all')
+        err(j) = 1/eps;
     end
+%     for con=1:m
+%         param_idx = (1+(con-1)*N_p):(con*N_p);
+%         idx = idx_con((1+(con-1)*N_per_iter):(1+con*N_per_iter));
+%         param_m = param(param_idx);
+% 
+%         [~, X_temp] = ode45(@(t,X) eom_param(INSECT, WK_R, WK_L, t, X, param_m, param_type, varargin{:}), ...
+%         t(idx), X_del0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+%         if size(X_temp,1) ~= (N_per_iter+1)
+%             err(j) = 1/eps;
+%             break;
+%         else
+%             X(idx,:) = X_temp;
+%         end
+% 
+%         X_del0 = X(idx(end),:)';
+%         dang0 = param_type(param_m, t(idx(end)), varargin{:});
+%         varargin = get_args(t(idx(end)), dang0);
+%     end
 
     err(j) = err(j) + sum((Weights.OutputVariables .* (X(end, :) - X(1, :))).^2);
 end

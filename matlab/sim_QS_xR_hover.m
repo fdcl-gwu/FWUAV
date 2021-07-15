@@ -56,7 +56,8 @@ else
     tpoints = CustomStartPointSet(ptmatrix);
     ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf,'MaxTime',12*3600);
     options = optimoptions(@fmincon,'Algorithm','sqp',...
-        'UseParallel',true,'MaxIterations',2000,'MaxFunctionEvaluations',6000);%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
+        'UseParallel',true,'MaxIterations',2000,'MaxFunctionEvaluations',6000, ...%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
+        'ConstraintTolerance',1e-14,'StepTolerance',1e-8,'ObjectiveLimit',0);
     problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0, final_pos),...
         'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
     [WK_arr, fval, exitflag, output, solutions] = run(ms, problem, tpoints);
@@ -92,12 +93,12 @@ fval = solutions(sol_idx).Fval;
 X0=[x0; reshape(R0,9,1); x_dot0; W0];
 % load('sim_QS_xR_hover_control_opt_single.mat', 'X0'); N=201; T=2/WK.f;
 
-N=1001;
+N=301; % minimum 30 / period
 T=3/WK.f;
 t=linspace(0,T,N);
 
 % [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
-X = crgr_xR(INSECT, WK, WK, t, X0);
+X = crgr_xR_mex(INSECT, WK, WK, t, X0);
 
 x = X(:,1:3)';
 x_dot = X(:,13:15)';
@@ -134,7 +135,7 @@ T=1/WK.f;
 t=linspace(0,T,N);
 
 % [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
-X = crgr_xR(INSECT, WK, WK, t, X0);
+X = crgr_xR_mex(INSECT, WK, WK, t, X0);
 
 c(1) = abs(WK.phi_0) + WK.phi_m - WK.phi_max;
 c(2) = abs(WK.psi_0) + WK.psi_m - WK.psi_max;
@@ -144,10 +145,14 @@ c(2) = abs(WK.psi_0) + WK.psi_m - WK.psi_max;
 % end
 % theta_B_max = max(theta_B);
 % c(3) = theta_B_max - WK.theta_B_max;
-ceq(1:3) = X(1,1:3)' - (X(end,1:3)' -final_pos); % x
-ceq(4:12) = 1e-2*(X(1,4:12)' - X(end,4:12)'); % R
-ceq(13:15) = 1e-1*(X(1,13:15)' - X(end,13:15)'); % x_dot
-ceq(16:18) = 1e-3*(X(1,16:18)' - X(end,16:18)'); % W
+% ceq(1:3) = X(1,1:3)' - (X(end,1:3)' -final_pos); % x
+% ceq(4:12) = 1e-2*(X(1,4:12)' - X(end,4:12)'); % R
+% ceq(13:15) = 1e-1*(X(1,13:15)' - X(end,13:15)'); % x_dot
+% ceq(16:18) = 1e-3*(X(1,16:18)' - X(end,16:18)'); % W
+ceq(1:3) = 10* (X(1,1:3)' - (X(end,1:3)' -final_pos)); % x
+ceq(4:12) = (X(1,4:12)' - X(end,4:12)'); % R
+ceq(13:15) = 5*(X(1,13:15)' - X(end,13:15)'); % x_dot
+ceq(16:18) = (X(1,16:18)' - X(end,16:18)'); % W
 if any(isnan(ceq), 'all')
     ceq(1:18) = 1/eps;
 end
@@ -162,7 +167,7 @@ T=1/WK.f;
 t=linspace(0,T,N);
 
 % [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
-X = crgr_xR(INSECT, WK, WK, t, X0);
+X = crgr_xR_mex(INSECT, WK, WK, t, X0);
 
 x=X(:,1:3)';
 x_dot=X(:,13:15)';
