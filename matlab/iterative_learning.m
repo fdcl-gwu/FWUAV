@@ -143,7 +143,7 @@ MLP_net = update_weights(w, MLP_net, N_inp, N_neu, N_out);
 idx_con = 1:(1+N_single);
 err = zeros(n, 1);
 
-parfor j=1:n
+for j=1:n
 %     j = 1;
 %     X = zeros(1+N_single, length(X0));
     dR = delta0(4:6, j);

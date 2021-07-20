@@ -14,7 +14,7 @@ set(0,'DefaultAxesFontSize',18);
 set(0,'DefaultLineLineWidth',1.5);
 % load('sim_QS_x_hover_control.mat');
 type = 'xR'; % types = {'x', 'xR', 'full'}
-plot_uncontrol = true;
+plot_uncontrol = false;
 
 if plot_uncontrol
     uncon = load('sim_QS_xR_hover_uncon.mat', 'x', 'x_dot', 'R', 'W', 'N');
