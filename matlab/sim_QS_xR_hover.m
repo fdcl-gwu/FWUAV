@@ -8,7 +8,7 @@ addpath('./modules', './sim_data', './plotting');
 load('morp_MONARCH', 'MONARCH');
 INSECT=MONARCH;
 filename='sim_QS_xR_hover';
-load_past_data = false;
+load_past_data = true;
 
 WK.f=10.2247;
 % WK.beta=25.4292*pi/180;
@@ -18,7 +18,8 @@ WK.phi_max=75*pi/180;
 WK.psi_max=5*pi/180;
 WK.psi_N = 2; % or 1
 
-N=101;
+N_single = 200;
+N = 1 + 1*N_single;
 x0=[0; 0; 0;];
 final_pos = [0; 0; 0;];
 % final_pos = [0.1; 0; -0.1/3;]; % Experimental trajectory
@@ -30,8 +31,10 @@ else
     A = []; b = []; Aeq = []; beq = [];
     % Initial value of WK_arr = [beta, phi_m, phi_K, phi_0, theta_m, theta_C, theta_0, theta_a, psi_m, psi_a, psi_0, x_dot1, x_dot2, x_dot3, theta_A_m, theta_A_0, theta_A_a, freq, theta_B02, W_B02]
     WK_arr0 = [-0.2400   0.7806  0.4012   0.7901    0.6981    2.9999    0.2680    0.1050    5*pi/180    0.9757    5*pi/180   -0.1000   -0.0000 -0.1000 0.0937 pi/15 0 WK.f 0 0];
-    lb = [-pi/8, 0, 0, -pi/2, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/15, -pi, WK.f*(1-0.15), 0, -5];
-    ub = [pi/5, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/4, pi, WK.f*(1+0.15), 45*pi/180, 5];
+	lb = [-pi/8, 0, 0, -pi/2, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/15, -pi, WK.f*(1-0.15), 0, -5];
+	ub = [pi/5, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/4, pi, WK.f*(1+0.15), 45*pi/180, 5];
+    % lb = [-pi/12, 0, 0, -pi/2, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/15, -pi, WK.f*(1-0.15), 0, -5];
+    % ub = [pi/8, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/6, pi, WK.f*(1+0.15), 45*pi/180, 5];
     nonlcon = @(WK_arr) traj_condition(WK_arr, WK, INSECT, N, x0, final_pos);
 
     tic;
@@ -56,8 +59,8 @@ else
     tpoints = CustomStartPointSet(ptmatrix);
     ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf,'MaxTime',12*3600);
     options = optimoptions(@fmincon,'Algorithm','sqp',...
-        'UseParallel',true,'MaxIterations',2000,'MaxFunctionEvaluations',6000, ...%'ConstraintTolerance',1e-5,'StepTolerance',1e-8,'OptimalityTolerance',1e-5);
-        'ConstraintTolerance',1e-14,'StepTolerance',1e-8,'ObjectiveLimit',0);
+        'UseParallel',true,'MaxIterations',2000,'MaxFunctionEvaluations',6000); ...
+        % 'ConstraintTolerance',1e-10,'StepTolerance',1e-8,'ObjectiveLimit',0);
     problem = createOptimProblem('fmincon','objective',@(WK_arr) objective_func(WK_arr, WK, INSECT, N, x0, final_pos),...
         'x0',WK_arr0,'lb',lb,'ub',ub,'nonlcon',nonlcon,'options',options);
     [WK_arr, fval, exitflag, output, solutions] = run(ms, problem, tpoints);
@@ -68,19 +71,17 @@ else
     toc;
 end
 
-sol_arr = zeros(length(solutions), 5);
+sol_arr = [];
 for i=1:length(solutions)
-    sol_arr(i, :) = [i, solutions(i).Fval, solutions(i).Output.firstorderopt, ...
-        solutions(i).Output.funcCount, solutions(i).Output.constrviolation];
+	if all(solutions(i).Output.bestfeasible.x == solutions(i).X) && (solutions(i).Output.lssteplength < 1)
+		sol_arr = [sol_arr; i, solutions(i).Fval, solutions(i).Output.firstorderopt, ...
+			solutions(i).Output.funcCount, solutions(i).Output.constrviolation];
+	end
 end
 sol_arr = array2table(sol_arr, 'VariableNames', ...
     {'Index','Fval','Firstorderopt','FuncCount','Constrviolation'});
-sol_arr = sortrows(sol_arr, 'Firstorderopt');
-if length(solutions) > 5
-    disp([sol_arr(1:5,:); sol_arr(sol_arr.Index == 1, :)]);
-else
-    disp(sol_arr);
-end
+% sol_arr = sortrows(sol_arr, 'Firstorderopt');
+disp(sol_arr);
 if ~exist('sol_idx')
     sol_idx = sol_arr{1, 1};
 end
@@ -93,8 +94,9 @@ fval = solutions(sol_idx).Fval;
 X0=[x0; reshape(R0,9,1); x_dot0; W0];
 % load('sim_QS_xR_hover_control_opt_single.mat', 'X0'); N=201; T=2/WK.f;
 
-N=301; % minimum 30 / period
-T=3/WK.f;
+N_periods=3;
+N=1+N_periods*N_single; % minimum 30 / period
+T=N_periods/WK.f;
 t=linspace(0,T,N);
 
 % [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
@@ -145,14 +147,14 @@ c(2) = abs(WK.psi_0) + WK.psi_m - WK.psi_max;
 % end
 % theta_B_max = max(theta_B);
 % c(3) = theta_B_max - WK.theta_B_max;
-% ceq(1:3) = X(1,1:3)' - (X(end,1:3)' -final_pos); % x
-% ceq(4:12) = 1e-2*(X(1,4:12)' - X(end,4:12)'); % R
-% ceq(13:15) = 1e-1*(X(1,13:15)' - X(end,13:15)'); % x_dot
-% ceq(16:18) = 1e-3*(X(1,16:18)' - X(end,16:18)'); % W
-ceq(1:3) = 10* (X(1,1:3)' - (X(end,1:3)' -final_pos)); % x
-ceq(4:12) = (X(1,4:12)' - X(end,4:12)'); % R
-ceq(13:15) = 5*(X(1,13:15)' - X(end,13:15)'); % x_dot
-ceq(16:18) = (X(1,16:18)' - X(end,16:18)'); % W
+ceq(1:3) = X(1,1:3)' - (X(end,1:3)' -final_pos); % x
+ceq(4:12) = 1e-2*(X(1,4:12)' - X(end,4:12)'); % R
+ceq(13:15) = 1e-1*(X(1,13:15)' - X(end,13:15)'); % x_dot
+ceq(16:18) = 1e-3*(X(1,16:18)' - X(end,16:18)'); % W
+% ceq(1:3) = 10* (X(1,1:3)' - (X(end,1:3)' -final_pos)); % x
+% ceq(4:12) = (X(1,4:12)' - X(end,4:12)'); % R
+% ceq(13:15) = 5*(X(1,13:15)' - X(end,13:15)'); % x_dot
+% ceq(16:18) = (X(1,16:18)' - X(end,16:18)'); % W
 if any(isnan(ceq), 'all')
     ceq(1:18) = 1/eps;
 end
