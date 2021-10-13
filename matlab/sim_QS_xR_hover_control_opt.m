@@ -57,8 +57,8 @@ idx = (1+N_single):N;
 X_ref(idx, :) = X_ref(mod(idx-1, N_single)+1, :);
 
 idx_con = 1:(1+N_single*N_periods);
-% des.x_fit_t = X_ref(idx_con, 1:3)'; des.x_dot_fit_t = X_ref(idx_con, 13:15)';
-% des.R_fit_t = reshape(X_ref(idx_con, 4:12)', 3, 3, []); des.W_fit_t = X_ref(idx_con, 16:18)';
+des.x_fit_t = X_ref(idx_con, 1:3)'; des.x_dot_fit_t = X_ref(idx_con, 13:15)';
+des.R_fit_t = reshape(X_ref(idx_con, 4:12)', 3, 3, []); des.W_fit_t = X_ref(idx_con, 16:18)';
 
 % Weights.OutputVariables = [5*ones(1,3), 1*ones(1,9), 2.5*ones(1,3), 1*ones(1,3)]; % 5/15, 1/2.5, 2.5/5, 1
 Weights.OutputVariables = [15*ones(1,3), 1.5*ones(1,9), 5*ones(1,3), 1*ones(1,3)]; % 5/15, 1/2.5, 2.5/5, 1
@@ -71,6 +71,8 @@ Weights.PredictionHorizon = Weights.PredictionHorizon / sum(Weights.PredictionHo
 dx_max = 0.2*max(max(abs(X_ref(:, 1:3)), [], 1)); dtheta_max = 2.86*pi/180;
 dx_dot_max = 0.05 * max(max(abs(X_ref(:, 13:15)), [], 1)); domega_max = 0.05 * max(max(abs(X_ref(:, 16:18)), [], 1));
 Weights.PerturbVariables = [dx_max*ones(1,3), dtheta_max*ones(1,3), dx_dot_max*ones(1,3), domega_max*ones(1,3)];
+WW = (1 ./ Weights.PerturbVariables);
+Weights.OutputVariables = [WW(1:3) WW(4:6) WW(4:6) WW(4:6) WW(7:12)];
 
 WK_R = WK; WK_L = WK;
 
