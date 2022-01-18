@@ -8,7 +8,7 @@ e2=[0 1 0]';
 e3=[0 0 1]';
 II=eye(3);
 
-load STLRead/fv_monarch;
+load ../STLRead/fv_monarch;
 
 WK.f=10.2247;
 WK.beta=25.4292*pi/180;
@@ -18,11 +18,11 @@ N=1001;
 T=5/WK.f;
 t=linspace(0,T,N);
 
-load('morp_MONARCH');
+load('../morp_MONARCH');
 bool_video=0;
-%% generate figures for the note
-%fig_note(fv_body, fv_wr, fv_wl, true);
-%return;
+% generate figures for the note
+fig_note(fv_body, fv_wr, fv_wl, true);
+return;
 
 %% generate the initial object when k=1
 k=1;
@@ -273,7 +273,7 @@ function [h_body, h_wr, h_wl, h_ab, h_FB, h_FR, f_FL]=patch_monarch(fv_body, fv_
 if nargin < 10
     bool_FB=true; % show the body-fixed frame
     bool_FR=false; % show the right wing frame
-    bool_FL=false % show the left wing frame
+    bool_FL=false; % show the left wing frame
 else
     bool_FB=varargin{1}(1);
     bool_FR=varargin{1}(2);
@@ -364,10 +364,10 @@ II=eye(3);
 %% body-fixed frame
 h_FB=figure('color','w');
 x=100*[-1.5 1 -1]';
-R=expmhat(-pi/12*e3)*expmhat(pi/6*e2)*expmhat(-pi/12*e1);
+R=expm(hat(-pi/12*e3))*expm(hat(pi/6*e2))*expm(hat(-pi/12*e1));
 Q_R=eye(3);
 Q_L=eye(3);
-[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[1,0,0]);
+[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L, eye(3), [1,0,0]);
 alpha([h_body, h_wr, h_wl],0.25);
 
 % show the inertial frame
@@ -491,6 +491,16 @@ for i=2
     plot_arc(x0, R*Q_R*II(:,i), R*expmhat(beta*e2)*II(:,i), 40);
 end
 
+%% NSF
+h_NSF=figure('color','w');
+x=100*[-1.5 1 -1]';
+R=expmhat(-pi/12*e3)*expmhat(pi/6*e2)*expmhat(-pi/12*e1);
+Q_R=eye(3);
+Q_L=eye(3);
+[h_body, h_wr, h_wl]=patch_monarch(fv_body, fv_wr, fv_wl, x, R, Q_R, Q_L,[0,0,0]);
+alpha([h_body, h_wr, h_wl],0.25);
+
+
 if bool_print
     figure(h_FB);
     print('monarch_FB','-depsc');
@@ -506,6 +516,8 @@ if bool_print
     print('monarch_FR_theta','-depsc');
     figure(h_FR_psi);
     print('monarch_FR_psi','-depsc');
+    figure(h_NSF);
+    print('monarch_NSF','-depsc');
     
     !mv *.eps ../doc/Figs
 end

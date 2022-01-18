@@ -276,7 +276,7 @@ One can show that the angular velocity of the right wing is obtained from the ti
     \end{bmatrix}
     \begin{bmatrix}
         \dot\phi_R \\ \dot\theta_R \\ \dot\psi_R
-    \end{bmatrix}.
+    \end{bmatrix}.\label{eqn:euler2Omega_R}
 \end{align}
 The determinant of the above $3\times 3$ matrix is $-\cos\psi_R$. 
 Consequently, it is invertible when the deviation angle satisfies $\psi_R\neq \pm\frac{\pi}{2}$. 
@@ -333,7 +333,7 @@ Also, we have
     \end{bmatrix}
     \begin{bmatrix}
         \dot\phi_L \\ \dot\theta_L \\ \dot\psi_L
-    \end{bmatrix}.
+    \end{bmatrix}.\label{eqn:euler2Omega_L}
 \end{align}
 
 \subsubsection{Wing Kinematics}
@@ -1525,6 +1525,79 @@ Multiply \eqref{eqn:J22dotxi_2} by $C$, and subtract it from \eqref{eqn:J11dotxi
 \end{gather}
 Now, the unknown $(\tau_R,\tau_L,\tau_A)$ is eliminated, and for given $(g_2,\xi_2,\dot\xi_2)$ the above can be simulated to construct $(g_1,\xi_1)$. 
 Once $(g_1,\xi_1)$ is obtained, it can be substituted into \eqref{eqn:J22dotxi_2} to compute $(\tau_R,\tau_L,\tau_A)$ that the torque at the thorax required to rotate the wings and the abdomen as described. 
+
+
+\subsubsection{Prescribed Flapping/Deviation Angle and Abdomen Attitude}
+
+Suppose that a part of the wing kinematics, represented by the flapping angle and the deviation angle, is prescribed. 
+In other words, we have $(\phi_R(t),\psi_R(t), \phi_L(t), \psi_L(t))$ prescribed as a function of time. 
+The pitching angle $(\theta_R(t), \theta_L(t))$ should be determined by the equations of motion \eqref{eqn:g1xi1}, \eqref{eqn:g2xi2}.
+
+First, we assume that there is a torsional spring in the root of the wing. 
+In the above, we modeled a torsional spring through its potential energy proportional to the pitch angle squared. 
+Here, we consider an alternative formulation that is directly proportional to the pitch angle without considering its potential, as given by
+\begin{align}
+    \mathbf{f}_{t} = 
+    \begin{bmatrix} 
+        0_{3\times 1} \\
+        0_{3\times 1} \\
+        -\kappa_t \theta_R e_2 \\
+        -\kappa_t \theta_L e_2 \\
+        0_{3\times 3}
+    \end{bmatrix},\label{eqn:f_torsion}
+\end{align}
+for a torsional spring coefficient $\kappa_t>0$.
+Also, it is assumed that there is no internal, control torque along the pitching axis, $\mathbf{r}_y$ and $\mathbf{l}_y$.
+Since the internal control torque $\tau_R$ is resolved in $\mathcal{F}_B$, it is $Q_R^T \tau_R$ when resolved in $\mathcal{F}_R$.
+Therefore, the assumption of zero pitching moment yields
+\begin{align}
+    e_2^T Q_R^T \tau_R =0. \label{eqn:tau_R_2}
+\end{align}
+Similarly, for the left wing
+\begin{align}
+    e_2^T Q_L^T \tau_L =0. \label{eqn:tau_L_2}
+\end{align}
+
+Now, let's consider how the above \eqref{eqn:f_torsion}--\eqref{eqn:tau_L_2} can be integrated with the complete equations of motion \eqref{eqn:g1xi1} and \eqref{eqn:g2xi2}.
+The number of equations that we have is 17 (6 from \eqref{eqn:g1xi1}, 9 from \eqref{eqn:g2xi2}, and 2 from \eqref{eqn:tau_R_2}-\eqref{eqn:tau_L_2}).
+Note that $\Omega_i$ is determined by $(\theta_i, \psi_i, \dot\phi_i, \dot\theta_i,\dot\psi_i)$ for $i\in\{R,L\}$ through \eqref{eqn:euler2Omega_R} or \eqref{eqn:euler2Omega_L}.
+Since $(\phi_i,\psi_i)$ are given as a function of time, we can determine $\Omega_i$ if $(\theta_i,\dot\theta_i)$ are available. 
+Similarly, $\dot\Omega_i$ can be determined by $(\theta_i,\dot\theta_i,\ddot\theta_i)$.
+Thus, the number of unknown variables in \eqref{eqn:g1xi1}, \eqref{eqn:g2xi2}, \eqref{eqn:tau_R_2}, and \eqref{eqn:tau_L_2} is also 17: 6 of $\dot\xi_1$, 9 of $(\tau_L,\tau_R,\tau_A)$, and 2 of $(\ddot\theta_R, \ddot\theta_L)$.
+Here, $\dot\theta_i$ is not counted as one of the unknown variables, as it can be obtained by integrating $\ddot\theta_i$ with an initial condition $\dot\theta_i(0)$. 
+
+
+
+Therefore, the equations \eqref{eqn:g1xi1}, \eqref{eqn:g2xi2}, \eqref{eqn:tau_R_2}, and \eqref{eqn:tau_L_2} can be solved together for $\dot\xi_1$, $(\tau_L,\tau_R,\tau_A)$, and $(\ddot\theta_R, \ddot\theta_L)$.
+While the resulting expression would be quite involved due to the complexities of \eqref{eqn:euler2Omega_R} and \eqref{eqn:euler2Omega_L}, the unknown variables appear linearly. 
+As such, all of the equations may be arranged in the form of
+\begin{align*}
+    \begin{bmatrix}
+        \cdots & \cdots & & & & \\
+        \cdots & \cdots \\
+        \cdots & \cdots \\
+        \cdots & \cdots \\
+    \end{bmatrix}
+    \begin{bmatrix}
+        \dot\xi_1 \\
+        \ddot\theta_R \\
+        \ddot\theta_L \\
+        \tau_R \\
+        \tau_L \\
+        \tau_A 
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        \vdots \\
+        \vdots \\ \\ \\ \\
+    \end{bmatrix},
+\end{align*}
+which can be integrated numerically with the kinematics \eqref{eqn:dot_g}.
+
+Given the complexities, we may begin with the longitudinal dynamics with the symmetric wing kinematics when there is no abdomen undulation, i.e., $x=[x_1, 0, x_3]$, $\Omega=[0, \Omega_2, 0]$, $Q_A=I_{3\times 3}$, $\Omega_A=0$, and $(\phi_R,\theta_R,\psi_R)= (\phi_L, \theta_L, \psi_L)$. 
+This reduces the number of unknown variables into 4: $\dot x_i = (\ddot x_1, \ddot x_3, \dot\Omega_2)$ and $\ddot\theta$. 
+
+
 
 \subsubsection{Prescribed Wing Kinematics and Abdomen/Body Attitude}
 
