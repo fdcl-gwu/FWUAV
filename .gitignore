@@ -28,3 +28,7 @@ slprj/
 *.png
 *.jpg
 *.avi
+
+# Matlab coder
+codegen/
+*.mexa64
