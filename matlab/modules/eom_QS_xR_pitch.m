@@ -48,8 +48,8 @@ f_g_2=f_g(7:15);
 
 % Torsional spring at wing root
 e2 = [0, 1, 0]';
-f_t_2=[-(INSECT.Ktorsion*theta_R + INSECT.Ctorsion*theta_R_dot - INSECT.ftau0)*e2;
-       -(INSECT.Ktorsion*theta_L + INSECT.Ctorsion*theta_L_dot - INSECT.ftau0)*e2;
+f_t_2=[-(INSECT.Ktorsion*(theta_R - WK_R.theta_ftau) + INSECT.Ctorsion*theta_R_dot)*e2;
+       -(INSECT.Ktorsion*(theta_L - WK_L.theta_ftau) + INSECT.Ctorsion*theta_L_dot)*e2;
         zeros(3,1)];
 
 psi_R=Euler_R(3);

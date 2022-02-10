@@ -17,7 +17,8 @@ m(2) = 0;
 % tau0 = 0;
 INSECT.Ktorsion = m(1); % Torsional spring coefficient 
 INSECT.Ctorsion = m(2); % Torsional damping coefficient
-INSECT.ftau0 = tau0; % Initial value
+% INSECT.ftau0 = tau0; % Initial value
+WK.theta_ftau = tau0 / m(1);
 clear('Euler_R', 'Euler_R_dot', 'f_tau');
 
 WK.f=10.2247;
@@ -45,10 +46,10 @@ if load_past_data
     load(filename, 'WK', 'WK_arr', 'solutions', 'output', 'lb', 'ub');
 else
     A = []; b = []; Aeq = []; beq = [];
-    % Initial value of WK_arr = [beta, phi_m, phi_K, phi_0, psi_m, psi_a, psi_0, x_dot1, x_dot2, x_dot3, theta_A_m, theta_A_0, theta_A_a, freq, theta_B02, W_B02, theta_0; theta_dot0]
-    WK_arr0 = [0.0580    0.6750    0.8238    0.0133    0   -2.7926   -0.0529   -0.1932    0.0000   -0.0875    0.2618    0.7440    1.6496   11.7584    0.6188   -0.2733  0.8379 66.1229];
-	lb = [-pi/8, 0, 0, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/15, -pi, WK.f*(1-0.15), 0, -5, -pi/3, -100];
-	ub = [pi/5, pi/2, 1, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/4, pi, WK.f*(1+0.15), 45*pi/180, 5, pi/2, 100];
+    % Initial value of WK_arr = [beta, phi_m, phi_K, phi_0, psi_m, psi_a, psi_0, x_dot1, x_dot2, x_dot3, theta_A_m, theta_A_0, theta_A_a, freq, theta_B02, W_B02, theta_0, theta_dot0, theta_ftau]
+    WK_arr0 = [0.0580    0.6750    0.8238    0.0133    0   -2.7926   -0.0529   -0.1932    0.0000   -0.0875    0.2618    0.7440    1.6496   11.7584    0.6188   -0.2733  0.8379 66.1229 WK.theta_ftau];
+	lb = [-pi/8, 0, 0, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/15, -pi, WK.f*(1-0.15), 0, -5, -pi/3, -100, -pi/6];
+	ub = [pi/5, pi/2, 1, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/4, pi, WK.f*(1+0.15), 45*pi/180, 5, pi/2, 100, pi/3];
     % lb = [-pi/12, 0, 0, -pi/2, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/15, -pi, WK.f*(1-0.15), 0, -5];
     % ub = [pi/8, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/6, pi, WK.f*(1+0.15), 45*pi/180, 5];
     nonlcon = @(WK_arr) traj_condition(WK_arr, WK, INSECT, N, x0, final_pos);
@@ -57,12 +58,12 @@ else
     rng default; % For reproducibility
 
     % % MULTISTART, PARTICLESWARM
-    ptmatrix(1, :) = [0.0580    0.6750    0.8238    0.0133    0   -2.7926   -0.0529   -0.1932    0.0000   -0.0875    0.2618    0.7440    1.6496   11.7584    0.6188   -0.2733  0.8379 66.1229];
-    ptmatrix(2, :) = [-0.2799    0.7425    0.6669    0.5665    0.0000   -2.8879    0.0524   -0.1000   -0.0000   -0.1000 0.2094   0.2669    1.5707   11.7584 0 0 pi/4 50];
-    ptmatrix(3, :) = [-0.3324    1.4397-0.6658    0.3889    0.6658    5*pi/180   -1.0691    5*pi/180   -0.0441    0.0137 -0.0783 0 0.21 0 WK.f 0 0 pi/4 50];
-    ptmatrix(4, :) = [0.0577    pi/2-1.2217    0.3587    1.2217  5*pi/180    0.9429    0.0291 0 0 0 10*pi/180  0.21 0 WK.f 0 0 pi/4 50];
-    ptmatrix(5, :) = [0.6273    0.6355    0.2866   -0.6599    0.0196    0.2506   -0.0003 -0.2458   -0.0000    0.0230    0.1970    0.4696    1.4270   11.6689  0.5319    1.4862 pi/4 50];
-    ptmatrix(6, :) = [0.3273    0.7399    0.9091    0.5642    0.0244    2.2337    0.0278 0.2275    0.0000    0.1058    0.2093    0.2778    1.8785   10.9897   0.7069    1.8056 pi/4 50];
+    ptmatrix(1, :) = [0.0580    0.6750    0.8238    0.0133    0   -2.7926   -0.0529   -0.1932    0.0000   -0.0875    0.2618    0.7440    1.6496   11.7584    0.6188   -0.2733  0.8379 66.1229 0.38];
+    ptmatrix(2, :) = [-0.2799    0.7425    0.6669    0.5665    0.0000   -2.8879    0.0524   -0.1000   -0.0000   -0.1000 0.2094   0.2669    1.5707   11.7584 0 0 pi/4 50 0];
+    ptmatrix(3, :) = [-0.3324    1.4397-0.6658    0.3889    0.6658    5*pi/180   -1.0691    5*pi/180   -0.0441    0.0137 -0.0783 0 0.21 0 WK.f 0 0 pi/4 50 0];
+    ptmatrix(4, :) = [0.0577    pi/2-1.2217    0.3587    1.2217  5*pi/180    0.9429    0.0291 0 0 0 10*pi/180  0.21 0 WK.f 0 0 pi/4 50 0];
+    ptmatrix(5, :) = [0.6273    0.6355    0.2866   -0.6599    0.0196    0.2506   -0.0003 -0.2458   -0.0000    0.0230    0.1970    0.4696    1.4270   11.6689  0.5319    1.4862 pi/4 50 0];
+    ptmatrix(6, :) = [0.3273    0.7399    0.9091    0.5642    0.0244    2.2337    0.0278 0.2275    0.0000    0.1058    0.2093    0.2778    1.8785   10.9897   0.7069    1.8056 pi/4 50 0];
     N_points = 8;
     ptmatrix(7:N_points, :) = lb + rand(N_points-6, length(WK_arr0)) .* (ub - lb);
     tpoints = CustomStartPointSet(ptmatrix);
@@ -221,6 +222,7 @@ e2 = [0; 1; 0];
 R0 = expmhat(WK_arr(15)*e2);
 W0 = [0; WK_arr(16); 0];
 thetas0 = [WK_arr(17); WK_arr(17); WK_arr(18); WK_arr(18)];
+WK.theta_ftau = WK_arr(19);
 
 WK = orderfields(WK);
 end
