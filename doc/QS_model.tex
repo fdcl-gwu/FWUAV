@@ -1598,11 +1598,11 @@ which can be integrated numerically with the kinematics \eqref{eqn:dot_g}.
 %Given the complexities, we may begin with the longitudinal dynamics with the symmetric wing kinematics when there is no abdomen undulation, i.e., $x=[x_1, 0, x_3]$, $\Omega=[0, \Omega_2, 0]$, $Q_A=I_{3\times 3}$, $\Omega_A=0$, and $(\phi_R,\theta_R,\psi_R)= (\phi_L, \theta_L, \psi_L)$. 
 %This reduces the number of unknown variables into 4: $\dot x_i = (\ddot x_1, \ddot x_3, \dot\Omega_2)$ and $\ddot\theta$. 
 
-To obtain these equations we expand the wing angular accelerations as,
+To obtain these equations we expand the wing angular accelerations as
 \begin{equation*}
 	\dot{\Omega}_i = T_i [\ddot{\phi}_i, \ddot{\theta}_i, \ddot{\psi}_i]^T + (\dot{\theta}_i T_{\theta_i} + \dot{\psi}_i T_{\psi_i}) [\dot{\phi}_i, \dot{\theta}_i, \dot{\psi}_i]^T  
 \end{equation*}
-for $ i = \braces{R, L} $ and,
+for $ i = \braces{R, L} $ and
 \begin{gather*}
 	T_i = \begin{bmatrix}
 		c\psi_i c\theta_i & 0 & s\theta_i \\
@@ -1625,8 +1625,8 @@ for $ i = \braces{R, L} $ and,
 are the corresponding transformation matrices for the right wing (here $ c $ is $ \cos $ while $ s $ is $ \sin $).
 If we multiply the first and last rows of all the three matrices by $ (-1) $, we will have the values for the left wing (i.e., $ T_L = \text{diag}\bracket{-1, 1, -1} T_R $ and so on).
 
-Denoting, $ \Upsilon_i = [{\phi}_i, {\theta}_i, {\psi}_i]^T $, we can express, $ \dot \Omega_R - T_R[:,2] \ddot{\theta}_R = T_R[:,1] \ddot{\phi}_R + T_R[:,3] \ddot{\psi}_R + (\dot{\theta}_R T_{\theta_R} + \dot{\psi}_R T_{\psi_R}) \dot \Upsilon_R $.
-So the known value of $ \dot \xi_2 = [\dot \Omega_R, \dot \Omega_L, \dot \Omega_A]^T $ is,
+Denoting $ \Upsilon_i = [{\phi}_i, {\theta}_i, {\psi}_i]^T $, we can express, $ \dot \Omega_R - T_R[:,2] \ddot{\theta}_R = T_R[:,1] \ddot{\phi}_R + T_R[:,3] \ddot{\psi}_R + (\dot{\theta}_R T_{\theta_R} + \dot{\psi}_R T_{\psi_R}) \dot \Upsilon_R $.
+So the known value of $ \dot \xi_2 = [\dot \Omega_R, \dot \Omega_L, \dot \Omega_A]^T $ is
 \begin{equation*}
 	\dot \xi_{2,\phi,\psi} = \begin{bmatrix}
 		T_R[:,1] \ddot{\phi}_R + T_R[:,3] \ddot{\psi}_R + (\dot{\theta}_R T_{\theta_R} + \dot{\psi}_R T_{\psi_R}) \dot \Upsilon_R \\
@@ -1669,7 +1669,7 @@ Denoting the above coefficient matrix by $ T_{\ddot \theta} $, we simplify the $
 		\ad^*_{\xi_1}\cdot(\mathbf{J}_{11}\xi_1 + \mathbf{J}_{12}\xi_2) - \mathbf{L}_{11}\xi_1 - \mathbf{L}_{12}\xi_2 + \mathbf{f}_{a_1} + \mathbf{f}_{g_1} -J_{12} \dot \xi_{2,\phi,\psi} \\
 		\ad^*_{\xi_2}\cdot(\mathbf{J}_{21}\xi_1 + \mathbf{J}_{22}\xi_2) - \mathbf{L}_{21}\xi_1 - \mathbf{L}_{22}\xi_2 + \mathbf{f}_{a_2} + \mathbf{f}_{g_2} + \mathbf{f}_{t_2} -J_{22} \dot \xi_{2,\phi,\psi}\\
 		0_{2\times 1}
-	\end{bmatrix}
+	\end{bmatrix}.
 \end{align*}
 
 Next, we can eliminate $ \tau $s from \eqref{eqn:J11dotxi_1} and \eqref{eqn:J22dotxi_2} as illustrated in \eqref{eqn:EL_xR}.
@@ -1696,10 +1696,10 @@ Hence we obtain 8 independent equations as,
 		\left. + \mathbf{f}_{a_1}+\mathbf{f}_{g_1}-C(\mathbf{f}_{a_2}+\mathbf{f}_{g_2}+\mathbf{f}_{t_2})
 		-(J_{12} - C J_{22}) \dot \xi_{2,\phi,\psi} \right) \\
 		E_{R,L} (\ad^*_{\xi_2}\cdot(\mathbf{J}_{21}\xi_1 + \mathbf{J}_{22}\xi_2) - \mathbf{L}_{21}\xi_1 - \mathbf{L}_{22}\xi_2 + \mathbf{f}_{a_2} + \mathbf{f}_{g_2} + \mathbf{f}_{t_2} -J_{22} \dot \xi_{2,\phi,\psi})
-	\end{bmatrix}
+	\end{bmatrix}.
 \end{align*}
 
-\paragraph{Information regarding code structure:}
+\paragraph{Implementation Detials}
 Once we solve this relation, we can substitute back to compute $ (\tau_R, \tau_L, \tau_A) $ from \eqref{eqn:J22dotxi_2} as implemented in \texttt{modules / eom\_QS\_xR\_pitch.m}.
 This process of trajectory integration is further sped up using MATLAB coder by initially running \texttt{modules / mex\_crgr\_xR\_ab / generate\_mex} to obtain the required mex-file.
 For instance, the setup for obtaining a periodic hover trajectory is described below (in \texttt{sim\_QS\_xR\_pitch\_hover.m}) which is quite similar to the setup in `effects of abdomen motion' paper.
