@@ -1542,12 +1542,12 @@ Here, we consider an alternative formulation that is directly proportional to th
     \begin{bmatrix} 
         0_{3\times 1} \\
         0_{3\times 1} \\
-        -\kappa_t \theta_R e_2 \\
-        -\kappa_t \theta_L e_2 \\
+        -\kappa_t (\theta_R - \theta_0) e_2 \\
+        -\kappa_t (\theta_L - \theta_0) e_2 \\
         0_{3\times 3}
     \end{bmatrix},\label{eqn:f_torsion}
 \end{align}
-for a torsional spring coefficient $\kappa_t>0$.
+for a torsional spring coefficient $\kappa_t>0$ and a pitch offset $ \theta_0 $.
 Also, it is assumed that there is no internal, control torque along the pitching axis, $\mathbf{r}_y$ and $\mathbf{l}_y$.
 Since the internal control torque $\tau_R$ is resolved in $\mathcal{F}_B$, it is $Q_R^T \tau_R$ when resolved in $\mathcal{F}_R$.
 Therefore, the assumption of zero pitching moment yields
@@ -1595,10 +1595,10 @@ As such, all of the equations may be arranged in the form of
 \end{align*}
 which can be integrated numerically with the kinematics \eqref{eqn:dot_g}.
 
-Given the complexities, we may begin with the longitudinal dynamics with the symmetric wing kinematics when there is no abdomen undulation, i.e., $x=[x_1, 0, x_3]$, $\Omega=[0, \Omega_2, 0]$, $Q_A=I_{3\times 3}$, $\Omega_A=0$, and $(\phi_R,\theta_R,\psi_R)= (\phi_L, \theta_L, \psi_L)$. 
-This reduces the number of unknown variables into 4: $\dot x_i = (\ddot x_1, \ddot x_3, \dot\Omega_2)$ and $\ddot\theta$. 
+%Given the complexities, we may begin with the longitudinal dynamics with the symmetric wing kinematics when there is no abdomen undulation, i.e., $x=[x_1, 0, x_3]$, $\Omega=[0, \Omega_2, 0]$, $Q_A=I_{3\times 3}$, $\Omega_A=0$, and $(\phi_R,\theta_R,\psi_R)= (\phi_L, \theta_L, \psi_L)$. 
+%This reduces the number of unknown variables into 4: $\dot x_i = (\ddot x_1, \ddot x_3, \dot\Omega_2)$ and $\ddot\theta$. 
 
-Or we can just utilize the full equations by expanding the angular accelerations as,
+To obtain these equations we expand the wing angular accelerations as,
 \begin{equation*}
 	\dot{\Omega}_i = T_i [\ddot{\phi}_i, \ddot{\theta}_i, \ddot{\psi}_i]^T + (\dot{\theta}_i T_{\theta_i} + \dot{\psi}_i T_{\psi_i}) [\dot{\phi}_i, \dot{\theta}_i, \dot{\psi}_i]^T  
 \end{equation*}
@@ -1699,7 +1699,45 @@ Hence we obtain 8 independent equations as,
 	\end{bmatrix}
 \end{align*}
 
-Once we solve this relation, we can substitute back to compute $ (\tau_R, \tau_L, \tau_A) $.
+\paragraph{Information regarding code structure:}
+Once we solve this relation, we can substitute back to compute $ (\tau_R, \tau_L, \tau_A) $ from \eqref{eqn:J22dotxi_2} as implemented in \texttt{modules / eom\_QS\_xR\_pitch.m}.
+This process of trajectory integration is further sped up using MATLAB coder by initially running \texttt{modules / mex\_crgr\_xR\_ab / generate\_mex} to obtain the required mex-file.
+For instance, the setup for obtaining a periodic hover trajectory is described below (in \texttt{sim\_QS\_xR\_pitch\_hover.m}) which is quite similar to the setup in `effects of abdomen motion' paper.
+
+The parameters being optimized over characterize FWUAV flapping and deviation angles and abdomen undulation along with the initial conditions.
+More specifically, this is formulated as follows.
+\begin{itemize}
+	\item The objective function is 
+	\begin{equation}\label{eqn:obj_func}
+		J = w_1 \int_{0}^{T} |E(t)| dt + w_2 \int_{0}^{T} |\dot{E}(t)| dt,
+	\end{equation}
+	where $w_1,w_2\in\Re$, and
+	$
+	E(t) = \frac{1}{2} m \norm{\dot x(t)}^2 - mge_3^T x(t)
+	$
+	is the sum of body kinetic energy and the gravitational potential energy.
+	\item The states evolving freely consist of $ X(t) = \braces{x(t), R(t), \dot x(t), \Omega(t), \theta_R(t), \theta_L(t), \dot\theta_R(t), \dot\theta_L(t)} $.
+	We ensure periodic motion by imposing the constraints:
+	$
+	X(0) = X(T).
+	$
+	%	Furthermore, there are additional constraints to avoid physically infeasible flapping,
+	%	$
+	%	|\phi_m| + |\phi_0| < \pi/2,
+	%	$
+	%	along with prescribed hard bounds on other parameters.
+	It is also assumed that the motion of wings is symmetric to each other in this simple maneuver.
+	\item The optimization parameters are given by
+	\begin{itemize}
+		\item flapping frequency: $f$ and stroke plane angle: $\beta$
+		\item wing kinematics: $(\phi_m, \phi_K, \phi_0)$, $(\psi_m, \psi_0, \psi_a)$
+		\item abdomen undulation : $(\theta_{A_m}, \theta_{A_0}, \theta_{A_a})$
+		\item initial translational velocity: $\dot x(0) \in \Re^3$
+		\item initial attitude, angular velocity along 2nd axis: $ \theta_B(0)\ s.t.\ R(0) = \exp(\theta_B(0) \hat{e}_2) $, $ \Omega_2(0) = \pair{\Omega, e_2} $ ; taken to be $ 0 $ along other axes for this simple maneuver
+		\item initial pitch, pitch rate and pitch offset: $ \theta(0), \dot\theta(0), \theta_0 $
+	\end{itemize}
+	Meanwhile, the torsional spring coefficient, $ \kappa_t $, is approximately estimated from the physical characteristics of previous optimization results.
+\end{itemize}
 
 \subsubsection{Prescribed Wing Kinematics and Abdomen/Body Attitude}
 

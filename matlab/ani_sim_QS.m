@@ -16,10 +16,12 @@ bool_video=false;
 file_to_save = 'sim_QS_x_hover_mona.avi';
 
 add_to_save="_mona";
-load('sim_QS_x_hover'+ add_to_save,'WK','t','x','R','Q_R','Q_L','Q_A','N','F_R','F_L','des');
+% load('sim_QS_x_hover'+ add_to_save,'WK','t','x','R','Q_R','Q_L','Q_A','N','F_R','F_L','des');
+load('sim_QS_xR_pitch_hover','WK','t','x','R','Q_R','Q_L','Q_A','N','F_R','F_L','des');
 N_period = round(max(t*WK.f));
 ix_d = round((N-1)/N_period);
-ix_to_save = round(linspace(1,ix_d,9));
+% ix_to_save = round(linspace(1,ix_d,9));
+ix_to_save = round(linspace(1,N,10*N_period+1));
 bool_save_plot = false;
 
 %% generate the initial object when k=1

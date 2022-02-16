@@ -10,16 +10,20 @@ load_past_data = false;
 
 load('morp_MONARCH', 'MONARCH');
 INSECT=MONARCH;
-load('sim_QS_xR_hover_200.mat', 'Euler_R', 'Euler_R_dot', 'f_tau');
-[m, tau0] = lin_reg([-Euler_R(2, :); -Euler_R_dot(2, :)]', f_tau(8, :)');
-% m(1) = 2e-5;
-m(2) = 0;
-% tau0 = 0;
-INSECT.Ktorsion = m(1); % Torsional spring coefficient 
-INSECT.Ctorsion = m(2); % Torsional damping coefficient
-% INSECT.ftau0 = tau0; % Initial value
-WK.theta_ftau = tau0 / m(1);
-clear('Euler_R', 'Euler_R_dot', 'f_tau');
+
+% load('sim_QS_xR_hover_200.mat', 'Euler_R', 'Euler_R_dot', 'f_tau');
+% [m, tau0] = lin_reg([-Euler_R(2, :); -Euler_R_dot(2, :)]', f_tau(8, :)');
+% % m(1) = 2e-5;
+% m(2) = 0;
+% % tau0 = 0;
+% INSECT.Ktorsion = 2*m(1); % Torsional spring coefficient 
+% INSECT.Ctorsion = m(2); % Torsional damping coefficient
+% % INSECT.ftau0 = tau0; % Initial value
+% WK.theta_ftau = tau0 / m(1);
+% clear('Euler_R', 'Euler_R_dot', 'f_tau');
+INSECT.Ktorsion = 4e-5;
+INSECT.Ctorsion = 0;
+WK.theta_ftau = 0;
 
 WK.f=10.2247;
 % WK.beta=25.4292*pi/180;
@@ -43,15 +47,13 @@ final_pos = [0; 0; 0;];
 
 %% The optimization algorithm
 if load_past_data
-    load(filename, 'WK', 'WK_arr', 'solutions', 'output', 'lb', 'ub');
+    load(filename, 'INSECT', 'WK', 'WK_arr', 'solutions', 'output', 'lb', 'ub');
 else
     A = []; b = []; Aeq = []; beq = [];
     % Initial value of WK_arr = [beta, phi_m, phi_K, phi_0, psi_m, psi_a, psi_0, x_dot1, x_dot2, x_dot3, theta_A_m, theta_A_0, theta_A_a, freq, theta_B02, W_B02, theta_0, theta_dot0, theta_ftau]
-    WK_arr0 = [0.0580    0.6750    0.8238    0.0133    0   -2.7926   -0.0529   -0.1932    0.0000   -0.0875    0.2618    0.7440    1.6496   11.7584    0.6188   -0.2733  0.8379 66.1229 WK.theta_ftau];
+    WK_arr0 = [0.0580    0.6750    0.8238    0.0133    0   -2.7926   -0.0529   -0.1932    0.0000   -0.0875    0.2618    0.7440    1.6496   11.7584    0.6188   -0.2733  0.8379 66.1229 0];
 	lb = [-pi/8, 0, 0, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/15, -pi, WK.f*(1-0.15), 0, -5, -pi/3, -100, -pi/6];
 	ub = [pi/5, pi/2, 1, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/4, pi, WK.f*(1+0.15), 45*pi/180, 5, pi/2, 100, pi/3];
-    % lb = [-pi/12, 0, 0, -pi/2, 0, 0, -pi/6, -pi/2, 0, -pi, -5*pi/180, -2, -2, -2, 0, pi/15, -pi, WK.f*(1-0.15), 0, -5];
-    % ub = [pi/8, pi/2, 1, pi/2, 40*pi/180, 3, pi/6, pi/2, 5*pi/180, pi, 5*pi/180, 2, 2, 2, pi/12, pi/6, pi, WK.f*(1+0.15), 45*pi/180, 5];
     nonlcon = @(WK_arr) traj_condition(WK_arr, WK, INSECT, N, x0, final_pos);
 
     tic;
@@ -64,7 +66,7 @@ else
     ptmatrix(4, :) = [0.0577    pi/2-1.2217    0.3587    1.2217  5*pi/180    0.9429    0.0291 0 0 0 10*pi/180  0.21 0 WK.f 0 0 pi/4 50 0];
     ptmatrix(5, :) = [0.6273    0.6355    0.2866   -0.6599    0.0196    0.2506   -0.0003 -0.2458   -0.0000    0.0230    0.1970    0.4696    1.4270   11.6689  0.5319    1.4862 pi/4 50 0];
     ptmatrix(6, :) = [0.3273    0.7399    0.9091    0.5642    0.0244    2.2337    0.0278 0.2275    0.0000    0.1058    0.2093    0.2778    1.8785   10.9897   0.7069    1.8056 pi/4 50 0];
-    N_points = 8;
+    N_points = 100;
     ptmatrix(7:N_points, :) = lb + rand(N_points-6, length(WK_arr0)) .* (ub - lb);
     tpoints = CustomStartPointSet(ptmatrix);
     ms = MultiStart('Display','iter','PlotFcn',@gsplotbestf,'MaxTime',12*3600);
@@ -82,10 +84,12 @@ end
 
 % sol_arr = [];
 % for i=1:length(solutions)
-% 	if all(solutions(i).Output.bestfeasible.x == solutions(i).X) && (solutions(i).Output.lssteplength < 1)
-% 		sol_arr = [sol_arr; i, solutions(i).Fval, solutions(i).Output.firstorderopt, ...
-% 			solutions(i).Output.funcCount, solutions(i).Output.constrviolation];
-% 	end
+%     try
+%         if all(solutions(i).Output.bestfeasible.x == solutions(i).X) && (solutions(i).Output.lssteplength < 1)
+%             sol_arr = [sol_arr; i, solutions(i).Fval, solutions(i).Output.firstorderopt, ...
+%                 solutions(i).Output.funcCount, solutions(i).Output.constrviolation];
+%         end
+%     end
 % end
 % sol_arr = array2table(sol_arr, 'VariableNames', ...
 %     {'Index','Fval','Firstorderopt','FuncCount','Constrviolation'});
@@ -112,7 +116,7 @@ N=1+N_periods*N_single; % minimum 30 / period
 T=N_periods/WK.f;
 t=linspace(0,T,N);
 
-% [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+% [t, X]=ode45(@(t,X) eom_QS_xR_pitch(INSECT, WK, WK, t,X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 X = crgr_xR_pitch_mex(INSECT, WK, WK, t, X0);
 
 x = X(:,1:3)';
@@ -129,6 +133,26 @@ for k=1:N
 end
 
 x_ddot = X_dot(13:15,:);
+
+% Energy conservation considering virtual work
+% for k=1:N
+%     xi=[x_dot(:,k); W(:,k); W_R(:,k); W_L(:,k); W_A(:,k)];    
+%     JJ = inertia(INSECT, R(:,:,k), Q_R(:,:,k), Q_L(:,:,k), Q_A(:,:,k), x_dot(:,k), W(:,k), W_R(:,k), W_L(:,k), W_A(:,k));
+%     T(k) = 1/2* xi'*JJ* xi;
+%     U(k) = potential(INSECT,x(:,k),R(:,:,k),Q_R(:,:,k),Q_L(:,:,k),Q_A(:,:,k));
+%     dW(k) = (f_tau(:, k) + f_a(:, k))' * xi + f_t_2(:, k)' * xi(7:end);
+% end
+% 
+% E = T + U - cumtrapz(t, dW);
+% E_dot = gradient(T + U, t) - dW;
+% figure;
+% plot(E_dot);
+% ylabel('$\dot E$', 'interpreter', 'latex');
+% hold on;
+% yyaxis right;
+% plot((E - E(1)) ./ E)
+% ylabel('$\frac{\Delta E}{E}$', 'interpreter', 'latex');
+% title('Has to be 0');
 
 % Get a list of all variables
 allvars = whos;
@@ -149,7 +173,7 @@ X0=[x0; reshape(R0,9,1); x_dot0; W0; thetas0];
 T=1/WK.f;
 t=linspace(0,T,N);
 
-% [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+% [t, X]=ode45(@(t,X) eom_QS_xR_pitch(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 X = crgr_xR_pitch_mex(INSECT, WK, WK, t, X0);
 
 c(1) = abs(WK.phi_0) + WK.phi_m - WK.phi_max;
@@ -161,10 +185,6 @@ ceq(13:15) = 1e-1*(X(1,13:15)' - X(end,13:15)'); % x_dot
 ceq(16:18) = 1e-3*(X(1,16:18)' - X(end,16:18)'); % W
 ceq(19:20) = 1e-1*(X(1,19:20)' - X(end,19:20)'); % theta
 ceq(21:22) = 1e-4*(X(1,21:22)' - X(end,21:22)'); % theta_dot
-% ceq(1:3) = 10* (X(1,1:3)' - (X(end,1:3)' -final_pos)); % x
-% ceq(4:12) = (X(1,4:12)' - X(end,4:12)'); % R
-% ceq(13:15) = 5*(X(1,13:15)' - X(end,13:15)'); % x_dot
-% ceq(16:18) = (X(1,16:18)' - X(end,16:18)'); % W
 if any(isnan(ceq), 'all')
     ceq(1:18) = 1/eps;
 end
@@ -178,7 +198,7 @@ X0=[x0; reshape(R0,9,1); x_dot0; W0; thetas0];
 T=1/WK.f;
 t=linspace(0,T,N);
 
-% [t, X]=ode45(@(t,X) eom_QS_xR(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
+% [t, X]=ode45(@(t,X) eom_QS_xR_pitch(INSECT, WK, WK, t, X), t, X0, odeset('AbsTol',1e-6,'RelTol',1e-6));
 X = crgr_xR_pitch_mex(INSECT, WK, WK, t, X0);
 
 x=X(:,1:3)';
@@ -192,8 +212,6 @@ gam = 1e3;
 del = 1e4;
 % J = gam * abs(trapz(t, E_dot)) + del * abs(trapz(t, E)); % new data
 J = gam * trapz(t, abs(E_dot)) + del * trapz(t, abs(E));
-% J = gam * trapz(t, abs(E_dot)) + del * trapz(t, abs(E)) + ...
-%     1e4 * trapz(t, 0.5 * INSECT.Ktorsion * X(:, 19).^2) + 1e0 * trapz(t, 0.5 * INSECT.Ktorsion * X(:, 21).^2);
 
 if isnan(J)
     J = 1/eps;
