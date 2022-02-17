@@ -1699,7 +1699,7 @@ Hence we obtain 8 independent equations as,
 	\end{bmatrix}.
 \end{align*}
 
-\paragraph{Implementation Detials}
+\paragraph{Implementation Details}
 Once we solve this relation, we can substitute back to compute $ (\tau_R, \tau_L, \tau_A) $ from \eqref{eqn:J22dotxi_2} as implemented in \texttt{modules / eom\_QS\_xR\_pitch.m}.
 This process of trajectory integration is further sped up using MATLAB coder by initially running \texttt{modules / mex\_crgr\_xR\_ab / generate\_mex} to obtain the required mex-file.
 For instance, the setup for obtaining a periodic hover trajectory is described below (in \texttt{sim\_QS\_xR\_pitch\_hover.m}) which is quite similar to the setup in `effects of abdomen motion' paper.
@@ -1738,6 +1738,29 @@ More specifically, this is formulated as follows.
 	\end{itemize}
 	Meanwhile, the torsional spring coefficient, $ \kappa_t $, is approximately estimated from the physical characteristics of previous optimization results.
 \end{itemize}
+
+The results that we obtained are in \texttt{sim\_data / sim\_QS\_xR\_pitch\_hover.mat} and the corresponding trajectories are shown in Figure \ref{fig:hover_xR_pitch}.
+\begin{figure}%[h!]
+	\centerline{
+		\subfigure[Position]{
+			\includegraphics[width=0.5\linewidth]{hover_position_3d}
+		}
+		\hfill
+		\subfigure[Linear velocity]{
+			\includegraphics[width=0.5\linewidth]{hover_velocity}
+		}
+	}
+	\centerline{
+		\subfigure[Free body attitude and prescribed abdomen]{
+			\includegraphics[width=0.5\linewidth]{hover_abd_body}
+		}
+		\subfigure[Free wing pitching along with prescribed flapping and deviation]{
+			\includegraphics[width=0.5\linewidth]{hover_wing_kinematics}
+		}
+	}
+	\caption{Trajectories obtained with optimization}
+	\label{fig:hover_xR_pitch}
+\end{figure}
 
 \subsubsection{Prescribed Wing Kinematics and Abdomen/Body Attitude}
 

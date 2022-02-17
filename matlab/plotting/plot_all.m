@@ -3,7 +3,7 @@ addpath('../modules', '../sim_data', '../');
 set(0,'DefaultAxesFontName','times');
 set(0,'DefaultAxesFontSize',18);
 set(0,'DefaultLineLineWidth',2);
-add_to_save="_mona";
+add_to_save="";
 
 h_x3=figure;
 plot3(x(1,:),x(2,:),x(3,:));
