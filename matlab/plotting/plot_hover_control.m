@@ -83,7 +83,8 @@ if ~strcmp(type, 'x')
 end
 xlabel('$t/T$','interpreter','latex');
 % subplot(4,1,2);
-print(h_x, 'hover_control_pos', '-depsc');
+% print(h_x, 'hover_control_pos', '-depsc');
+exportgraphics(h_x,'hover_control_pos.pdf','ContentType','vector');
 
 if strcmp(type, 'x')
     h_x3=figure;
@@ -115,7 +116,8 @@ for ii=1:3
     end
 end
 xlabel('$t/T$','interpreter','latex');
-print(h_x_dot, 'hover_control_vel', '-depsc');
+% print(h_x_dot, 'hover_control_vel', '-depsc');
+exportgraphics(h_x_dot,'hover_control_vel.pdf','ContentType','vector');
 
 if ~strcmp(type, 'x')
     h_rot=figure;
@@ -148,7 +150,8 @@ if ~strcmp(type, 'x')
         end
     end
     xlabel('$t/T$','interpreter','latex');
-    print(h_W, 'hover_control_ang_vel', '-depsc');
+%     print(h_W, 'hover_control_ang_vel', '-depsc');
+    exportgraphics(h_W,'hover_control_ang_vel.pdf','ContentType','vector');
 end
 
 % W_dot = diff(W, 1, 2);
@@ -231,7 +234,8 @@ if strcmp(type, 'xR')
         ax.YAxis.Exponent = -3;
     end
     xlabel('$t/T$','interpreter','latex');
-    print(h_control, 'hover_control_input', '-depsc');
+%     print(h_control, 'hover_control_input', '-depsc');
+    exportgraphics(h_control,'hover_control_input.pdf','ContentType','vector');
 end
 
 % h_aero = figure;

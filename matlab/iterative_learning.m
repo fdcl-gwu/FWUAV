@@ -18,8 +18,8 @@ end
 inputs = (1 ./ Weights.PerturbVariables)' .* err'; targets = opt_param_flat';
 opt_complete = opt_complete & (cost(:, end) < cost(:, 1));
 % inputs = inputs(:, opt_complete); targets = targets(:, opt_complete);
-idx = 1:1000;
-% idx = 1:600;
+% idx = 1:1000;
+idx = 1:450;
 inputs = inputs(:, opt_complete([idx, N_sims+idx, 2*N_sims+idx]));
 targets = targets(:, opt_complete([idx, N_sims+idx, 2*N_sims+idx]));
 large_inp_idx = find(vecnorm(inputs, 2, 1) > 1);
@@ -27,6 +27,7 @@ large_inp_idx = find(vecnorm(inputs, 2, 1) > 1);
 % N_zero = 1000; % 25, 100
 N_data = size(inputs, 2);
 N_zero = round(N_data/15);
+N_zero = 300;
 inputs(:, (N_data+1):(N_data+N_zero)) = zeros(12, N_zero);
 targets(:, (N_data+1):(N_data+N_zero)) = zeros(60, N_zero);
 
@@ -56,7 +57,7 @@ control_net.divideParam.testRatio = 10/100;
 
 %% Setup
 % alpha = 0.5;
-alphas = linspace(0.1, 0.5, N_iters);
+% alphas = linspace(0.1, 0.5, N_iters);
 alphas = 0.75 * ones(1, N_iters);
 N_inp = N_features; [N_out, N_neu] = size(control_net.LW{2,1});
 solver = @fmincon;
@@ -75,6 +76,7 @@ problem.options.ObjectiveLimit = 0;
 %% Algorithm
 y_star = targets;
 perf = zeros(N_iters, 1); perf_z = zeros(N_iters, 1);
+perf_yz = zeros(N_iters, 1);
 cons = zeros(N_iters, 1); cons_z = zeros(N_iters, 1);
 cs = cell(N_iters, 1); es = cell(N_iters, 1); os = cell(N_iters, 1);
 
@@ -84,7 +86,10 @@ ttotal = tic;
 control_net = init(control_net);
 % control_net = configure(control_net, inputs, targets);
 disp('Starting initial training');
+tinit = tic;
 control_net = train(control_net, inputs, targets, 'useParallel', 'yes'); %
+time_init = toc(tinit);
+cs_init = control_net;
 disp('Finished initial training');
 hints = nn.wb_indices(control_net);
 y = control_net(inputs);
@@ -191,6 +196,7 @@ for i=1:N_iters
 	w_y = getwb(control_net, hints);
     cons(i) = norm(control_net(zeros(N_features,1)));
     perf(i) = perform(control_net, y_star, y);
+    perf_yz(i) = perform(control_net, z, y);
 end
 
 time_taken = toc(ttotal);

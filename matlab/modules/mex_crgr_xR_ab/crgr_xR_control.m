@@ -32,56 +32,44 @@ end
 
 function Xout = crouch_grossman_4th(INSECT, X, t, dt, a, b, c, WK_R_des, WK_L_des, t0, dang0, param_con)
 %% 4th order Crouch Grossman
-x1=X(1:3);
-R1=reshape(X(4:12),3,3);
-x_dot1=X(13:15);
-W1=X(16:18);
+s = length(b);
+x_dot = zeros(3, s);
+W = zeros(3, s);
+K_xi = zeros(6, s);
 
-xi1=X(13:18);
-t1=t+c(1)*dt;
+x1 = X(1:3);
+R1 = reshape(X(4:12),3,3);
+x_dot(:, 1) = X(13:15);
+W(:, 1) = X(16:18);
+
+xi1 = X(13:18);
+t1 = t+c(1)*dt;
 dang = dang0 + param_con*(t1 - t0);
 [WK_R, WK_L] = get_WK(WK_R_des, WK_L_des, dang);
-K1_xi = deriv_xi(INSECT, x1, R1, x_dot1, W1, WK_R, WK_L, t1);
+K_xi(:, 1) = deriv_xi(INSECT, x1, R1, x_dot(:, 1), W(:, 1), WK_R, WK_L, t1);
 
-x2 = x1 + dt*a(2,1)* x_dot1;
-R2 = R1 * expmhat(dt*a(2,1)*W1);
-xi2 = xi1 + dt*a(2,1)* K1_xi;
-x_dot2 = xi2(1:3); W2 = xi2(4:6);
-t2=t+c(2)*dt;
-dang = dang0 + param_con*(t2 - t0);
-[WK_R, WK_L] = get_WK(WK_R_des, WK_L_des, dang);
-K2_xi = deriv_xi(INSECT, x2, R2, x_dot2, W2, WK_R, WK_L, t2);
+for i = 2:s
+    x = x1 + dt* sum(bsxfun(@times, a(i,1:(i-1)), x_dot(:, 1:(i-1))), 2);
+    R = R1;
+    for j = 1:(i-1)
+        R = R * expmhat(dt*a(i, j)*W(:, j));
+    end
+    xi = xi1 + dt* sum(bsxfun(@times, a(i,1:(i-1)), K_xi(:, 1:(i-1))), 2);
+    x_dot(:, i) = xi(1:3); W(:, i) = xi(4:6);
+    ti = t+c(i)*dt;
+    dang = dang0 + param_con*(ti - t0);
+    [WK_R, WK_L] = get_WK(WK_R_des, WK_L_des, dang);
+    K_xi(:, i) = deriv_xi(INSECT, x, R, x_dot(:, i), W(:, i), WK_R, WK_L, ti);
+end
 
-x3 = x1 + dt* (a(3,1)* x_dot1 + a(3,2)* x_dot2);
-R3 = R1 * expmhat(dt*a(3,1)*W1) * expmhat(dt*a(3,2)*W2);
-xi3 = xi1 + dt* (a(3,1)* K1_xi + a(3,2)* K2_xi);
-x_dot3 = xi3(1:3); W3 = xi3(4:6);
-t3=t+c(3)*dt;
-dang = dang0 + param_con*(t3 - t0);
-[WK_R, WK_L] = get_WK(WK_R_des, WK_L_des, dang);
-K3_xi = deriv_xi(INSECT, x3, R3, x_dot3, W3, WK_R, WK_L, t3);
-
-x4 = x1 + dt* (a(4,1)* x_dot1 + a(4,2)* x_dot2 + a(4,3)* x_dot3);
-R4 = R1 * expmhat(dt*a(4,1)*W1) * expmhat(dt*a(4,2)*W2) * expmhat(dt*a(4,3)*W3);
-xi4 = xi1 + dt* (a(4,1)* K1_xi + a(4,2)* K2_xi + a(4,3)* K3_xi);
-x_dot4 = xi4(1:3); W4 = xi4(4:6);
-t4=t+c(4)*dt;
-dang = dang0 + param_con*(t4 - t0);
-[WK_R, WK_L] = get_WK(WK_R_des, WK_L_des, dang);
-K4_xi = deriv_xi(INSECT, x4, R4, x_dot4, W4, WK_R, WK_L, t4);
-
-x5 = x1 + dt* (a(5,1)* x_dot1 + a(5,2)* x_dot2 + a(5,3)* x_dot3 + a(5,4)* x_dot4);
-R5 = R1 * expmhat(dt*a(5,1)*W1) * expmhat(dt*a(5,2)*W2) * expmhat(dt*a(5,3)*W3) * expmhat(dt*a(5,4)*W4);
-xi5 = xi1 + dt* (a(5,1)* K1_xi + a(5,2)* K2_xi + a(5,3)* K3_xi + a(5,4)* K4_xi);
-x_dot5 = xi5(1:3); W5 = xi5(4:6);
-t5=t+c(5)*dt;
-dang = dang0 + param_con*(t5 - t0);
-[WK_R, WK_L] = get_WK(WK_R_des, WK_L_des, dang);
-K5_xi = deriv_xi(INSECT, x5, R5, x_dot5, W5, WK_R, WK_L, t5);
-
-xout = x1 + dt* (b(1)* x_dot1 + b(2)* x_dot2 + b(3)* x_dot3 + b(4)* x_dot4 + b(5)* x_dot5);
-Rout = R1 * expmhat(dt*b(1)*W1) * expmhat(dt*b(2)*W2) * expmhat(dt*b(3)*W3) * expmhat(dt*b(4)*W4) * expmhat(dt*b(5)*W5);
-xiout = xi1 + dt* (b(1)* K1_xi + b(2)* K2_xi + b(3)* K3_xi + b(4)* K4_xi + b(5)* K5_xi);
+% Final values
+xout = x1 + dt* sum(bsxfun(@times, b, x_dot), 2);
+Rout = R1;
+for j = 1:s
+    Rout = Rout * expmhat(dt*b(j)*W(:, j));
+end
+xiout = xi1 + dt* sum(bsxfun(@times, b, K_xi), 2);
+% xiout = xi1 + dt* K_xi * b'; % little slower
 
 Xout = [xout; reshape(Rout, 9, 1); xiout];
 

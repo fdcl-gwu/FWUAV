@@ -17,13 +17,15 @@ end
 inputs = (1 ./ Weights.PerturbVariables)' .* err'; targets = opt_param_flat';
 opt_complete = opt_complete & (cost(:, end) < cost(:, 1));
 % inputs = inputs(:, opt_complete); targets = targets(:, opt_complete);
-idx = 1:1000;
+% idx = 1:1000;
+idx = 1:600;
 inputs = inputs(:, opt_complete([idx, N_sims+idx, 2*N_sims+idx]));
 targets = targets(:, opt_complete([idx, N_sims+idx, 2*N_sims+idx]));
 
 % N_zero = 1000; % 25, 100
 N_data = size(inputs, 2);
 N_zero = round(N_data/15);
+N_zero = 300;
 inputs(:, (N_data+1):(N_data+N_zero)) = zeros(12, N_zero);
 targets(:, (N_data+1):(N_data+N_zero)) = zeros(60, N_zero);
 
@@ -68,7 +70,7 @@ X_ref0 = des.X0;
 
 %%
 rng(1);
-N_sims = 10;
+N_sims = 15;
 scale = logspace(0, -2, 3);
 N_scale = length(scale);
 dX = zeros(N_sims*N_scale, 12);

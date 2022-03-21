@@ -70,6 +70,7 @@ Weights.PredictionHorizon = Weights.PredictionHorizon / sum(Weights.PredictionHo
 % To multiply the perturbations
 dx_max = 0.2*max(max(abs(X_ref(:, 1:3)), [], 1)); dtheta_max = 2.86*pi/180;
 dx_dot_max = 0.05 * max(max(abs(X_ref(:, 13:15)), [], 1)); domega_max = 0.05 * max(max(abs(X_ref(:, 16:18)), [], 1));
+dx_max = 0.05; dtheta_max = 5*pi/180; dx_dot_max = 0.2;
 Weights.PerturbVariables = [dx_max*ones(1,3), dtheta_max*ones(1,3), dx_dot_max*ones(1,3), domega_max*ones(1,3)];
 WW = (1 ./ Weights.PerturbVariables);
 Weights.OutputVariables = [WW(1:3) WW(4:6) WW(4:6) WW(4:6) WW(7:12)];
@@ -269,10 +270,11 @@ switch simulation_type
             [control_net, tr] = train(control_net, inputs, targets);
             tstPerform = perform(control_net, targets(:, tr.testInd), control_net(inputs(:, tr.testInd)));
         else
-            load('sim_QS_xR_hover_control_opt.mat', 'control_net', 'tr');
+%             load('sim_QS_xR_hover_control_opt.mat', 'control_net', 'tr');
 %             control_net = newgrnn(inputs, targets, 0.1);
         end
     end
+    load('control_performance_WW_fisher_I_1500_36_bigNzero.mat', 'Weights', 'control_net');
     arr_idx = 1:(3*mc.N_sims);
     inc_idx = 1 + mod(arr_idx(mc.cost(:,end) > mc.cost(:,1)) - 1, mc.N_sims);
     opt_idx = inc_idx(1); % 3 for mc
@@ -291,6 +293,7 @@ switch simulation_type
             reshape(des_R0*expmhat(dXi(6)*e3)*expmhat(dXi(5)*e2)*expmhat(dXi(4)*e1),1,9),...
             des_X0(13:18) + dXi(7:12)]';
     end
+    load('sim_QS_xR_hover_control_opt_single.mat', 'X0');
     opt_param = zeros(N_dang*m, N_periods*N_iters/m);
     for i=1:N_periods
         if strcmp(use_control_net, 'none')

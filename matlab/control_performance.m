@@ -8,7 +8,6 @@ load('sim_QS_xR_hover_control_opt_200_WW', 't', 'X_ref0', ...
     'get_args', 'param_type', 'm', 'N_dang', 'Weights', 'N_sims', ...
     'des', 'opt_complete');
 
-M
 load('iterative_learning_result', 'control_net');
 WK = WK_R;
 
@@ -87,33 +86,78 @@ time_taken = toc;
 % end
 
 %% Performance measures
-ult_bound = max(cost(cost(:, 1) < 1, 10:end), [], 'all');
+idx_cost_good = cost(:, 1) < 1;
+log_cost = log(cost);
+% d_log = (log_cost(:, 1) - log_cost(:, 2:end)) ./ (1:N_periods);
+d_log = log_cost(:, 1:end-1) - log_cost(:, 2:end);
 
-ult_bound = 1.35*ult_bound; % 0.0076
-decay_rate = 1; decay_factor = 10;
-for k=1:10
-    conv_rates = [decay_rate/decay_factor, decay_rate, decay_rate * decay_factor];
-    c_r_bool = ones(size(conv_rates), 'logical');
-    for j = 1:length(conv_rates)
-        c_r = conv_rates(j);
-        for i=1:N_sims*N_scale
-            cost_idx = cost(i, start_idx) >=  ult_bound;
-            if (cost(i, 1) < 1) && (cost(i, 1) > ult_bound) ...
-                    && any(cost(i, start_idx(cost_idx)) > cost(i, 1) * exp(-c_r * (start_idx(cost_idx) - 1)))
-                c_r_bool(j) = false;
-                break;
-            end
-        end
-        if ~c_r_bool(j)
-            try
-                c_r_bool((j+1):end) = false;
-            end
-            break;
-        end
-    end
-    decay_rate = conv_rates(c_r_bool);
-    decay_rate = decay_rate(end);
-    decay_factor = sqrt(decay_factor);
+ult_bound = max(cost(idx_cost_good, 10:end), [], 'all');
+decay_rate = -Inf;
+while decay_rate < 0
+    ult_bound = ult_bound * 1.01;
+    idx_ult_bound = (cost(:, 1:end-1) > ult_bound) & (cost(:, 2:end) > ult_bound) & idx_cost_good;
+    decay_rate = min(d_log(idx_ult_bound));
+end
+
+% x_fit = start_idx';
+% conv_rate = zeros(N_sims*N_scale, 1);
+% for i=1:N_sims*N_scale
+%     if cost(i, 1) < 1
+%         y_fit = cost(i, start_idx)';
+%         f = fit(x_fit-1, y_fit, 'exp1');
+%         conv_rate(i) = f.b;
+%     end
+% end
+% figure;
+% plot(conv_rate(cost(:, 1) > 0.01 & cost(:, 1) < 1));
+% decay_rate = max(conv_rate(cost(:, 1) < 1 & cost(:, 1) > ult_bound));
+
+%%
+% all(diff(max(cost(cost(:, 1) < 1, 10:end), [], 1)) < 0)
+% a = diff(mean(cost(cost(:, 1) < 1, 10:end), 1));
+% sum(a(a>0)), sum(a(a<0))
+% 
+% start_idx = 1:10;
+% decay_rate = 1; decay_factor = 10;
+% for k=1:10
+%     conv_rates = [decay_rate/decay_factor, decay_rate, decay_rate * decay_factor];
+%     c_r_bool = ones(size(conv_rates), 'logical');
+%     for j = 1:length(conv_rates)
+%         c_r = conv_rates(j);
+%         for i=1:N_sims*N_scale
+%             cost_idx = (cost(i, start_idx) >=  ult_bound) & (cost(i, 1) * exp(-c_r * (start_idx - 1)) >= ult_bound);
+%             if (cost(i, 1) < 1) && (cost(i, 1) > ult_bound) ...
+%                     && any(cost(i, start_idx(cost_idx)) > cost(i, 1) * exp(-c_r * (start_idx(cost_idx) - 1)))
+%                 c_r_bool(j) = false;
+%                 break;
+%             end
+%         end
+%         if ~c_r_bool(j)
+%             try
+%                 c_r_bool((j+1):end) = false;
+%             end
+%             break;
+%         end
+%     end
+%     decay_rate = conv_rates(c_r_bool);
+%     decay_rate = decay_rate(end);
+%     decay_factor = sqrt(decay_factor);
+% end
+
+allvars = whos;
+tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
+save(filename, allvars(tosave).name)
+evalin('base',['load ' filename]);
+
+%%
+function err = get_error(X, Xd)
+err = zeros(12, 1);
+R = reshape(X(4:12), 3, 3); Rd = reshape(Xd(4:12), 3, 3);
+err(1:3) = X(1:3) - Xd(1:3);
+err(4:6) = 0.5*vee(Rd'*R - R'*Rd);
+% [err(4), err(6), err(5)] = dcm2angle(R'*Rd, 'xzy');
+err(7:9) = X(13:15) - Xd(13:15);
+err(10:12) = X(16:18) - (R'*Rd*Xd(16:18));
 end
 
 %% Initial studies
@@ -161,19 +205,3 @@ end
 % plot(L_time');
 % xlabel('time period');
 % ylabel('$\frac{\Delta cost}{\Delta t}$', 'Interpreter', 'latex');
-
-allvars = whos;
-tosave = cellfun(@isempty, regexp({allvars.class}, '^matlab\.(ui|graphics)\.'));
-save(filename, allvars(tosave).name)
-evalin('base',['load ' filename]);
-
-%%
-function err = get_error(X, Xd)
-err = zeros(12, 1);
-R = reshape(X(4:12), 3, 3); Rd = reshape(Xd(4:12), 3, 3);
-err(1:3) = X(1:3) - Xd(1:3);
-err(4:6) = 0.5*vee(Rd'*R - R'*Rd);
-% [err(4), err(6), err(5)] = dcm2angle(R'*Rd, 'xzy');
-err(7:9) = X(13:15) - Xd(13:15);
-err(10:12) = X(16:18) - (R'*Rd*Xd(16:18));
-end
