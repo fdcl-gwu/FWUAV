@@ -35,7 +35,7 @@ X_ref = crgr_xR_mex(INSECT, WK, WK, des.t', des.X0);
 
 %% Optimization
 rng default;
-N_periods = 3; % 1, 3
+N_periods = 3; % 30 for image generation
 N_iters = 10; % 2, 4, 10 per period
 p = 2*N_iters; % Prediction Horizon multiplier of iter
 m = N_iters; % Control Horizon multiplier of iter
@@ -67,10 +67,13 @@ Weights.OutputVariables = [15*ones(1,3), 1.5*ones(1,9), 5*ones(1,3), 1*ones(1,3)
 % Weights.PredictionHorizon = logspace(0, 1, p); % p elements
 Weights.PredictionHorizon = logspace(-0.5, 1, p); % p elements
 Weights.PredictionHorizon = Weights.PredictionHorizon / sum(Weights.PredictionHorizon);
-% To multiply the perturbations
+
+% To multiply the perturbations (initial submission values for RAL)
 dx_max = 0.2*max(max(abs(X_ref(:, 1:3)), [], 1)); dtheta_max = 2.86*pi/180;
 dx_dot_max = 0.05 * max(max(abs(X_ref(:, 13:15)), [], 1)); domega_max = 0.05 * max(max(abs(X_ref(:, 16:18)), [], 1));
-dx_max = 0.05; dtheta_max = 5*pi/180; dx_dot_max = 0.2;
+% dx_max = 0.05; dtheta_max = 5*pi/180; dx_dot_max = 0.2; % Big values for image generation data
+% dx_max = 0.5; dtheta_max = 10*pi/180; dx_dot_max = 0.2; % Huge values which haven't been used yet
+
 Weights.PerturbVariables = [dx_max*ones(1,3), dtheta_max*ones(1,3), dx_dot_max*ones(1,3), domega_max*ones(1,3)];
 WW = (1 ./ Weights.PerturbVariables);
 Weights.OutputVariables = [WW(1:3) WW(4:6) WW(4:6) WW(4:6) WW(7:12)];
@@ -122,7 +125,7 @@ problem.options.ConstraintTolerance = 1e-10; problem.options.StepTolerance = 1e-
 problem.options.ObjectiveLimit = 0;
 
 %% Simulation
-simulation_type = 'monte_carlo'; % 'single', 'monte_carlo', 'optimized', 'opt_net'
+simulation_type = 'optimized'; % 'single', 'monte_carlo', 'optimized', 'opt_net'
 switch simulation_type
     case 'single'
 %%
@@ -130,6 +133,7 @@ switch simulation_type
     des_X0 = X_ref(1, :);
     load('sim_QS_xR_hover_control_opt_mc.mat', 'dX');
     dX0 = 1e-2 * dX(268, :);
+    rng default;
 %     dx = 2*rand(1,3)-1; dx = rand(1) * dx / norm(dx);
 %     dtheta = 2*rand(1,3)-1; dtheta = rand(1) * dtheta / norm(dtheta);
 %     dx_dot = 2*rand(1,3)-1; dx_dot = rand(1) * dx_dot / norm(dx_dot);
@@ -155,7 +159,7 @@ switch simulation_type
 %%
     load_mc_data = false; % To add similar data to the old values
 %     Weights.PerturbVariables = 1e-2 * Weights.PerturbVariables;
-    N_sims = 5000; % 10/30 sec per sim
+    N_sims = 5000; % 100 for image generation with many periods
 %     problem.options.Display = 'final';
     problem.options.UseParallel = false;
     old_seed = 'shuffle'; % default, shuffle
@@ -210,8 +214,8 @@ switch simulation_type
     
     case 'optimized'
 %%
-    mc = load('sim_QS_xR_hover_control_opt_mc.mat', 'N_sims', 'X0_pert', 'cost', 'opt_param');
-    use_control_net = 'period'; % 'none', 'iter', 'period'
+    mc = load('sim_QS_xR_hover_control_opt_bigxR.mat', 'N_sims', 'X0_pert', 'cost', 'opt_param');
+    use_control_net = 'none'; % 'none', 'iter', 'period'
     mc.X0_pert_flat = squeeze(mc.X0_pert(:, 1, :)); mc.opt_param_flat = reshape(permute(mc.opt_param, [1, 3, 2]), 3*mc.N_sims, 6*N_iters);
 %     N_periods = 3;
     t = t(1:(1+N_periods*N_single));
@@ -274,12 +278,13 @@ switch simulation_type
 %             control_net = newgrnn(inputs, targets, 0.1);
         end
     end
-    load('control_performance_WW_fisher_I_1500_36_bigNzero.mat', 'Weights', 'control_net');
+%     load('control_performance_WW_fisher_I_1500_36_bigNzero.mat', 'Weights', 'control_net');
     arr_idx = 1:(3*mc.N_sims);
     inc_idx = 1 + mod(arr_idx(mc.cost(:,end) > mc.cost(:,1)) - 1, mc.N_sims);
     opt_idx = inc_idx(1); % 3 for mc
+    opt_idx = 1;
     X0 = squeeze(mc.X0_pert(opt_idx, 1, :));
-    if true
+    if false
         rng('shuffle');
         dx = 2*rand(1,3)-1; dx = rand(1) * dx / norm(dx);
         dtheta = 2*rand(1,3)-1; dtheta = rand(1) * dtheta / norm(dtheta);
@@ -293,7 +298,7 @@ switch simulation_type
             reshape(des_R0*expmhat(dXi(6)*e3)*expmhat(dXi(5)*e2)*expmhat(dXi(4)*e1),1,9),...
             des_X0(13:18) + dXi(7:12)]';
     end
-    load('sim_QS_xR_hover_control_opt_single.mat', 'X0');
+%     load('sim_QS_xR_hover_control_opt_single.mat', 'X0');
     opt_param = zeros(N_dang*m, N_periods*N_iters/m);
     for i=1:N_periods
         if strcmp(use_control_net, 'none')
@@ -702,7 +707,7 @@ opt_iter = zeros(N_sims, N_periods, 1); opt_firstorder = zeros(N_sims, N_periods
 opt_complete = zeros(N_sims, N_periods, 1, 'logical');
 X0_pert = zeros(N_sims, N_periods, 1+N_iters, 18);
 idx_cost = zeros(N_periods, 1+N_iters); idx_X0 = zeros(N_periods, 1+N_iters);
-for period=1:3
+for period=1:N_periods
     idx_cost(period,:) = (1+(period-1)*N_iters):(1+period*N_iters);
     idx_X0(period,:,:) = (1+(period-1)*N_single):N_per_iter:(1+period*N_single);
 end
@@ -815,10 +820,10 @@ for period=1:N_periods
             INSECT, WK_R, WK_L, X_ref(idx_opt,:), Weights, param_type, ...
             get_args, p, N_p, N_per_iter, varargin{:});
 %         problem.nonlcon = @(param) param_cons(param, p, N_iters);
-		for sol_iter=1:5
+		for sol_iter=1:3
             [param, fval, exitflag, output] = solver(problem);
             if ( ((period == 1 && output.iterations >= 15) || (period > 1 && output.iterations >= 5)) ...
-					&& (exitflag ~= -2) && (fval < 1e0) && (output.firstorderopt < 1e10))
+					&& (exitflag ~= -2) && (fval < 2e0) && (output.firstorderopt < 1e10))
                 fprintf('Exit flag is %d\n', exitflag);
 				opt_complete(1+((period-1)*N_iters+(iter-1))/m) = true;
 				break;

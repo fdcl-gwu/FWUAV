@@ -15,6 +15,7 @@ set(0,'DefaultLineLineWidth',1.5);
 % load('sim_QS_x_hover_control.mat');
 type = 'xR'; % types = {'x', 'xR', 'full'}
 plot_uncontrol = false;
+save_plots = false;
 
 if plot_uncontrol
     uncon = load('sim_QS_xR_hover_uncon.mat', 'x', 'x_dot', 'R', 'W', 'N');
@@ -84,7 +85,9 @@ end
 xlabel('$t/T$','interpreter','latex');
 % subplot(4,1,2);
 % print(h_x, 'hover_control_pos', '-depsc');
-exportgraphics(h_x,'hover_control_pos.pdf','ContentType','vector');
+if save_plots
+    exportgraphics(h_x,'hover_control_pos.pdf','ContentType','vector');
+end
 
 if strcmp(type, 'x')
     h_x3=figure;
@@ -98,7 +101,9 @@ if strcmp(type, 'x')
     xlim([-0.01, 0.01]);
     zlim([-0.005, 0.005]);
     set(gca,'Zdir','reverse','Xdir','reverse');
-    print(h_x3, 'hover_control_pos_3d', '-depsc');
+    if save_plots
+        print(h_x3, 'hover_control_pos_3d', '-depsc');
+    end
 end
 
 h_x_dot=figure;
@@ -117,7 +122,9 @@ for ii=1:3
 end
 xlabel('$t/T$','interpreter','latex');
 % print(h_x_dot, 'hover_control_vel', '-depsc');
-exportgraphics(h_x_dot,'hover_control_vel.pdf','ContentType','vector');
+if save_plots
+    exportgraphics(h_x_dot,'hover_control_vel.pdf','ContentType','vector');
+end
 
 if ~strcmp(type, 'x')
     h_rot=figure;
@@ -151,7 +158,9 @@ if ~strcmp(type, 'x')
     end
     xlabel('$t/T$','interpreter','latex');
 %     print(h_W, 'hover_control_ang_vel', '-depsc');
-    exportgraphics(h_W,'hover_control_ang_vel.pdf','ContentType','vector');
+    if save_plots
+        exportgraphics(h_W,'hover_control_ang_vel.pdf','ContentType','vector');
+    end
 end
 
 % W_dot = diff(W, 1, 2);
@@ -235,7 +244,9 @@ if strcmp(type, 'xR')
     end
     xlabel('$t/T$','interpreter','latex');
 %     print(h_control, 'hover_control_input', '-depsc');
-    exportgraphics(h_control,'hover_control_input.pdf','ContentType','vector');
+    if save_plots
+        exportgraphics(h_control,'hover_control_input.pdf','ContentType','vector');
+    end
 end
 
 % h_aero = figure;
