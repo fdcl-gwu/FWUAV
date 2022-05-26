@@ -1,14 +1,23 @@
 evalin('base','clear all');
 close all;
-addpath('./modules', './sim_data', './plotting');
-filename = 'control_performance';
+addpath('./modules', './sim_data', './plotting', './imitation_learning');
+
+addtype = '_coil';
+add_noise = true;
+add_model_noise = false;
+noise_scale = 1e-3;
+if add_noise
+	filename = ['control_performance_noise', addtype];
+	load(['control_performance', addtype], 'control_net');
+else
+	filename = ['control_performance', addtype];
+	load(['iterative_learning', addtype], 'control_net');
+end
 
 load('sim_QS_xR_hover_control_opt_200_WW', 't', 'X_ref0', ...
     'WK_R', 'WK_L', 'INSECT', 'N_single', 'N_iters', 'N_per_iter', ...
     'get_args', 'param_type', 'm', 'N_dang', 'Weights', 'N_sims', ...
     'des', 'opt_complete');
-
-load('iterative_learning_result', 'control_net');
 WK = WK_R;
 
 %%
@@ -63,7 +72,22 @@ parfor i=1:N_sims*N_scale
 
     for period=1:N_periods
         idx = (1+(period-1)*N_single):(1+period*N_single);
-        param = control_net((1 ./ Weights.PerturbVariables)' .* get_error(X0, X_ref0));
+
+		if add_noise
+			dx = 2*rand(1,3)-1; dx = rand(1) * dx / norm(dx);
+			dtheta = 2*rand(1,3)-1; dtheta = rand(1) * dtheta / norm(dtheta);
+			dx_dot = 2*rand(1,3)-1; dx_dot = rand(1) * dx_dot / norm(dx_dot);
+			domega = 2*rand(1,3)-1; domega = rand(1) * domega / norm(domega);
+			derr = noise_scale * (Weights.PerturbVariables .* [dx, dtheta, dx_dot, domega])';
+			X_meas0 = [X0(1:3) + derr(1:3); reshape(reshape(X0(4:12),3,3)*expmhat(derr(4:6)), 9, 1); ...
+				X0(13:18) + derr(7:12)];
+		else
+			X_meas0 = X0;
+		end
+		if add_model_noise
+			X0 = X_meas0;
+		end
+        param = control_net((1 ./ Weights.PerturbVariables)' .* get_error(X_meas0, X_ref0));
 
         X(idx, :) = crgr_xR_control_mex(INSECT, WK_R, WK_L, t(idx), X0, dang0, param, N_dang, m, N_per_iter);
         X0 = X(idx(end),:)';
@@ -71,6 +95,10 @@ parfor i=1:N_sims*N_scale
         cost_arr(period+1) = sqrt(sum((Weights.OutputVariables .* (X(idx(end), :) - X_ref0')).^2));
     end
     cost(i, :) = cost_arr;
+
+	if (rem(i, 1000) == 0)
+		disp([num2str(i), ' simulations completed out of ', num2str(N_sims*N_scale)]);
+	end
 	% X_T(i, :, :) = X(1:N_single:end, :);
 
 end
@@ -98,6 +126,8 @@ while decay_rate < 0
     idx_ult_bound = (cost(:, 1:end-1) > ult_bound) & (cost(:, 2:end) > ult_bound) & idx_cost_good;
     decay_rate = min(d_log(idx_ult_bound));
 end
+
+clear idx_cost_good log_cost d_log idx_ult_bound
 
 % x_fit = start_idx';
 % conv_rate = zeros(N_sims*N_scale, 1);

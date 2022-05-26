@@ -1,7 +1,7 @@
 evalin('base','clear all');
 close all;
 addpath('./modules', './sim_data', './plotting');
-filename = 'iterative_learning_dagger';
+filename = 'iterative_learning_dart';
 
 load('sim_QS_xR_hover_control_opt_200_WW', 't', 'X_ref0', ...
     'WK_R', 'WK_L', 'INSECT', 'N_single', 'N_iters', 'N_per_iter', ...
@@ -17,8 +17,10 @@ end
 inputs = (1 ./ Weights.PerturbVariables)' .* err'; targets = opt_param_flat';
 opt_complete = opt_complete & (cost(:, end) < cost(:, 1));
 % inputs = inputs(:, opt_complete); targets = targets(:, opt_complete);
-idx = 1:1000;
-% idx = 1:600;
+% idx = 1:1000;
+is_completely_new = false;
+alpha_dart = 1e-4; % 1e-4 works, 1e-2 or 1e-6 don't
+idx = 1:600; % 450 - bad, 600 - works
 inputs = inputs(:, opt_complete([idx, N_sims+idx, 2*N_sims+idx]));
 targets = targets(:, opt_complete([idx, N_sims+idx, 2*N_sims+idx]));
 
@@ -34,7 +36,7 @@ N_features = size(inputs, 1);
 N_dagger_iters = 5;
 
 %% NN Model
-control_net = cascadeforwardnet([60]); % 36, 60
+control_net = cascadeforwardnet([36]); % 36, 60
 control_net = configure(control_net, inputs, targets);
 trainFcn = 'trainbr'; % trainbr, trainrp
 control_net.trainFcn = trainFcn; % trainbr, trainrp
@@ -62,16 +64,31 @@ m = N_iters; % Control Horizon multiplier of iter
 p = 2*m;
 N_single = 100; % per time period
 N_per_iter = N_single / N_iters;
-N = N_single*N_periods + 1;
-T = N_periods /WK.f;
+% N = N_single*N_periods + 1;
+N = N_single*(N_periods-1) + 1 + N_per_iter*p;
+T = (N_periods - 1 + p/N_iters)/WK.f;
 t = linspace(0,T,N);
 dt = t(2)-t(1);
 X_ref0 = des.X0;
 
+X_ref = zeros(N, 18);
+idx_ref = 1:(1+N_single);
+X_ref(idx_ref, :) = crgr_xR_mex(INSECT, WK, WK, t(idx_ref), X_ref0);
+idx_ref = (1+N_single):N;
+X_ref(idx_ref, :) = X_ref(mod(idx_ref-1, N_single)+1, :);
+
 %%
 rng(1);
-N_sims = 10;
-scale = logspace(0, -2, 3);
+if is_completely_new
+	N_sims = 55;
+	scale = 1;
+else
+	% N_sims = 10;
+	% scale = logspace(0, -2, 3);
+	% This works
+	N_sims = 15;
+	scale = logspace(0, -2, 2);
+end
 N_scale = length(scale);
 dX = zeros(N_sims*N_scale, 12);
 dX_scale = zeros(N_sims*N_scale, 1);
@@ -91,17 +108,38 @@ dX_scale = zeros(N_sims*N_scale, 1);
 y_star = targets;
 perf = zeros(N_dagger_iters, 1); perf_z = zeros(N_dagger_iters, 1);
 cons = zeros(N_dagger_iters, 1); cons_z = zeros(N_dagger_iters, 1);
+covariance = zeros(N_dagger_iters, N_outputs, N_outputs);
 cost = zeros(N_sims*N_scale, N_periods+1);
 X_T = zeros(N_sims*N_scale, N_periods+1, 18);
 
-tic;
-for iter=1:N_dagger_iters
-    %% TRAINING
-    control_net = init(control_net);
-	% control_net = configure(control_net, inputs, targets);
-    control_net = train(control_net, inputs, targets, 'useParallel', 'yes'); % 'useParallel', 'yes'
+% INITIAL TRAINING
+ttotal = tic;
 
-	%% Rollout
+if is_completely_new
+	inputs = [];
+	targets = [];
+else
+	control_net = init(control_net);
+	% control_net = configure(control_net, inputs, targets);
+	control_net = train(control_net, inputs, targets, 'useParallel', 'yes'); % 'useParallel', 'yes'
+end
+
+for iter=1:N_dagger_iters
+	if is_completely_new && (iter==1)
+		covariance(iter, :, :) = 0.1 * alpha_dart * eye(N_outputs);
+	else
+		%% Noise parameter distribution
+		tcovar = tic;
+		cov_iter = zeros(N_outputs);
+		parfor j = 1:size(inputs, 2)
+			err_target = control_net(inputs(:, j)) - targets(:, j);
+			cov_iter = cov_iter + err_target * err_target';
+		end
+		covariance(iter, :, :) = alpha_dart * cov_iter / size(inputs, 2);
+		time_covar = toc(tcovar);
+	end
+
+	%% New data from noisy expert
 	for i = 1:N_sims
 		dx = 2*rand(1,3)-1; dx = rand(1) * dx / norm(dx);
 		dtheta = 2*rand(1,3)-1; dtheta = rand(1) * dtheta / norm(dtheta);
@@ -110,64 +148,63 @@ for iter=1:N_dagger_iters
 		for j = 1:N_scale
 			dX(i+(j-1)*N_sims,:) = scale(j) * Weights.PerturbVariables .* [dx, dtheta, dx_dot, domega];
 			dX_scale(i+(j-1)*N_sims) = scale(j) * norm([dx, dtheta, dx_dot, domega]);
-		end
-	end
-
+        end
+    end
+    
+	opt_complete_iter = zeros(N_sims*N_scale, N_periods, 1, 'logical');
+	inputs_iter = zeros(N_features, N_sims*N_scale, N_periods);
+	targets_iter = zeros(N_outputs, N_sims*N_scale, N_periods);
+    
+%     sc = parallel.pool.Constant(RandStream('Threefry', 'Seed', 0));
+	cov_iter = squeeze(covariance(iter, :, :));
+	titer = tic;
 	parfor i=1:N_sims*N_scale
-		X = zeros(1+N_single*N_periods, 18);
-		dang0 = zeros(N_dang, 1);
-		cost_arr = zeros(1+N_periods, 1);
+%         stream = sc.Value;        % Extract the stream from the Constant
+%         stream.Substream = i;
+        % rng(i + N_sims*N_scale*(iter-1));
 
 		dX0 = dX(i, :)';
 		X0 = [X_ref0(1:3)+ dX0(1:3); reshape(reshape(X_ref0(4:12),3,3)*expmhat(dX0(4:6)), 9, 1); ...
 			X_ref0(13:18) + dX0(7:12)];
-		cost_arr(1) = sqrt(sum((Weights.OutputVariables' .* (X0 - X_ref0)).^2));
+        
+        [cost_i, opt_param_i, ~, ~, ~, opt_complete_i, ~, X_i] = ...
+            simulate_opt_control(t, X0, X_ref, WK_R, WK_L, INSECT, ...
+            N, N_periods, N_single, N_iters, N_per_iter, problem, solver, Weights, ...
+            get_args, param_type, p, m, 0, cov_iter);
 
-		for period=1:N_periods
-			idx = (1+(period-1)*N_single):(1+period*N_single);
-			param = control_net((1 ./ Weights.PerturbVariables)' .* get_error(X0, X_ref0));
-
-			X(idx, :) = crgr_xR_control_mex(INSECT, WK_R, WK_L, t(idx), X0, dang0, param, N_dang, m, N_per_iter);
-			X0 = X(idx(end),:)';
-			dang0 = dang0 + sum(reshape(param, 6, 10), 2) / WK_R.f / m;
-			cost_arr(period+1) = sqrt(sum((Weights.OutputVariables .* (X(idx(end), :) - X_ref0')).^2));
+		opt_complete_iter(i, :) = opt_complete_i;
+		targets_iter(:, i, :) = opt_param_i;
+		for j=1:N_periods
+			inputs_iter(:, i, j) = (1 ./ Weights.PerturbVariables)' .* get_error(X_i(1+(j-1)*N_single, :)', X_ref0);
 		end
-		cost(i, :) = cost_arr;
-		X_T(i, :, :) = X(1:N_single:end, :);
+        
+		% cost(i, :) = cost_arr;
+		% X_T(i, :, :) = X(1:N_single:end, :);
+    end
+	time_iter = toc(titer);
+
+	inputs_iter = inputs_iter(:, opt_complete_iter);
+	targets_iter = targets_iter(:, opt_complete_iter);
+	if is_completely_new
+		inputs = [zeros(12, round(N_zero/N_dagger_iters)), inputs];
+		targets = [zeros(60, round(N_zero/N_dagger_iters)), targets];
 	end
+	inputs = [inputs, reshape(inputs_iter, size(inputs_iter, 1), prod(size(inputs_iter, [2,3])))];
+	targets = [targets, reshape(targets_iter, size(targets_iter, 1), prod(size(targets_iter, [2,3])))];
 
-	%% Expert labels
-	X0_pi = reshape(X_T(:, 2:end, :), [], 18);
-	N_pi = size(X0_pi, 1);
-	is_bounded = zeros(N_pi, 1, 'logical');
-	opt_complete_pi = zeros(N_pi, 1, 'logical');
-	inputs_pi = zeros(N_features, N_pi);
-	targets_pi = zeros(N_outputs, N_pi);
-	N_period_pi = 1;
-	parfor i=1:N_pi
-		X0 = X0_pi(i, :)';
-		inputs_pi(:, i) = (1 ./ Weights.PerturbVariables)' .* get_error(X0, X_ref0);
-		if norm(inputs_pi(:, i)) <= 1
-			is_bounded(i) = true;
-			[cost, opt_param, opt_fval, opt_iter, opt_firstorder, opt_complete] = ...
-				simulate_opt_control(t, X0, X_ref, WK_R, WK_L, INSECT, ...
-				N, N_period_pi, N_single, N_iters, N_per_iter, problem, solver, Weights, ...
-				get_args, param_type, p, m, 0);
-			opt_complete_pi(i) = opt_complete;
-			targets_pi(:, i) = opt_param;
-		end
-	end
-
-	inputs = [inputs, inputs_pi(:, opt_complete_pi & is_bounded)];
-	targets = [targets, targets_pi(:, opt_complete_pi & is_bounded)];
-
-    %% Performance
+    %% Training
+    control_net = init(control_net);
+    % control_net = configure(control_net, inputs, targets);
+	ttrain = tic;
+    control_net = train(control_net, inputs, targets, 'useParallel', 'yes'); % 'useParallel', 'yes'
+	time_train = toc(ttrain);
+    
     y = control_net(inputs);
     cons(iter) = norm(control_net(zeros(N_features,1)));
     perf(iter) = perform(control_net, targets, y);
 end
 
-time_taken = toc;
+time_taken = toc(ttotal);
 
 %%
 allvars = whos;
@@ -181,7 +218,7 @@ function [cost, opt_param, opt_fval, opt_iter, opt_firstorder, opt_complete, dan
     W_L_dot, W_A, W_A_dot, F_R, F_L, M_R, M_L, f_a, f_g, f_tau, tau, Euler_R, ...
     Euler_R_dot] = simulate_opt_control(t, X0, X_ref, WK_R, WK_L, INSECT, ...
     N, N_periods, N_single, N_iters, N_per_iter, problem, solver, Weights, ...
-    get_args, param_type, p, m, control_net)
+    get_args, param_type, p, m, control_net, covariance)
 %%
 cost = zeros(1, 1+N_periods*N_iters);
 cost(1) = sqrt(sum((Weights.OutputVariables .* (X0' - X_ref(1, :))).^2));
@@ -216,10 +253,10 @@ for period=1:N_periods
             INSECT, WK_R, WK_L, X_ref(idx_opt,:), Weights, param_type, ...
             get_args, p, N_p, N_per_iter, varargin{:});
 %         problem.nonlcon = @(param) param_cons(param, p, N_iters);
-		for sol_iter=1:5
+		for sol_iter=1:3
             [param, fval, exitflag, output] = solver(problem);
             if ( ((period == 1 && output.iterations >= 15) || (period > 1 && output.iterations >= 5)) ...
-					&& (exitflag ~= -2) && (fval < 1e0) && (output.firstorderopt < 1e10))
+					&& (exitflag ~= -2) && (fval < 2e0) && (output.firstorderopt < 1e10))
                 fprintf('Exit flag is %d\n', exitflag);
 				opt_complete(1+((period-1)*N_iters+(iter-1))/m) = true;
 				break;
@@ -243,6 +280,10 @@ for period=1:N_periods
         idx_con = (1+(period-1)*N_single+(iter-1)*N_per_iter):(1+(period-1)*N_single+(iter+m-1)*N_per_iter);
         
         idx = idx_con(1:(1+m*N_per_iter));
+        % DART : adding noise to expert control values
+        param_temp = mvnrnd(param, covariance);
+		param = reshape(param_temp - mean(param_temp), size(param));
+        
         X(idx, :) = crgr_xR_control_mex(INSECT, WK_R, WK_L, t(idx), X0, dang0, param, N_p, m, N_per_iter);
         for con=1:m
             param_idx = (1+(con-1)*N_p):(con*N_p);
@@ -353,3 +394,4 @@ function [WKR_new, WKL_new] = get_WK(WKR_old, WKL_old, dang)
 %     WKR_new.theta_A_m = WKR_new.theta_A_m + dang(7);
 %     WKL_new.theta_A_m = WKL_new.theta_A_m + dang(7);
 end
+
