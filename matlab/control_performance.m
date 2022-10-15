@@ -3,7 +3,7 @@ close all;
 addpath('./modules', './sim_data', './plotting', './imitation_learning');
 
 addtype = '_coil';
-add_noise = true;
+add_noise = false;
 add_model_noise = false;
 noise_scale = 1e-3;
 if add_noise

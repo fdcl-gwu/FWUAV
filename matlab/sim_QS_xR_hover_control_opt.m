@@ -125,7 +125,7 @@ problem.options.ConstraintTolerance = 1e-10; problem.options.StepTolerance = 1e-
 problem.options.ObjectiveLimit = 0;
 
 %% Simulation
-simulation_type = 'optimized'; % 'single', 'monte_carlo', 'optimized', 'opt_net'
+simulation_type = 'single'; % 'single', 'monte_carlo', 'optimized', 'opt_net'
 switch simulation_type
     case 'single'
 %%
@@ -134,11 +134,16 @@ switch simulation_type
     load('sim_QS_xR_hover_control_opt_mc.mat', 'dX');
     dX0 = 1e-2 * dX(268, :);
     rng default;
-%     dx = 2*rand(1,3)-1; dx = rand(1) * dx / norm(dx);
-%     dtheta = 2*rand(1,3)-1; dtheta = rand(1) * dtheta / norm(dtheta);
-%     dx_dot = 2*rand(1,3)-1; dx_dot = rand(1) * dx_dot / norm(dx_dot);
-%     domega = 2*rand(1,3)-1; domega = rand(1) * domega / norm(domega);
-%     dX0 = Weights.PerturbVariables .* [dx, dtheta, dx_dot, domega];
+    dx = 2*rand(1,3)-1; dx = rand(1) * dx / norm(dx);
+    dtheta = 2*rand(1,3)-1; dtheta = rand(1) * dtheta / norm(dtheta);
+    dx_dot = 2*rand(1,3)-1; dx_dot = rand(1) * dx_dot / norm(dx_dot);
+    domega = 2*rand(1,3)-1; domega = rand(1) * domega / norm(domega);
+    dX0 = Weights.PerturbVariables .* [dx, dtheta, dx_dot, domega];
+    % load('sim_QS_xR_hover_control_opt_200_WW.mat', 'dX', 'opt_complete', 'cost', 'N_sims');
+    load('sim_QS_xR_hover_control_opt_mc.mat', 'dX', 'opt_complete', 'cost', 'N_sims');
+	% dX0 = dX(rem(find(opt_complete == 0, 1), 5000), :);
+	[~, m_idx] = sort(cost((2*N_sims+1):end, end));
+	dX0 = dX(m_idx(end), :);
     X0 = [des_X0(1:3)+dX0(1:3),...
             reshape(reshape(des_X0(4:12), 3, 3)*expmhat(dX0(6)*e3)*expmhat(dX0(5)*e2)*expmhat(dX0(4)*e1),1,9),...
             des_X0(13:18) + dX0(7:12)]';
@@ -159,7 +164,7 @@ switch simulation_type
 %%
     load_mc_data = false; % To add similar data to the old values
 %     Weights.PerturbVariables = 1e-2 * Weights.PerturbVariables;
-    N_sims = 5000; % 100 for image generation with many periods
+    N_sims = 2000; % 100 for image generation with many periods
 %     problem.options.Display = 'final';
     problem.options.UseParallel = false;
     old_seed = 'shuffle'; % default, shuffle
@@ -848,6 +853,7 @@ for period=1:N_periods
         
         idx = idx_con(1:(1+m*N_per_iter));
         X(idx, :) = crgr_xR_control_mex(INSECT, WK_R, WK_L, t(idx), X0, dang0, param, N_p, m, N_per_iter);
+        % X(idx, :) = rk_xR_control_mex(INSECT, WK_R, WK_L, t(idx), X0, dang0, param, N_p, m, N_per_iter);
         for con=1:m
             param_idx = (1+(con-1)*N_p):(con*N_p);
             param_m = param(param_idx);
@@ -974,6 +980,7 @@ function J = cost_fun(param, t, X0, INSECT, WK_R, WK_L, X_ref, Weights, param_ty
 dt = t(2) - t(1);
 
 X = crgr_xR_control_mex(INSECT, WK_R, WK_L, t(1:(1+p*N_per_iter)), X0, zeros(N_p,1), param, N_p, p, N_per_iter);
+% X = rk_xR_control_mex(INSECT, WK_R, WK_L, t(1:(1+p*N_per_iter)), X0, zeros(N_p,1), param, N_p, p, N_per_iter);
 int_dx = cumsum([zeros(1, 3); (X(:, 1:3) - X_ref(1:(1+p*N_per_iter), 1:3))*dt], 1);
 int_dx = int_dx(1:end-1, :);
 

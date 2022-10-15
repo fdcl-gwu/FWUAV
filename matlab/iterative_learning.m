@@ -2,7 +2,7 @@
 evalin('base','clear all');
 close all;
 addpath('./modules', './sim_data', './plotting');
-filename = 'iterative_learning';
+filename = 'iterative_learning_coil';
 
 load('sim_QS_xR_hover_control_opt_200_WW', 't', 'X_ref0', ...
     'WK_R', 'WK_L', 'INSECT', 'N_single', 'N_iters', 'N_per_iter', ...
@@ -56,6 +56,7 @@ control_net.divideParam.valRatio = 10/100;
 control_net.divideParam.testRatio = 10/100;
 
 %% Setup
+% rng default;
 % alpha = 0.5;
 % alphas = linspace(0.1, 0.5, N_iters);
 alphas = 0.75 * ones(1, N_iters);

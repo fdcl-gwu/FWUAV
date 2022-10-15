@@ -97,9 +97,13 @@ X_T = zeros(N_sims*N_scale, N_periods+1, 18);
 tic;
 for iter=1:N_dagger_iters
     %% TRAINING
+	disp('Starting training for iteration ' + string(iter));
+	ttrain = tic;
     control_net = init(control_net);
 	% control_net = configure(control_net, inputs, targets);
     control_net = train(control_net, inputs, targets, 'useParallel', 'yes'); % 'useParallel', 'yes'
+	time_train = toc(ttrain);
+	disp('Finished training for iteration ' + string(iter));
 
 	%% Rollout
 	for i = 1:N_sims
@@ -113,6 +117,8 @@ for iter=1:N_dagger_iters
 		end
 	end
 
+	disp('Starting rollout for iteration ' + string(iter));
+	troll = tic;
 	parfor i=1:N_sims*N_scale
 		X = zeros(1+N_single*N_periods, 18);
 		dang0 = zeros(N_dang, 1);
@@ -135,6 +141,8 @@ for iter=1:N_dagger_iters
 		cost(i, :) = cost_arr;
 		X_T(i, :, :) = X(1:N_single:end, :);
 	end
+	time_roll = toc(troll);
+	disp('Finished rollout for iteration ' + string(iter));
 
 	%% Expert labels
 	X0_pi = reshape(X_T(:, 2:end, :), [], 18);
@@ -144,6 +152,9 @@ for iter=1:N_dagger_iters
 	inputs_pi = zeros(N_features, N_pi);
 	targets_pi = zeros(N_outputs, N_pi);
 	N_period_pi = 1;
+
+	disp('Starting expert labeling for iteration ' + string(iter));
+	titer = tic;
 	parfor i=1:N_pi
 		X0 = X0_pi(i, :)';
 		inputs_pi(:, i) = (1 ./ Weights.PerturbVariables)' .* get_error(X0, X_ref0);
@@ -157,6 +168,8 @@ for iter=1:N_dagger_iters
 			targets_pi(:, i) = opt_param;
 		end
 	end
+	time_iter = toc(titer);
+	disp('Finished expert labeling for iteration ' + string(iter));
 
 	inputs = [inputs, inputs_pi(:, opt_complete_pi & is_bounded)];
 	targets = [targets, targets_pi(:, opt_complete_pi & is_bounded)];

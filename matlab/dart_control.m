@@ -115,6 +115,7 @@ X_T = zeros(N_sims*N_scale, N_periods+1, 18);
 % INITIAL TRAINING
 ttotal = tic;
 
+disp('Starting initial training');
 if is_completely_new
 	inputs = [];
 	targets = [];
@@ -123,12 +124,13 @@ else
 	% control_net = configure(control_net, inputs, targets);
 	control_net = train(control_net, inputs, targets, 'useParallel', 'yes'); % 'useParallel', 'yes'
 end
+disp('Finished initial training');
 
 for iter=1:N_dagger_iters
+	%% Noise parameter distribution
 	if is_completely_new && (iter==1)
 		covariance(iter, :, :) = 0.1 * alpha_dart * eye(N_outputs);
 	else
-		%% Noise parameter distribution
 		tcovar = tic;
 		cov_iter = zeros(N_outputs);
 		parfor j = 1:size(inputs, 2)
@@ -157,6 +159,7 @@ for iter=1:N_dagger_iters
     
 %     sc = parallel.pool.Constant(RandStream('Threefry', 'Seed', 0));
 	cov_iter = squeeze(covariance(iter, :, :));
+	disp('Starting data collection for iteration ' + string(iter));
 	titer = tic;
 	parfor i=1:N_sims*N_scale
 %         stream = sc.Value;        % Extract the stream from the Constant
@@ -182,6 +185,7 @@ for iter=1:N_dagger_iters
 		% X_T(i, :, :) = X(1:N_single:end, :);
     end
 	time_iter = toc(titer);
+	disp('Finished data collection for iteration ' + string(iter));
 
 	inputs_iter = inputs_iter(:, opt_complete_iter);
 	targets_iter = targets_iter(:, opt_complete_iter);
@@ -195,9 +199,11 @@ for iter=1:N_dagger_iters
     %% Training
     control_net = init(control_net);
     % control_net = configure(control_net, inputs, targets);
+	disp('Starting training for iteration ' + string(iter));
 	ttrain = tic;
     control_net = train(control_net, inputs, targets, 'useParallel', 'yes'); % 'useParallel', 'yes'
 	time_train = toc(ttrain);
+	disp('Finished training for iteration ' + string(iter));
     
     y = control_net(inputs);
     cons(iter) = norm(control_net(zeros(N_features,1)));
