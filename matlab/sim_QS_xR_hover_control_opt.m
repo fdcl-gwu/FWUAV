@@ -35,7 +35,7 @@ X_ref = crgr_xR_mex(INSECT, WK, WK, des.t', des.X0);
 
 %% Optimization
 rng default;
-N_periods = 3; % 30 for image generation
+N_periods = 3; % 30 for image generation; 10 for large dataset of images
 N_iters = 10; % 2, 4, 10 per period
 p = 2*N_iters; % Prediction Horizon multiplier of iter
 m = N_iters; % Control Horizon multiplier of iter
@@ -71,7 +71,7 @@ Weights.PredictionHorizon = Weights.PredictionHorizon / sum(Weights.PredictionHo
 % To multiply the perturbations (initial submission values for RAL)
 dx_max = 0.2*max(max(abs(X_ref(:, 1:3)), [], 1)); dtheta_max = 2.86*pi/180;
 dx_dot_max = 0.05 * max(max(abs(X_ref(:, 13:15)), [], 1)); domega_max = 0.05 * max(max(abs(X_ref(:, 16:18)), [], 1));
-% dx_max = 0.05; dtheta_max = 5*pi/180; dx_dot_max = 0.2; % Big values for image generation data
+dx_max = 0.05; dtheta_max = 5*pi/180; dx_dot_max = 0.2; % Big values for image generation data
 % dx_max = 0.5; dtheta_max = 10*pi/180; dx_dot_max = 0.2; % Huge values which haven't been used yet
 
 Weights.PerturbVariables = [dx_max*ones(1,3), dtheta_max*ones(1,3), dx_dot_max*ones(1,3), domega_max*ones(1,3)];
@@ -125,7 +125,7 @@ problem.options.ConstraintTolerance = 1e-10; problem.options.StepTolerance = 1e-
 problem.options.ObjectiveLimit = 0;
 
 %% Simulation
-simulation_type = 'single'; % 'single', 'monte_carlo', 'optimized', 'opt_net'
+simulation_type = 'monte_carlo'; % 'single', 'monte_carlo', 'optimized', 'opt_net'
 switch simulation_type
     case 'single'
 %%
@@ -163,8 +163,12 @@ switch simulation_type
     case 'monte_carlo'
 %%
     load_mc_data = false; % To add similar data to the old values
-%     Weights.PerturbVariables = 1e-2 * Weights.PerturbVariables;
-    N_sims = 2000; % 100 for image generation with many periods
+	N_sims = 5000; % original with 3 periods
+    % N_sims = 100; % 100 for image generation with 30 periods
+
+    % N_sims = 2500; % 10 periods
+    % Weights.PerturbVariables = 3e-2 * Weights.PerturbVariables;
+
 %     problem.options.Display = 'final';
     problem.options.UseParallel = false;
     old_seed = 'shuffle'; % default, shuffle

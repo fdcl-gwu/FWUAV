@@ -1,7 +1,7 @@
 evalin('base','clear all');
 close all;
 addpath('./modules', './sim_data', './plotting');
-filename = 'iterative_learning_dart';
+filename = 'iterative_learning_dart_noise';
 
 load('sim_QS_xR_hover_control_opt_200_WW', 't', 'X_ref0', ...
     'WK_R', 'WK_L', 'INSECT', 'N_single', 'N_iters', 'N_per_iter', ...
@@ -24,16 +24,28 @@ idx = 1:600; % 450 - bad, 600 - works
 inputs = inputs(:, opt_complete([idx, N_sims+idx, 2*N_sims+idx]));
 targets = targets(:, opt_complete([idx, N_sims+idx, 2*N_sims+idx]));
 
+load('python_training_data.mat');%, 'input_coil', 'target_coil', 'input_zeros');
+idx = 1:5000;
+inputs = input_coil(idx, :)'; targets = target_coil(idx, :)';
+
 % N_zero = 1000; % 25, 100
 N_data = size(inputs, 2);
 N_zero = round(N_data/15);
 N_zero = 300;
+N_zero = 900;
 inputs(:, (N_data+1):(N_data+N_zero)) = zeros(12, N_zero);
 targets(:, (N_data+1):(N_data+N_zero)) = zeros(60, N_zero);
 
 N_features = size(inputs, 1);
 [N_outputs, N_data] = size(targets);
 N_dagger_iters = 5;
+
+rand_idx = randperm(N_data);
+inputs = inputs(:, rand_idx); targets = targets(:, rand_idx);
+inputs_orig = inputs;
+load('python_data.mat', 'Mean', 'Cov');
+rng shuffle;
+inputs = inputs_orig + mvnrnd(Mean, Cov, size(inputs, 2))';
 
 %% NN Model
 control_net = cascadeforwardnet([36]); % 36, 60
@@ -88,6 +100,9 @@ else
 	% This works
 	N_sims = 15;
 	scale = logspace(0, -2, 2);
+	N_sims = 50;
+	% scale = logspace(0, -2, 3);
+	scale = logspace(0, -3, 4);
 end
 N_scale = length(scale);
 dX = zeros(N_sims*N_scale, 12);
@@ -189,12 +204,15 @@ for iter=1:N_dagger_iters
 
 	inputs_iter = inputs_iter(:, opt_complete_iter);
 	targets_iter = targets_iter(:, opt_complete_iter);
+	inputs_iter = reshape(inputs_iter, size(inputs_iter, 1), []);
+	targets_iter = reshape(targets_iter, size(targets_iter, 1), []);
+	inputs_iter = inputs_iter + mvnrnd(Mean, Cov, size(inputs_iter, 2))';
 	if is_completely_new
 		inputs = [zeros(12, round(N_zero/N_dagger_iters)), inputs];
 		targets = [zeros(60, round(N_zero/N_dagger_iters)), targets];
 	end
-	inputs = [inputs, reshape(inputs_iter, size(inputs_iter, 1), prod(size(inputs_iter, [2,3])))];
-	targets = [targets, reshape(targets_iter, size(targets_iter, 1), prod(size(targets_iter, [2,3])))];
+	inputs = [inputs, inputs_iter]; 
+	targets = [targets, targets_iter];
 
     %% Training
     control_net = init(control_net);
