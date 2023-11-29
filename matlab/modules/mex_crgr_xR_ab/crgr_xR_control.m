@@ -1,4 +1,4 @@
-function X = crgr_xR_control(INSECT, WK_R_des, WK_L_des, t, X0, dang0, param, N_dang, N_con, N_per_iter)
+function [X, xi_dot] = crgr_xR_control(INSECT, WK_R_des, WK_L_des, t, X0, dang0, param, N_dang, N_con, N_per_iter)
 %% assuming equally spaced t array
 N = length(t);
 dt = t(2) - t(1);
@@ -16,6 +16,9 @@ a = [0, 0, 0, 0, 0;
 b = [0.1370831520630755, -0.0183698531564020, 0.7397813985370780, -0.1907142565505889, 0.3322195591068374];
 c = [0, 0.8177227988124852, 0.3859740639032449, 0.3242290522866937, 0.8768903263420429];
 
+xi_dot = zeros(N, 6);
+xi_dot(1, :) = deriv_xi(INSECT, X0(1:3), reshape(X0(4:12),3,3), X0(13:15), X0(16:18), WK_R_des, WK_L_des, t(1));
+
 for con=1:N_con
     param_idx = (1+(con-1)*N_dang):(con*N_dang);
     param_con = param(param_idx);
@@ -23,14 +26,14 @@ for con=1:N_con
     
     t0 = t(idx_1);
     for k=idx_1:(idx_end-1)
-        X(k+1, :) = crouch_grossman_4th(INSECT, X(k, :)', t(k), dt, a, b, c, WK_R_des, WK_L_des, t0, dang0, param_con);
+        [X(k+1, :), xi_dot(k+1, :)] = crouch_grossman_4th(INSECT, X(k, :)', t(k), dt, a, b, c, WK_R_des, WK_L_des, t0, dang0, param_con);
     end
     dang0 = dang0 + param_con * (t(idx_end) - t0);
 end
 
 end
 
-function Xout = crouch_grossman_4th(INSECT, X, t, dt, a, b, c, WK_R_des, WK_L_des, t0, dang0, param_con)
+function [Xout, xi_dot_out] = crouch_grossman_4th(INSECT, X, t, dt, a, b, c, WK_R_des, WK_L_des, t0, dang0, param_con)
 %% 4th order Crouch Grossman
 s = length(b);
 x_dot = zeros(3, s);
@@ -72,6 +75,12 @@ xiout = xi1 + dt* sum(bsxfun(@times, b, K_xi), 2);
 % xiout = xi1 + dt* K_xi * b'; % little slower
 
 Xout = [xout; reshape(Rout, 9, 1); xiout];
+
+% Final accelerations (extra information for IMU simulation)
+tf = t+dt;
+dang = dang0 + param_con*(tf - t0);
+[WK_R, WK_L] = get_WK(WK_R_des, WK_L_des, dang);
+xi_dot_out = deriv_xi(INSECT, xout, Rout, xiout(1:3), xiout(4:6), WK_R, WK_L, tf);
 
 end
 

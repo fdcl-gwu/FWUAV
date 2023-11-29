@@ -2,7 +2,7 @@
 evalin('base','clear all');
 close all;
 addpath('./modules', './sim_data', './plotting');
-filename = 'iterative_learning_coil';
+filename = 'iterative_learning_coil_noisyinp_test';
 
 load('sim_QS_xR_hover_control_opt_200_WW', 't', 'X_ref0', ...
     'WK_R', 'WK_L', 'INSECT', 'N_single', 'N_iters', 'N_per_iter', ...
@@ -22,34 +22,65 @@ opt_complete = opt_complete & (cost(:, end) < cost(:, 1));
 idx = 1:450;
 inputs = inputs(:, opt_complete([idx, N_sims+idx, 2*N_sims+idx]));
 targets = targets(:, opt_complete([idx, N_sims+idx, 2*N_sims+idx]));
+
+load('python_training_data.mat');%, 'input_coil', 'target_coil', 'input_zeros');
+idx = 1:5000;
+% idx = 1:1500;
+inputs = input_coil(idx, :)'; targets = target_coil(idx, :)';
+
 large_inp_idx = find(vecnorm(inputs, 2, 1) > 1);
 
 % N_zero = 1000; % 25, 100
 N_data = size(inputs, 2);
 N_zero = round(N_data/15);
-N_zero = 300;
-inputs(:, (N_data+1):(N_data+N_zero)) = zeros(12, N_zero);
-targets(:, (N_data+1):(N_data+N_zero)) = zeros(60, N_zero);
+% N_zero = 300;
+N_zero = 900;
 
 N_features = size(inputs, 1);
+inputs(:, (N_data+1):(N_data+N_zero)) = zeros(N_features, N_zero);
+targets(:, (N_data+1):(N_data+N_zero)) = zeros(60, N_zero);
+% N_zero = size(input_zeros', 2);
+% inputs = [inputs, input_zeros'];
+% targets = [targets, zeros(60, N_zero)];
+
 [N_outputs, N_data] = size(targets);
 N_iters = 5;
 
+inputs_orig = inputs; targets_orig = targets;
+rand_idx = randperm(N_data);
+inputs = inputs(:, rand_idx); targets = targets(:, rand_idx);
+load('python_data.mat', 'Mean', 'Cov');
+rng shuffle;
+% GMModel = gmdistribution(bgm_means, permute(bgm_covars, [2,3,1]), bgm_weights);
+% inputs = inputs_orig + random(GMModel, size(inputs, 2))';
+% inputs = inputs_orig + mvnrnd(Mean, Cov, size(inputs, 2))';
+
 %% NN Model
 control_net = cascadeforwardnet([36]); % 36, 60
+% control_net = feedforwardnet([32, 96]);
+% control_net.inputConnect(end) = 1;
+% control_net.numInputs = 2;
+% control_net.inputConnect = [1, 1; 0, 1];
+% control_net = configure(control_net, inputs_multiple, targets);
 control_net = configure(control_net, inputs, targets);
 trainFcn = 'trainbr'; % trainbr, trainrp
 control_net.trainFcn = trainFcn; % trainbr, trainrp
 switch trainFcn
     case 'trainbr'
-        control_net.trainParam.epochs = 25;
+        control_net.trainParam.epochs = 5; % 25 originally
     case 'trainrp'
         control_net.trainParam.epochs = 20000;
         control_net.trainParam.max_fail = 20;
         control_net.performParam.regularization = 0.1; % if not trainbr
+    case 'trainlm'
+        control_net.trainParam.epochs = 100;
+%         control_net.trainParam.max_fail = 20;
+        control_net.performParam.regularization = 1e-2;
 end
 control_net.performParam.normalization = 'standard';
-control_net.inputs{1}.processFcns = {'mapminmax', 'processpca'};
+% for i=1:control_net.numInputs
+%     control_net.inputs{i}.processFcns = {'mapminmax', 'processpca'};
+% end
 control_net.layers{1:(end-1)}.transferFcn = 'leakyrelu'; % leakyrelu, tansig, poslin, purelin
 control_net.divideParam.trainRatio = 80/100;
 control_net.divideParam.valRatio = 10/100;
@@ -88,7 +119,7 @@ control_net = init(control_net);
 % control_net = configure(control_net, inputs, targets);
 disp('Starting initial training');
 tinit = tic;
-control_net = train(control_net, inputs, targets, 'useParallel', 'yes'); %
+[control_net, tr] = train(control_net, inputs, targets, 'useParallel', 'yes'); %
 time_init = toc(tinit);
 cs_init = control_net;
 disp('Finished initial training');
@@ -148,8 +179,8 @@ for i=1:N_iters
 	parfor k = 1:length(large_inp_idx)
 		j = large_inp_idx(k);
 	% parfor j = 1:N_data
-		de_dwb = defaultderiv('de_dwb', control_net, inputs(:, j), targets(:, j));
-		grad_log_pi = - de_dwb * corr_mat * (control_net(inputs(:, j)) - targets(:, j));
+        de_dwb = defaultderiv('de_dwb', control_net, inputs_orig(:, j), targets_orig(:, j));
+		grad_log_pi = - de_dwb * corr_mat * (control_net(inputs_orig(:, j)) - targets_orig(:, j));
 		F = F + grad_log_pi * grad_log_pi';
 	end
 	F = F / length(large_inp_idx);
@@ -169,7 +200,7 @@ for i=1:N_iters
 	% eps_cons = problem.options.ConstraintTolerance;
     % problem.nonlcon = @(w) fisher_norm_cons(w, w0, eig_vals, eig_vecs, eps_cons);
 
-	problem.options.MaxIterations = 20; % 25, 50
+	problem.options.MaxIterations = 50; % 25, 50
 	problem.options.SpecifyObjectiveGradient = true;
 	% problem.options.SpecifyConstraintGradient = true;
 	disp('Starting optimization for iteration ' + string(i));
@@ -189,13 +220,14 @@ for i=1:N_iters
 
 	disp('Starting unconstrained training for iteration ' + string(i));
     control_net = init(control_net);
+	% inputs = inputs_orig + mvnrnd(Mean, Cov, size(inputs, 2))';
     control_net = train(control_net, inputs, z, 'useParallel', 'yes'); %
 	disp('Finished unconstrained training for iteration ' + string(i));
 	cs{i} = control_net;
     y = control_net(inputs);
     % w_y = get_weights(control_net);
 	w_y = getwb(control_net, hints);
-    cons(i) = norm(control_net(zeros(N_features,1)));
+    cons(i) = norm(control_net(zeros(N_features, 1)));
     perf(i) = perform(control_net, y_star, y);
     perf_yz(i) = perform(control_net, z, y);
 end
@@ -341,7 +373,7 @@ c = [];
 
 % control_net = update_weights(w, control_net, N_inp, N_neu, N_out);
 control_net = setwb(control_net, w, hints);
-ceq = control_net(zeros(N_inp, 1));
+ceq = control_net(zeros(N_inp,1));
 % zero_inp = zeros(N_inp, 1);
 % zero_out = control_net(zero_inp);
 % ceq = 0.5 * norm(zero_out)^2;

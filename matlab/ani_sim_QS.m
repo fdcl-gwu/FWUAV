@@ -50,7 +50,8 @@ h_x=line(x(1,1:k),x(2,1:k),x(3,1:k),'color','k','LineWidth',2);
 
 if bool_video
     vidObj = VideoWriter(file_to_save);
-    vidObj.FrameRate = 30; % To decrease the speed of video
+%     vidObj.FrameRate = 30; % To decrease the speed of video
+    vidObj.FrameRate = 10;
     open(vidObj);
 end
 
